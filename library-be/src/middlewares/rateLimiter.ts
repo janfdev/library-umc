@@ -11,12 +11,12 @@ import rateLimit from "express-rate-limit";
 
 // 1. STRICT - Authentication endpoints (login, register, password reset)
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 1 * 60 * 1000, // 15 minutes
   max: 5, // 5 requests per windowMs
   message: {
     status: 429,
     message:
-      "Terlalu banyak percobaan login. Silakan coba lagi dalam 15 menit.",
+      "Terlalu banyak percobaan login. Silakan coba lagi dalam 1 menit.",
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -41,7 +41,7 @@ export const publicApiLimiter = rateLimit({
 
 // 3. GENERAL - All other API endpoints
 export const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 1 * 60 * 1000, // 1 minutes
   max: 300, // 200 requests per windowMs
   message: {
     status: 429,
