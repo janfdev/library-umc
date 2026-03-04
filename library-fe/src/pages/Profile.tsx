@@ -1,4 +1,3 @@
-// src/pages/Profile.tsx
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useNavigate } from "react-router";
@@ -6,6 +5,7 @@ import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
 import RiwayatPeminjaman from "@/components/RiwayatPeminjaman";
 import MemberCard from "@/components/MemberCard";
+import ReservationList from "@/components/ReservationList";
 
 const Profile = () => {
   const { data: session, isPending } = authClient.useSession();
@@ -19,7 +19,7 @@ const Profile = () => {
     }
   }, [session, isPending, navigate]);
 
-  // Data dummy untuk development
+  // Data dummy untuk development (akan diganti dengan API nanti)
   const activeLoans = [
     { id: "1", bookTitle: "Basis Data Dasar", loanDate: "1 Februari 2026", returnDate: "8 Februari 2026", status: "Tepat Waktu" },
     { id: "2", bookTitle: "Metode Penelitian", loanDate: "21 Januari 2026", returnDate: "28 Januari 2026", status: "Tepat Waktu" },
@@ -108,6 +108,7 @@ const Profile = () => {
             {[
               { id: "peminjaman-aktif", label: "Peminjaman Aktif", count: activeLoans.length },
               { id: "riwayat-peminjaman", label: "Riwayat Peminjaman", count: loanHistory.length },
+              { id: "reservasi", label: "Reservasi", count: 0 },
               { id: "tagihan-denda", label: "Tagihan & Denda", count: 0 },
               { id: "kartu-member", label: "Kartu Member", count: 0 }
             ].map((tab) => (
@@ -119,7 +120,7 @@ const Profile = () => {
                 }`}
               >
                 {tab.label}
-                {tab.count !== undefined && tab.count > 0 && (
+                {tab.count && tab.count > 0 && (
                   <span className="absolute -top-1 -right-3 text-[10px] font-bold text-white bg-red-600 px-1.5 py-0.5 rounded-full">
                     {tab.count}
                   </span>
@@ -139,6 +140,10 @@ const Profile = () => {
 
             {activeTab === "peminjaman-aktif" && (
               <RiwayatPeminjaman loans={activeLoans} />
+            )}
+
+            {activeTab === "reservasi" && (
+              <ReservationList />
             )}
 
             {activeTab === "tagihan-denda" && (
@@ -162,7 +167,6 @@ const Profile = () => {
                 nim={userNim}
                 major={userJurusan}
                 category="Mahasiswa"
-                // profileImage={userImage}
                 onPrint={() => {
                   alert(`Kartu anggota ${userName} sedang dicetak...`);
                 }}

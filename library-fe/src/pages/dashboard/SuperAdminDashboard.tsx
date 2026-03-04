@@ -75,7 +75,7 @@ export default function SuperAdminDashboard() {
   const fetchData = async () => {
     try {
       // 1. Fetch Collections
-      const collectionsRes = await fetch(`${API_BASE_URL}api/collections`);
+      const collectionsRes = await fetch(`${API_BASE_URL}/api/collections`);
       const collectionsData = await collectionsRes.json();
       const collectionsList = collectionsData.success
         ? collectionsData.data
@@ -83,7 +83,7 @@ export default function SuperAdminDashboard() {
       setCollections(collectionsList);
 
       // 2. Fetch Categories
-      const categoriesRes = await fetch(`${API_BASE_URL}api/categories`);
+      const categoriesRes = await fetch(`${API_BASE_URL}/api/categories`);
       const categoriesData = await categoriesRes.json();
       const categoriesList = categoriesData.success ? categoriesData.data : [];
       setCategories(categoriesList);
@@ -91,7 +91,7 @@ export default function SuperAdminDashboard() {
       // 3. Fetch Guest Logs
       let guestsList: GuestLog[] = [];
       try {
-        const guestsRes = await fetch(`${API_BASE_URL}api/guests`, {
+        const guestsRes = await fetch(`${API_BASE_URL}/api/guests`, {
           credentials: "include",
         });
         const guestsData = await guestsRes.json();

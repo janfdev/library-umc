@@ -11,12 +11,34 @@ interface Collection {
   publicationYear: number;
   isbn?: string;
   type: string;
-  category_id: number;
+  categoryId: number;
   description?: string;
   image?: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
+  category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
+}
+
+interface Reservation {
+  id: string;
+  memberId: string;
+  collectionId: string;
+  status: 'waiting' | 'fulfilled' | 'canceled';
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface User {
+  id: string;
+  memberId?: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'mahasiswa';
+  nim?: string;
 }
 
 interface BookListProps {
@@ -24,37 +46,61 @@ interface BookListProps {
   searchType?: string;
   availabilityFilter?: string[];
   yearRange?: { start: string; end: string };
+  currentUser?: User | null;
 }
 
 const BookList = ({
   searchQuery = "",
   searchType = "all",
   availabilityFilter = [],
-  yearRange = { start: "", end: "" }
+  yearRange = { start: "", end: "" },
+  currentUser = null
 }: BookListProps) => {
   const navigate = useNavigate();
   
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [activeTab, setActiveTab] = useState(0); // 0 = Buku Fisik, 1 = E-Book
+  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
+  const [userReservations, setUserReservations] = useState<Reservation[]>([]);
+  const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCollections = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}api/collections`);
+        setLoading(true);
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // 1. Fetch semua koleksi buku
+        const collectionsResponse = await fetch(`${API_BASE_URL}/api/collections`);
+        
+        if (!collectionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${collectionsResponse.status}`);
         }
 
-        const responseJson = await response.json();
+        const collectionsJson = await collectionsResponse.json();
 
-        if (responseJson.success && Array.isArray(responseJson.data)) {
-          setCollections(responseJson.data);
+        if (collectionsJson.success && Array.isArray(collectionsJson.data)) {
+          setCollections(collectionsJson.data);
+          console.log('Data collections:', collectionsJson.data);
         } else {
           throw new Error('Invalid API response structure');
         }
+
+        // 2. Fetch semua reservasi aktif (fulfilled) untuk mengetahui status buku
+        const reservationsResponse = await fetch(`${API_BASE_URL}/api/reservations?status=fulfilled`);
+        if (reservationsResponse.ok) {
+          const reservationsJson = await reservationsResponse.json();
+          if (reservationsJson.success && Array.isArray(reservationsJson.data)) {
+            setAllReservations(reservationsJson.data);
+            console.log('Reservasi aktif:', reservationsJson.data);
+          }
+        }
+
+        // 3. Jika user login, fetch reservasi user
+        if (currentUser?.memberId) {
+          await fetchUserReservations(currentUser.memberId);
+        }
+
       } catch (err) {
         console.error('Fetch error:', err);
         setError(err instanceof Error ? err.message : 'Gagal mengambil data');
@@ -63,8 +109,45 @@ const BookList = ({
       }
     };
 
-    fetchCollections();
-  }, []);
+    const fetchUserReservations = async (memberId: string) => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/reservations?memberId=${memberId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && Array.isArray(data.data)) {
+            setUserReservations(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user reservations:', error);
+      }
+    };
+
+    fetchData();
+  }, [currentUser]);
+
+  // Helper: Cek apakah buku sedang dipinjam (oleh siapapun)
+  const isBookBorrowed = (collectionId: string): boolean => {
+    return allReservations.some(res => 
+      res.collectionId === collectionId && res.status === 'fulfilled'
+    );
+  };
+
+  // Helper: Cek apakah user sedang meminjam buku ini
+  const isUserBorrowing = (collectionId: string): boolean => {
+    return userReservations.some(res => 
+      res.collectionId === collectionId && 
+      (res.status === 'fulfilled' || res.status === 'waiting')
+    );
+  };
+
+  // Helper: Dapatkan status buku untuk keperluan filter
+  const getBookStatus = (collectionId: string): string => {
+    if (isBookBorrowed(collectionId)) {
+      return 'borrowed';
+    }
+    return 'available';
+  };
 
   // Filter berdasarkan tab
   const filteredByTab = collections.filter(collection => {
@@ -99,11 +182,12 @@ const BookList = ({
     }
   });
 
-  // Filter berdasarkan ketersediaan
+  // Filter berdasarkan ketersediaan (dari filter sidebar)
   const filteredByAvailability = availabilityFilter.length > 0
-    ? filteredBySearch.filter(collection => 
-        availabilityFilter.includes(collection.status)
-      )
+    ? filteredBySearch.filter(collection => {
+        const bookStatus = getBookStatus(collection.id);
+        return availabilityFilter.includes(bookStatus);
+      })
     : filteredBySearch;
 
   // Filter berdasarkan tahun terbit
@@ -118,15 +202,37 @@ const BookList = ({
   });
 
   // Helper: Status label
-  const getStatusLabel = (status: string) => {
-    return status === 'available' ? 'Tersedia' : 'Dipinjam';
+  const getStatusLabel = (collection: Collection) => {
+    // Cek apakah user sedang meminjam buku ini
+    if (currentUser && isUserBorrowing(collection.id)) {
+      const reservation = userReservations.find(r => r.collectionId === collection.id);
+      if (reservation?.status === 'waiting') {
+        return 'Menunggu Konfirmasi';
+      } else if (reservation?.status === 'fulfilled') {
+        return 'Sedang Anda Pinjam';
+      }
+    }
+    
+    // Status buku umum
+    return isBookBorrowed(collection.id) ? 'Dipinjam' : 'Tersedia';
   };
 
   // Helper: Status badge style
-  const getStatusBadge = (status: string) => {
-    return status === 'available' 
-      ? "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium"
-      : "px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium";
+  const getStatusBadge = (collection: Collection) => {
+    // Jika user sedang meminjam/menunggu buku ini
+    if (currentUser && isUserBorrowing(collection.id)) {
+      const reservation = userReservations.find(r => r.collectionId === collection.id);
+      if (reservation?.status === 'waiting') {
+        return "px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium";
+      } else if (reservation?.status === 'fulfilled') {
+        return "px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-800 font-medium";
+      }
+    }
+    
+    // Status buku umum
+    return isBookBorrowed(collection.id)
+      ? "px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium"
+      : "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
   };
 
   // Helper: Cover color fallback
@@ -141,7 +247,7 @@ const BookList = ({
 
   if (loading) {
     return (
-      <div className="w-full bg-white rounded-xl shadow p-6">
+      <div className="w-[800px] bg-white rounded-xl shadow p-6">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700 mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat data koleksi...</p>
@@ -152,7 +258,7 @@ const BookList = ({
 
   if (error) {
     return (
-      <div className="w-full bg-white rounded-xl shadow p-6">
+      <div className="w-[800px] bg-white rounded-xl shadow p-6">
         <div className="text-center py-12">
           <div className="text-5xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
@@ -170,13 +276,21 @@ const BookList = ({
 
   return (
     <div className="w-[800px] bg-white rounded-xl shadow p-6">
-      {/* Header dengan hasil pencarian */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Koleksi Perpustakaan</h2>
           <p className="text-sm text-gray-600 mt-1">
             {filteredByYear.length} hasil ditemukan
           </p>
+          {currentUser && (
+            <p className="text-xs text-purple-600 mt-1">
+              Anda sedang meminjam {userReservations.filter(r => r.status === 'fulfilled').length} buku
+              {userReservations.some(r => r.status === 'waiting') && 
+                `, ${userReservations.filter(r => r.status === 'waiting').length} menunggu konfirmasi`
+              }
+            </p>
+          )}
         </div>
         
         {/* Tab Navigation */}
@@ -242,11 +356,10 @@ const BookList = ({
                       e.currentTarget.style.display = 'none';
                       const parent = e.currentTarget.parentElement;
                       if (parent) {
-                        parent.innerHTML = `
-                          <div class="${getCoverColor(collection.type)} w-full h-full flex items-center justify-center">
-                            <span class="text-white text-xs font-medium">${collection.type === 'ebook' ? 'E-Book' : 'Buku'}</span>
-                          </div>
-                        `;
+                        const div = document.createElement('div');
+                        div.className = `${getCoverColor(collection.type)} w-full h-full flex items-center justify-center`;
+                        div.innerHTML = `<span class="text-white text-xs font-medium">${collection.type === 'ebook' ? 'E-Book' : 'Buku'}</span>`;
+                        parent.appendChild(div);
                       }
                     }}
                   />
@@ -286,13 +399,35 @@ const BookList = ({
 
               {/* Status */}
               <div className="ml-4 flex-shrink-0">
-                <span className={getStatusBadge(collection.status)}>
-                  {getStatusLabel(collection.status)}
+                <span className={getStatusBadge(collection)}>
+                  {getStatusLabel(collection)}
                 </span>
               </div>
             </div>
           ))
         )}
+      </div>
+
+      {/* Keterangan status */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full bg-green-500"></span>
+            <span>Tersedia</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+            <span>Dipinjam (orang lain)</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+            <span>Sedang Anda pinjam</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+            <span>Menunggu konfirmasi</span>
+          </div>
+        </div>
       </div>
     </div>
   );

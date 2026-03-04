@@ -29,7 +29,7 @@ const AppRoutes = () => {
       <Route path="/profile" element={<Profile />} />
 
       <Route path="/login" element={<Login />} />
-      <Route path="/auth/register" element={<Register />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/handle" element={<HandleLogout />} />
 
       {/* Dashboard Routes - Protected */}
