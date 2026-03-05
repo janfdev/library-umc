@@ -17,7 +17,7 @@ export default function AddCategoryPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}api/categories`, {
+      const res = await fetch(`${API_BASE_URL}/api/categories`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

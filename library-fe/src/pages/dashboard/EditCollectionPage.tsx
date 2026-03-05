@@ -33,13 +33,13 @@ export default function EditCollectionPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const categoriesRes = await fetch(`${API_BASE_URL}api/categories`);
+        const categoriesRes = await fetch(`${API_BASE_URL}/api/categories`);
         const categoriesData = await categoriesRes.json();
         if (categoriesData.success) {
           setCategories(categoriesData.data || []);
         }
 
-        const collectionRes = await fetch(`${API_BASE_URL}api/collections/${id}`, {
+        const collectionRes = await fetch(`${API_BASE_URL}/api/collections/${id}`, {
           credentials: "include",
         });
         const collectionData = await collectionRes.json();
@@ -94,7 +94,7 @@ export default function EditCollectionPage() {
       Object.entries(formData).forEach(([key, value]) => submitData.append(key, value));
       if (newImageFile) submitData.append("cover", newImageFile);
 
-      const res = await fetch(`${API_BASE_URL}api/collections/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/collections/${id}`, {
         method: "PATCH",
         credentials: "include",
         body: submitData,

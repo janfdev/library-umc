@@ -5,13 +5,66 @@ import { authClient } from "@/lib/auth-client";
 import { LogOut, User, ChevronDown, LayoutDashboard, BookOpen } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
 
+// Interface untuk user dari JWT
+interface JwtUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  token?: string;
+}
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [jwtUser, setJwtUser] = useState<JwtUser | null>(null);
+  
+  // Ambil session dari SSO
   const { data: session } = authClient.useSession();
+  
   const navigate = useNavigate();
-  const location = useLocation(); // Untuk active state
+  const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load user dari JWT token di localStorage
+  useEffect(() => {
+    const loadJwtUser = () => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        // Coba decode token atau ambil dari localStorage
+        // Biasanya backend mengirim data user saat login
+        const userData = localStorage.getItem("user_data");
+        if (userData) {
+          try {
+            setJwtUser(JSON.parse(userData));
+          } catch (e) {
+            console.error("Failed to parse user data", e);
+          }
+        } else {
+          // Jika tidak ada user_data, set minimal
+          setJwtUser({
+            id: "",
+            name: "User",
+            email: "",
+            role: "member",
+            token: token
+          });
+        }
+      } else {
+        setJwtUser(null);
+      }
+    };
+
+    loadJwtUser();
+
+    // Listen untuk perubahan localStorage
+    const handleStorageChange = () => {
+      loadJwtUser();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -53,9 +106,18 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await authClient.signOut();
-    navigate("/login");
+    // Logout dari SSO jika ada session
+    if (session) {
+      await authClient.signOut();
+    }
+    
+    // Hapus data JWT dari localStorage
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_data");
+    
+    setJwtUser(null);
     setIsDropdownOpen(false);
+    navigate("/login");
   };
 
   const handleProfileClick = () => {
@@ -77,7 +139,20 @@ const Navbar = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
-  const isSuperAdmin = (session?.user as any)?.role === "super_admin";
+  // Tentukan user aktif (prioritas: SSO > JWT)
+  const activeUser = session?.user || jwtUser;
+  const isLoggedIn = !!activeUser;
+  
+  // Tentukan role
+  const isSuperAdmin = 
+    (session?.user as any)?.role === "super_admin" || 
+    jwtUser?.role === "super_admin";
+
+  // Nama yang ditampilkan
+  const displayName = activeUser?.name || (jwtUser ? "User" : "");
+  
+  // Email yang ditampilkan
+  const displayEmail = activeUser?.email || jwtUser?.email || "";
 
   return (
     <>
@@ -123,7 +198,7 @@ const Navbar = () => {
 
         {/* User Menu / Login Button - Desktop */}
         <div className="hidden md:block relative" ref={dropdownRef}>
-          {session ? (
+          {isLoggedIn ? (
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -131,21 +206,21 @@ const Navbar = () => {
               >
                 {/* Avatar */}
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white shadow-sm">
-                  {session.user?.image ? (
+                  {activeUser?.image ? (
                     <img
-                      src={session.user.image}
-                      alt={session.user.name || "User"}
+                      src={activeUser.image}
+                      alt={displayName || "User"}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     <span className="text-white font-bold text-sm">
-                      {getInitials(session.user?.name)}
+                      {getInitials(displayName)}
                     </span>
                   )}
                 </div>
                 {/* Name */}
                 <span className="text-sm font-semibold text-gray-800 max-w-[120px] truncate hidden sm:block">
-                  {session.user?.name || "User"}
+                  {displayName || "User"}
                 </span>
                 <ChevronDown 
                   className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
@@ -160,10 +235,10 @@ const Navbar = () => {
                   {/* User Info Header */}
                   <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-800 truncate">
-                      {session.user?.name}
+                      {displayName || "User"}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {session.user?.email}
+                      {displayEmail || "Email tidak tersedia"}
                     </p>
                     <span className={`text-[10px] font-bold px-2 py-1 rounded-full mt-1 inline-block ${
                       isSuperAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
@@ -227,7 +302,7 @@ const Navbar = () => {
               onClick={() => navigate('/login')}
               className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center space-x-2 hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg"
             >
-              <span>SSO Login</span>
+              <span>Login</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-4 w-4"
@@ -352,35 +427,35 @@ const Navbar = () => {
           </nav>
 
           {/* Divider */}
-          {session && (
+          {isLoggedIn && (
             <div className="my-4 border-t border-gray-200"></div>
           )}
 
           {/* User Menu / Login - Mobile */}
           <div className="mt-auto pt-4">
-            {session ? (
+            {isLoggedIn ? (
               <div className="space-y-3">
                 {/* User Info */}
                 <div className="flex items-center space-x-3 px-3 py-4 bg-gray-50 rounded-xl">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white flex-shrink-0">
-                    {session.user?.image ? (
+                    {activeUser?.image ? (
                       <img
-                        src={session.user.image}
-                        alt={session.user.name || "User"}
+                        src={activeUser.image}
+                        alt={displayName || "User"}
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-white font-bold text-lg">
-                        {getInitials(session.user?.name)}
+                        {getInitials(displayName)}
                       </span>
                     )}
                   </div>
                   <div className="overflow-hidden">
                     <p className="text-sm font-bold text-gray-800 truncate">
-                      {session.user?.name || "User"}
+                      {displayName || "User"}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {session.user?.email}
+                      {displayEmail || "Email tidak tersedia"}
                     </p>
                   </div>
                 </div>
@@ -444,7 +519,7 @@ const Navbar = () => {
                 }}
                 className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center space-x-2 hover:from-red-700 hover:to-red-800 transition-all duration-200"
               >
-                <span>SSO Login</span>
+                <span>Login</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-4 w-4"
