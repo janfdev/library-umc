@@ -1,0 +1,26 @@
+meta {
+  name: Create Loans (Member Request a book loan)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{port_api}}/loans/request
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: Co1OiEKMEKnsjAhbLncoX5yZXJav07ek.QwcPenksVIIhMmAiMNjTujYsFLXcrO0U9z9%2BZtjL2PE%3D
+}
+
+body:json {
+  {
+   "itemId": "35651854-3777-4304-b779-4bbfc9d44efc"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

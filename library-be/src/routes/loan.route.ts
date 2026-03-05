@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { LoanController } from "../controller/LoanController";
 import { isAuthenticated, requireRole } from "../middlewares/auth.middleware";
+import { publicApiLimiter } from "../middlewares/rateLimiter";
 
 const router = Router();
 const loanController = new LoanController();
@@ -34,7 +35,12 @@ const loanController = new LoanController();
  *       401:
  *         description: Unauthorized
  */
-router.post("/loans/request", isAuthenticated, loanController.createRequest);
+router.post(
+  "/loans/request",
+  publicApiLimiter,
+  isAuthenticated,
+  loanController.createRequest,
+);
 
 /**
  * @swagger
@@ -62,6 +68,7 @@ router.post("/loans/request", isAuthenticated, loanController.createRequest);
  */
 router.get(
   "/loans/verify/:token",
+  publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   loanController.verifyToken,
@@ -95,6 +102,7 @@ router.get(
  */
 router.post(
   "/loans/:requestId/approve",
+  publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   loanController.approveLoan,
@@ -128,6 +136,7 @@ router.post(
  */
 router.post(
   "/loans/:requestId/reject",
+  publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   loanController.rejectLoan,
@@ -162,6 +171,7 @@ router.post(
  */
 router.post(
   "/loans/:loanId/return",
+  publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   loanController.returnLoan,
@@ -198,6 +208,7 @@ router.post(
  */
 router.get(
   "/loans",
+  publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   loanController.getAllLoans,
@@ -218,6 +229,11 @@ router.get(
  *       401:
  *         description: Unauthorized
  */
-router.get("/loans/history", isAuthenticated, loanController.getMyLoans);
+router.get(
+  "/loans/history",
+  publicApiLimiter,
+  isAuthenticated,
+  loanController.getMyLoans,
+);
 
 export const loanRoutes = router;

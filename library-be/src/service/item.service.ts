@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { items, collections, locations } from "../db/schema";
-import { eq, and, like } from "drizzle-orm";
+import { eq, and, like, isNull } from "drizzle-orm";
 import {
   type createItemSchema,
   type updateItemSchema,
@@ -15,9 +15,12 @@ export class ItemService {
    * Get All Items (Filtered by Collection ID if provided)
    */
   async getAllItems(collectionId?: string) {
-    let whereClause = undefined;
+    let whereClause: any = isNull(items.deletedAt);
     if (collectionId) {
-      whereClause = eq(items.collectionId, collectionId);
+      whereClause = and(
+        eq(items.collectionId, collectionId),
+        isNull(items.deletedAt),
+      );
     }
 
     const result = await db.query.items.findMany({
@@ -41,7 +44,7 @@ export class ItemService {
    */
   async getItemById(id: string) {
     const result = await db.query.items.findFirst({
-      where: eq(items.id, id),
+      where: and(eq(items.id, id), isNull(items.deletedAt)),
       with: {
         collection: true,
         location: true,
@@ -68,7 +71,7 @@ export class ItemService {
    */
   async getItemByBarcode(barcode: string) {
     const result = await db.query.items.findFirst({
-      where: eq(items.barcode, barcode),
+      where: and(eq(items.barcode, barcode), isNull(items.deletedAt)),
       with: {
         collection: true,
         location: true,
@@ -96,7 +99,7 @@ export class ItemService {
   async createItem(data: CreateItemData) {
     // Check if barcode already exists
     const existing = await db.query.items.findFirst({
-      where: eq(items.barcode, data.barcode),
+      where: and(eq(items.barcode, data.barcode), isNull(items.deletedAt)),
     });
 
     if (existing) {
@@ -144,7 +147,7 @@ export class ItemService {
    */
   async updateItem(id: string, data: UpdateItemData) {
     const existingItem = await db.query.items.findFirst({
-      where: eq(items.id, id),
+      where: and(eq(items.id, id), isNull(items.deletedAt)),
     });
 
     if (!existingItem) {
@@ -157,7 +160,7 @@ export class ItemService {
     // If updating barcode, check for duplicates
     if (data.barcode && data.barcode !== existingItem.barcode) {
       const duplicate = await db.query.items.findFirst({
-        where: eq(items.barcode, data.barcode),
+        where: and(eq(items.barcode, data.barcode), isNull(items.deletedAt)),
       });
 
       if (duplicate) {
@@ -186,7 +189,7 @@ export class ItemService {
    */
   async deleteItem(id: string) {
     const existingItem = await db.query.items.findFirst({
-      where: eq(items.id, id),
+      where: and(eq(items.id, id), isNull(items.deletedAt)),
     });
 
     if (!existingItem) {
@@ -206,7 +209,10 @@ export class ItemService {
       };
     }
 
-    await db.delete(items).where(eq(items.id, id));
+    await db
+      .update(items)
+      .set({ deletedAt: new Date(), status: "lost" })
+      .where(eq(items.id, id));
 
     return {
       success: true,

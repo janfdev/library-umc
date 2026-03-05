@@ -67,4 +67,34 @@ export class NotificationService {
       );
     }
   }
+
+  async sendReservationFulfilledNotification(
+    email: string,
+    name: string,
+    bookTitle: string,
+  ) {
+    try {
+      const subject = "Reservasi Buku Anda Sudah Tersedia — Perpustakaan UMC";
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>🎉 Buku Reservasi Anda Sudah Tersedia!</h2>
+          <p>Halo ${name},</p>
+          <p>Kabar baik! Buku yang Anda reservasi sudah tersedia untuk dipinjam:</p>
+          <p><strong>Judul Buku:</strong> ${bookTitle}</p>
+          <p>Silakan segera datang ke perpustakaan untuk mengambil buku tersebut <strong>dalam 3 hari ke depan</strong>.</p>
+          <p>Jika tidak diambil dalam batas waktu tersebut, reservasi Anda akan dibatalkan secara otomatis.</p>
+          <br/>
+          <p>Terima kasih,</p>
+          <p><strong>Perpustakaan Universitas Muhammadiyah Cirebon</strong></p>
+        </div>
+      `;
+
+      await this.sendEmail(email, subject, html);
+    } catch (error) {
+      console.error(
+        "[NotificationService] Failed to send reservation notification:",
+        error,
+      );
+    }
+  }
 }

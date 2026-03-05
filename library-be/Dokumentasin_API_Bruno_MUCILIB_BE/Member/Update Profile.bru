@@ -1,0 +1,16 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{port_api}}/members/me
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

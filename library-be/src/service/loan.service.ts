@@ -1,8 +1,9 @@
 import { db } from "../db";
-import { eq, and, sql } from "drizzle-orm";
-import { items, loans, members } from "../db/schema";
+import { eq, and, sql, isNull } from "drizzle-orm";
+import { items, loans, members, fines } from "../db/schema";
 import crypto from "crypto";
 import { NotificationService } from "./notification.service";
+import reservationService from "./reservation.service";
 
 const notificationService = new NotificationService();
 
@@ -19,6 +20,7 @@ export class LoanService {
         and(
           eq(loans.memberId, memberId),
           sql`${loans.status} IN ('approved', 'pending', 'extended')`,
+          isNull(loans.deletedAt),
         ),
       );
 
@@ -30,7 +32,7 @@ export class LoanService {
 
     // Validasi item
     const item = await db.query.items.findFirst({
-      where: eq(items.id, itemId),
+      where: and(eq(items.id, itemId), isNull(items.deletedAt)),
     });
 
     if (!item || item.status !== "available") {
@@ -67,6 +69,7 @@ export class LoanService {
       where: and(
         eq(loans.verificationToken, token),
         eq(loans.status, "pending"),
+        isNull(loans.deletedAt),
       ),
       with: {
         member: { with: { user: true } },
@@ -92,7 +95,7 @@ export class LoanService {
     const result = await db.transaction(async (tx) => {
       // Ambil data peminjaman untuk kirim email
       const loanData = await tx.query.loans.findFirst({
-        where: eq(loans.id, loanId),
+        where: and(eq(loans.id, loanId), isNull(loans.deletedAt)),
         with: {
           member: { with: { user: true } },
           item: { with: { collection: true } },
@@ -111,7 +114,7 @@ export class LoanService {
           approvedBy: adminId,
           verificationToken: null, // Hapus token setelah digunakan
         })
-        .where(eq(loans.id, loanId))
+        .where(and(eq(loans.id, loanId), isNull(loans.deletedAt)))
         .returning();
 
       // Update Item Status menjadi 'loaned'
@@ -150,7 +153,7 @@ export class LoanService {
           approvedBy: adminId,
           verificationToken: null,
         })
-        .where(eq(loans.id, loanId))
+        .where(and(eq(loans.id, loanId), isNull(loans.deletedAt)))
         .returning();
 
       if (!updatedLoan) {
@@ -174,7 +177,7 @@ export class LoanService {
   async returnLoan(loanId: string, _adminId: string) {
     return await db.transaction(async (tx) => {
       const loan = await tx.query.loans.findFirst({
-        where: eq(loans.id, loanId),
+        where: and(eq(loans.id, loanId), isNull(loans.deletedAt)),
       });
 
       if (!loan || loan.status !== "approved") {
@@ -183,12 +186,14 @@ export class LoanService {
         );
       }
 
+      const returnDateStr = new Date().toISOString().split("T")[0];
+
       // Update status peminjaman jadi 'returned'
       await tx
         .update(loans)
         .set({
           status: "returned",
-          returnDate: new Date().toISOString().split("T")[0],
+          returnDate: returnDateStr,
           updatedAt: new Date(),
         })
         .where(eq(loans.id, loanId));
@@ -202,9 +207,52 @@ export class LoanService {
         })
         .where(eq(items.id, loan.itemId));
 
+      // Ambil collectionId dari item untuk auto-fulfill reservasi
+      const returnedItem = await tx.query.items.findFirst({
+        where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)),
+      });
+      if (returnedItem?.collectionId) {
+        // Fire-and-forget: auto-fulfill reservasi tertua (FIFO)
+        void reservationService.fulfillNextReservation(
+          returnedItem.collectionId,
+        );
+      }
+
+      // Hitung Denda Keterlambatan
+      const returnDateObj = new Date();
+      // Parse string dueDate menjadi format date (contoh '2026-03-04')
+      const dueDateObj = new Date(loan.dueDate);
+
+      // Set jam ke 00:00:00 untuk komparasi tanggal yang akurat
+      returnDateObj.setHours(0, 0, 0, 0);
+      dueDateObj.setHours(0, 0, 0, 0);
+
+      const isLate = returnDateObj > dueDateObj;
+
+      if (isLate) {
+        const diffTime = Math.abs(
+          returnDateObj.getTime() - dueDateObj.getTime(),
+        );
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const finePerDay = 500; // Standar denda Rp 500 per hari
+        const fineAmount = diffDays * finePerDay;
+
+        // Otomatis buat data denda status 'unpaid'
+        await tx.insert(fines).values({
+          loanId: loanId,
+          amount: fineAmount.toString(),
+          status: "unpaid",
+        });
+
+        return {
+          success: true,
+          message: `Buku dikembalikan, namun terlambat ${diffDays} hari. Dikenakan denda sebesar Rp ${fineAmount.toLocaleString("id-ID")}.`,
+        };
+      }
+
       return {
         success: true,
-        message: "Buku telah berhasil dikembalikan.",
+        message: "Buku telah berhasil dikembalikan tepat waktu.",
       };
     });
   }
@@ -212,7 +260,7 @@ export class LoanService {
   // Helper: Get Member by User ID
   async getMemberIdByUserId(userId: string) {
     const member = await db.query.members.findFirst({
-      where: eq(members.userId, userId),
+      where: and(eq(members.userId, userId), isNull(members.deletedAt)),
     });
     return member?.id;
   }
@@ -226,7 +274,7 @@ export class LoanService {
     limit?: number;
     offset?: number;
   }) {
-    const whereConditions = [];
+    const whereConditions = [isNull(loans.deletedAt)];
 
     if (filters.memberId) {
       whereConditions.push(eq(loans.memberId, filters.memberId));

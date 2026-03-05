@@ -7,6 +7,11 @@ import { guestRoutes } from "./guest.route";
 import { loanRoutes } from "./loan.route";
 import { itemRoutes } from "./item.route";
 import { notificationRoutes } from "./notification.route";
+import { reservationRoutes } from "./reservation.route";
+import finesRoutes from "./fines.route";
+import { recommendationRoutes } from "./recommendations.route";
+import { auditRoutes } from "./audit.route";
+import { reportRoutes } from "./report.route";
 
 const router = Router();
 
@@ -33,5 +38,20 @@ router.use(loanRoutes);
 
 // Notification
 router.use(notificationRoutes);
+
+// Reservations
+router.use(reservationRoutes);
+
+// Fines
+router.use(finesRoutes);
+
+// Recommendations
+router.use(recommendationRoutes);
+
+// Audit
+router.use(auditRoutes);
+
+// Reports & Export
+router.use(reportRoutes);
 
 export const routes = router;

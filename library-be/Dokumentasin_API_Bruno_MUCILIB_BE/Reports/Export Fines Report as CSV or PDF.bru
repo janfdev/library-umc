@@ -1,0 +1,16 @@
+meta {
+  name: Export Fines Report as CSV or PDF
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{port_api}}/reports/fines/export
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

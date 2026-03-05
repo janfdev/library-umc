@@ -1,0 +1,16 @@
+meta {
+  name: Get User Data From Campus By Email
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{port_api}}/guest/campus/{email}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

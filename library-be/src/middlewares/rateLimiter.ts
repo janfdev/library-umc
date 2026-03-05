@@ -11,7 +11,7 @@ import rateLimit from "express-rate-limit";
 
 // 1. STRICT - Authentication endpoints (login, register, password reset)
 export const authLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 15 minutes
+  windowMs: 10 * 60 * 1000, // 10 minutes
   max: 5, // 5 requests per windowMs
   message: {
     status: 429,
@@ -27,7 +27,7 @@ export const authLimiter = rateLimit({
 
 // 2. MODERATE - Public GET endpoints (books, categories, etc)
 export const publicApiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 10 * 60 * 1000, // 10 minutes
   max: 100, // 100 requests per windowMs
   message: {
     status: 429,

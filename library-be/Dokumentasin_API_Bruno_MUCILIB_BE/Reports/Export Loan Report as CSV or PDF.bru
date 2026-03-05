@@ -1,0 +1,16 @@
+meta {
+  name: Export Loan Report as CSV or PDF
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{port_api}}/reports/loans/export
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

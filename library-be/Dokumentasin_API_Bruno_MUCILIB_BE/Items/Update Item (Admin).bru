@@ -1,0 +1,16 @@
+meta {
+  name: Update Item (Admin)
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{port_api}}/items/id
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

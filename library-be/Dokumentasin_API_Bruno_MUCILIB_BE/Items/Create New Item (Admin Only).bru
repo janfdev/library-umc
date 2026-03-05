@@ -1,0 +1,16 @@
+meta {
+  name: Create New Item (Admin Only)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{port_api}}/items
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

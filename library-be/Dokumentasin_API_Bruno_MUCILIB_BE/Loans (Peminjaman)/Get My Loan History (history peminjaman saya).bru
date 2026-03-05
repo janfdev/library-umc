@@ -1,0 +1,20 @@
+meta {
+  name: Get My Loan History (history peminjaman saya)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{port_api}}/loans/history
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: Co1OiEKMEKnsjAhbLncoX5yZXJav07ek.QwcPenksVIIhMmAiMNjTujYsFLXcrO0U9z9%2BZtjL2PE%3D
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

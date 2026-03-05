@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { members } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 
 type ServiceResponse<T> = {
   success: boolean;
@@ -30,7 +30,7 @@ export class MemberService {
       }
 
       const member = await db.query.members.findFirst({
-        where: eq(members.userId, userId),
+        where: and(eq(members.userId, userId), isNull(members.deletedAt)),
         with: {
           user: true,
         },
@@ -78,7 +78,7 @@ export class MemberService {
 
       // Check if member exists
       const member = await db.query.members.findFirst({
-        where: eq(members.userId, userId),
+        where: and(eq(members.userId, userId), isNull(members.deletedAt)),
       });
 
       if (!member) {
@@ -113,7 +113,7 @@ export class MemberService {
       const [updatedMember] = await db
         .update(members)
         .set(updateDataMember)
-        .where(eq(members.userId, userId))
+        .where(and(eq(members.userId, userId), isNull(members.deletedAt)))
         .returning();
 
       if (!updatedMember) {

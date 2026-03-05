@@ -1,0 +1,20 @@
+meta {
+  name: Verify Loan Token (Admin Verifikasi Token Scan)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{port_api}}/loans/verify/72cddfac0398d23cd5d61983d9ab68d3
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: gkxkIxUFLTZxfbFrBYUhRk3gCthvnQUN.CzaB7TmxvEGieojxdA2NVhxY9ceiowtByeWJx%2F%2F3Euc%3D
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

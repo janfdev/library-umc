@@ -1,0 +1,16 @@
+meta {
+  name: Delete Fines
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{port_api}}/fines/id
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

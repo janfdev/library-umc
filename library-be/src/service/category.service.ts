@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { categories, collections } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 
 type CategoryData = {
   name: string;
@@ -19,7 +19,10 @@ export class CategoryService {
    */
   async getAllCategories(): Promise<ServiceResponse<any[]>> {
     try {
-      const result = await db.select().from(categories);
+      const result = await db
+        .select()
+        .from(categories)
+        .where(isNull(categories.deletedAt));
 
       return {
         success: true,
@@ -52,7 +55,10 @@ export class CategoryService {
 
       // Check for duplicate name (case-insensitive)
       const existingCategory = await db.query.categories.findFirst({
-        where: eq(categories.name, data.name.trim()),
+        where: and(
+          eq(categories.name, data.name.trim()),
+          isNull(categories.deletedAt),
+        ),
       });
 
       if (existingCategory) {
@@ -118,7 +124,7 @@ export class CategoryService {
 
       // Check if category exists
       const existingCategory = await db.query.categories.findFirst({
-        where: eq(categories.id, id),
+        where: and(eq(categories.id, id), isNull(categories.deletedAt)),
       });
 
       if (!existingCategory) {
@@ -132,7 +138,10 @@ export class CategoryService {
       // Check for duplicate name (excluding current category)
       if (data.name && data.name.trim() !== existingCategory.name) {
         const duplicateCategory = await db.query.categories.findFirst({
-          where: eq(categories.name, data.name.trim()),
+          where: and(
+            eq(categories.name, data.name.trim()),
+            isNull(categories.deletedAt),
+          ),
         });
 
         if (duplicateCategory && duplicateCategory.id !== id) {
@@ -154,7 +163,7 @@ export class CategoryService {
       const [updatedCategory] = await db
         .update(categories)
         .set(updateData)
-        .where(eq(categories.id, id))
+        .where(and(eq(categories.id, id), isNull(categories.deletedAt)))
         .returning();
 
       if (!updatedCategory) {
@@ -196,7 +205,7 @@ export class CategoryService {
 
       // Check if category exists
       const existingCategory = await db.query.categories.findFirst({
-        where: eq(categories.id, id),
+        where: and(eq(categories.id, id), isNull(categories.deletedAt)),
       });
 
       if (!existingCategory) {
@@ -223,7 +232,8 @@ export class CategoryService {
 
       // Delete category
       const deletedCategory = await db
-        .delete(categories)
+        .update(categories)
+        .set({ deletedAt: new Date() })
         .where(eq(categories.id, id))
         .returning();
 
@@ -263,7 +273,7 @@ export class CategoryService {
 
       // Check if category exists
       const existingCategory = await db.query.categories.findFirst({
-        where: eq(categories.id, id),
+        where: and(eq(categories.id, id), isNull(categories.deletedAt)),
       });
 
       if (!existingCategory) {

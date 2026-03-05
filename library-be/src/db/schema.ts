@@ -11,7 +11,7 @@ import {
   index,
   uuid,
 } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 
 // ==========================================
 // 1. ENUMS
@@ -78,6 +78,7 @@ export const categories = pgTable("categories", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const locations = pgTable("locations", {
@@ -85,12 +86,14 @@ export const locations = pgTable("locations", {
   room: varchar("room", { length: 200 }).notNull(),
   rack: varchar("rack", { length: 200 }).notNull(),
   shelf: varchar("shelf", { length: 200 }).notNull(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const vendors = pgTable("vendors", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }),
   contact: varchar("contact", { length: 255 }),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // ==========================================
@@ -419,6 +422,7 @@ export const guestLogs = pgTable("guest_logs", {
   faculty: varchar("faculty", { length: 255 }), // If Student/Lecturer
   major: varchar("major", { length: 255 }), // If Student (Prodi)
   visitDate: timestamp("visit_date").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // ==========================================
@@ -484,3 +488,14 @@ export const recommendationRelations = relations(
     }),
   }),
 );
+
+export const reservationRelations = relations(reservations, ({ one }) => ({
+  member: one(members, {
+    fields: [reservations.memberId],
+    references: [members.id],
+  }),
+  collection: one(collections, {
+    fields: [reservations.collectionId],
+    references: [collections.id],
+  }),
+}));

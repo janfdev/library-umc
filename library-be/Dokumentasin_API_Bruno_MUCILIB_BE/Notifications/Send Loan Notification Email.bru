@@ -1,0 +1,16 @@
+meta {
+  name: Send Loan Notification Email
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{port_api}}/notifications/send-loans
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "../controller/AuthController";
 import { isAuthenticated, requireRole } from "../middlewares/auth.middleware";
-import { authLimiter } from "../middlewares/rateLimiter";
+import { authLimiter, generalLimiter } from "../middlewares/rateLimiter";
 
 const router = Router();
 const authController = new AuthController();

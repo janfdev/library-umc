@@ -1,0 +1,20 @@
+meta {
+  name: Approve Loan (Admin Menyetujui Pinjaman)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{port_api}}/loans/f10ba10a-96f3-4c46-b75a-03b4291887c4/approve
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: PllW61xftI5QBfZxnjFE8wnPFgLjvOz5.RMa56pj8PkC7Cgd2JN2%2B5cqCRdxBhAhD3Zn4skoGwv4%3D
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

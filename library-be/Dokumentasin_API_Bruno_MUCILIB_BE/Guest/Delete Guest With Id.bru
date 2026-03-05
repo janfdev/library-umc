@@ -1,0 +1,16 @@
+meta {
+  name: Delete Guest With Id
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{port_api}}/guest/id
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

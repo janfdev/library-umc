@@ -1,0 +1,16 @@
+meta {
+  name: Get All Users From Campus API
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{port_api}}/guest/campus
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

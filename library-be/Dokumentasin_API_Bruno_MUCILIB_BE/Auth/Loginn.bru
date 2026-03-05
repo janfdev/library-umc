@@ -1,0 +1,22 @@
+meta {
+  name: Loginn
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{port_api}}/auth/google-callback
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "fauzanrizqinoor@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Member Mengajukan Pinjaman Buku
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{port_api}}/loans/request
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: gkxkIxUFLTZxfbFrBYUhRk3gCthvnQUN.CzaB7TmxvEGieojxdA2NVhxY9ceiowtByeWJx%2F%2F3Euc%3D
+}
+
+body:json {
+  {
+    "itemId": "6b2eb53b-746f-4aa0-90b2-64e7c7f44a5b"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

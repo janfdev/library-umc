@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Dokumentasin_API_Bruno_MUCILIB_BE",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

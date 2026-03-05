@@ -1,0 +1,16 @@
+meta {
+  name: Reject Loan (Admin Menolak Peminjaman)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{port_api}}/loans/{requestId}/reject
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

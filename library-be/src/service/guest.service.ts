@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { guestLogs } from "../db/schema";
-import { desc, sql, eq, and, gte } from "drizzle-orm";
+import { desc, sql, eq, and, gte, isNull } from "drizzle-orm";
 
 type DataGuest = {
   name: string;
@@ -354,6 +354,7 @@ export class GuestService {
         where: and(
           eq(guestLogs.email, campusUser.data.email),
           gte(guestLogs.visitDate, today),
+          isNull(guestLogs.deletedAt),
         ),
       });
 
@@ -428,13 +429,15 @@ export class GuestService {
       const data = await db
         .select()
         .from(guestLogs)
+        .where(isNull(guestLogs.deletedAt))
         .limit(limit)
         .offset(offset)
         .orderBy(desc(guestLogs.visitDate));
 
       const [countResult] = await db
         .select({ count: sql<number>`count(*)` })
-        .from(guestLogs);
+        .from(guestLogs)
+        .where(isNull(guestLogs.deletedAt));
 
       return {
         success: true,
@@ -469,6 +472,7 @@ export class GuestService {
           count: sql<number>`count(*)`,
         })
         .from(guestLogs)
+        .where(isNull(guestLogs.deletedAt))
         .groupBy(guestLogs.faculty);
 
       // Group by Major (Prodi)
@@ -478,6 +482,7 @@ export class GuestService {
           count: sql<number>`count(*)`,
         })
         .from(guestLogs)
+        .where(isNull(guestLogs.deletedAt))
         .groupBy(guestLogs.major);
 
       return {
@@ -517,7 +522,7 @@ export class GuestService {
 
       // Check if guest log exists
       const existingLog = await db.query.guestLogs.findFirst({
-        where: eq(guestLogs.id, id),
+        where: and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt)),
       });
 
       if (!existingLog) {
@@ -538,7 +543,7 @@ export class GuestService {
           faculty: data.faculty,
           major: data.major,
         })
-        .where(eq(guestLogs.id, id))
+        .where(and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt)))
         .returning();
 
       if (!updateLog) {
@@ -580,7 +585,7 @@ export class GuestService {
 
       // Check if guest log exists
       const existingLog = await db.query.guestLogs.findFirst({
-        where: eq(guestLogs.id, id),
+        where: and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt)),
       });
 
       if (!existingLog) {
@@ -592,7 +597,11 @@ export class GuestService {
       }
 
       // Delete guest log
-      const deleteLog = await db.delete(guestLogs).where(eq(guestLogs.id, id));
+      const deleteLog = await db
+        .update(guestLogs)
+        .set({ deletedAt: new Date() })
+        .where(eq(guestLogs.id, id))
+        .returning();
 
       if (!deleteLog) {
         return {

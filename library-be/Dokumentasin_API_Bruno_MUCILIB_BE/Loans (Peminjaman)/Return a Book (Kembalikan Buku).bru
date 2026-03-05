@@ -1,0 +1,20 @@
+meta {
+  name: Return a Book (Kembalikan Buku)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{port_api}}/loans/f10ba10a-96f3-4c46-b75a-03b4291887c4/return
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: PllW61xftI5QBfZxnjFE8wnPFgLjvOz5.RMa56pj8PkC7Cgd2JN2%2B5cqCRdxBhAhD3Zn4skoGwv4%3D
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

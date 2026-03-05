@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { collections, categories } from "../db/schema";
 import { uploadToCloudinary } from "../utils/upload";
-import { eq, or, ilike, and } from "drizzle-orm";
+import { eq, or, ilike, and, isNull } from "drizzle-orm";
 
 type CollectionData = {
   coverImageUrl?: string;
@@ -25,7 +25,7 @@ export class CollectionService {
     try {
       const { search, categoryId, type } = filters || {};
 
-      const whereConditions = [];
+      const whereConditions: any[] = [isNull(collections.deletedAt)];
 
       if (search) {
         whereConditions.push(
@@ -90,7 +90,10 @@ export class CollectionService {
       // 2. Check for duplicate ISBN (if provided)
       if (data.isbn && data.isbn.trim() !== "") {
         const existingBook = await db.query.collections.findFirst({
-          where: eq(collections.isbn, data.isbn.trim()),
+          where: and(
+            eq(collections.isbn, data.isbn.trim()),
+            isNull(collections.deletedAt),
+          ),
         });
 
         if (existingBook) {
@@ -169,7 +172,7 @@ export class CollectionService {
   ) {
     try {
       const collection = await db.query.collections.findFirst({
-        where: eq(collections.id, id),
+        where: and(eq(collections.id, id), isNull(collections.deletedAt)),
       });
 
       if (!collection) {
@@ -228,7 +231,7 @@ export class CollectionService {
   async deleteCollection(id: string) {
     try {
       const collection = await db.query.collections.findFirst({
-        where: eq(collections.id, id),
+        where: and(eq(collections.id, id), isNull(collections.deletedAt)),
       });
 
       if (!collection) {
@@ -240,8 +243,10 @@ export class CollectionService {
       }
 
       const deletedCollection = await db
-        .delete(collections)
-        .where(eq(collections.id, id));
+        .update(collections)
+        .set({ deletedAt: new Date() })
+        .where(eq(collections.id, id))
+        .returning();
 
       if (!deletedCollection) {
         return {
@@ -279,7 +284,7 @@ export class CollectionService {
 
       // Check if collection exists
       const existingCollection = await db.query.collections.findFirst({
-        where: eq(collections.id, id),
+        where: and(eq(collections.id, id), isNull(collections.deletedAt)),
       });
 
       if (!existingCollection) {

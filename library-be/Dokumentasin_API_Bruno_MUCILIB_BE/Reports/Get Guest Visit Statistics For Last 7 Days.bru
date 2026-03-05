@@ -1,0 +1,16 @@
+meta {
+  name: Get Guest Visit Statistics For Last 7 Days
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{port_api}}/reports/guest-stats
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

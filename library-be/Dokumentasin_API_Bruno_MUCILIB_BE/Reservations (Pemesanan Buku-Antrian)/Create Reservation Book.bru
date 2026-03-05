@@ -1,0 +1,26 @@
+meta {
+  name: Create Reservation Book
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{port_api}}/reservations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: Co1OiEKMEKnsjAhbLncoX5yZXJav07ek.QwcPenksVIIhMmAiMNjTujYsFLXcrO0U9z9%2BZtjL2PE%3D
+}
+
+body:json {
+  {
+  "collectionId": "ca80a9e6-94be-4676-ae03-bc27c6ac49b8"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
