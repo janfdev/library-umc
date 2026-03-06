@@ -1,5 +1,5 @@
-# Gunakan Bun sebagai base image (kecil & cepat)
-FROM oven/bun:1 AS base
+# Gunakan Node.js sebagai base image
+FROM node:20-alpine AS base
 WORKDIR /app
 
 # Build argument untuk menentukan environment (default: development)
@@ -7,27 +7,22 @@ ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
 # Copy package.json & lockfile
-COPY package.json bun.lock* ./
+COPY package*.json ./
 
 # Install dependencies
-# Untuk production, hanya install production dependencies
-RUN if [ "$NODE_ENV" = "production" ]; then \
-      bun install --frozen-lockfile --production; \
-    else \
-      bun install --frozen-lockfile; \
-    fi
+RUN npm install
 
 # Copy seluruh source code
 COPY . .
 
-# Expose port (sesuaikan dengan port aplikasi, misal 3000)
-EXPOSE 4000
+# Expose port 3000
+EXPOSE 3000
 
 # Conditional CMD based on environment
-# Development: gunakan --watch untuk hot reload
-# Production: gunakan start biasa (lebih stabil & hemat resource)
+# Development: npm run dev (tsx watch)
+# Production: build then start
 CMD if [ "$NODE_ENV" = "production" ]; then \
-      bun run start; \
+      npm run build && npm run start; \
     else \
-      bun run dev; \
+      npm run dev; \
     fi

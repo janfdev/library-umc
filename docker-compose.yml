@@ -1,5 +1,5 @@
 services:
-  # BACKEND (Express + Bun)
+  # BACKEND (Express + Node.js)
   backend:
     build:
       context: ./library-be

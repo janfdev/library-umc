@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{port_api}}/recomendations/history
+  url: {{port_api}}/recommendations/history
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: 9A1KJq9OFUbIiua3k6wZtNiiOLdI3u39.DeFpy8S2O2zEdBhUGS2%2FqcdlXuBqNtiU6qbyQ4MuX%2BM%3D
 }
 
 settings {

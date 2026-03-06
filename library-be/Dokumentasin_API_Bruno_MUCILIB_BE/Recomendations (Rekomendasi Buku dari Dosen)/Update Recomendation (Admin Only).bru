@@ -5,9 +5,19 @@ meta {
 }
 
 patch {
-  url: {{port_api}}/recomendations/history
-  body: none
-  auth: inherit
+  url: {{port_api}}/recommendations/e7e08865-a293-4427-904a-ac3465d1ba72/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: LAF3cpOhLiNWCIL0wWoGnFOx2GR8MrjU.%2FxlIz3dh%2Bkmibe44OTe%2FddecvXZaIcMvo%2Butq34b1cM%3D
+}
+
+body:json {
+  {
+    "status": "approved"
+  }
 }
 
 settings {

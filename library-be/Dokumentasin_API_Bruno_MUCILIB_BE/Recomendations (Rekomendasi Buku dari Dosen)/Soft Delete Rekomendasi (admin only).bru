@@ -1,12 +1,12 @@
 meta {
-  name: Get All Recomendations
+  name: Soft Delete Rekomendasi (admin only)
   type: http
-  seq: 2
+  seq: 5
 }
 
-get {
-  url: {{port_api}}/recommendations
-  body: none
+delete {
+  url: {{port_api}}/recommendations/e7e08865-a293-4427-904a-ac3465d1ba72
+  body: json
   auth: bearer
 }
 
