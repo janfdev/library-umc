@@ -208,7 +208,7 @@ const Navbar = () => {
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white shadow-sm">
                   {activeUser?.image ? (
                     <img
-                      src={activeUser.image}
+                      src={activeUser.image}z
                       alt={displayName || "User"}
                       className="w-full h-full rounded-full object-cover"
                     />
