@@ -5,7 +5,14 @@ import { eq, desc } from "drizzle-orm";
 interface CreateLogPayload {
   userId: string;
   action: "create" | "update" | "delete" | "approve" | "blacklist";
-  entity: "loan" | "item" | "fine" | "Users";
+  entity:
+    | "loan"
+    | "item"
+    | "fine"
+    | "Users"
+    | "category"
+    | "collection"
+    | "reservation";
   entityId?: string;
   ipAddress?: string;
 }

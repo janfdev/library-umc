@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { categories, collections } from "../db/schema";
 import { eq, isNull, and } from "drizzle-orm";
+import auditService from "./audit.service";
 
 type CategoryData = {
   name: string;
@@ -42,7 +43,11 @@ export class CategoryService {
   /**
    * Create Category with duplicate check
    */
-  async createCategory(data: CategoryData): Promise<ServiceResponse<any>> {
+  async createCategory(
+    data: CategoryData,
+    userId?: string,
+    ipAddress?: string,
+  ): Promise<ServiceResponse<any>> {
     try {
       // Validate input
       if (!data.name || data.name.trim() === "") {
@@ -90,6 +95,16 @@ export class CategoryService {
         };
       }
 
+      if (userId) {
+        await auditService.createLog({
+          userId,
+          action: "create",
+          entity: "category",
+          entityId: result.id.toString(),
+          ipAddress,
+        });
+      }
+
       return {
         success: true,
         message: "Category created successfully",
@@ -111,6 +126,8 @@ export class CategoryService {
   async updateCategory(
     id: number,
     data: CategoryData,
+    userId?: string,
+    ipAddress?: string,
   ): Promise<ServiceResponse<any>> {
     try {
       // Validate ID
@@ -174,6 +191,16 @@ export class CategoryService {
         };
       }
 
+      if (userId) {
+        await auditService.createLog({
+          userId,
+          action: "update",
+          entity: "category",
+          entityId: id.toString(),
+          ipAddress,
+        });
+      }
+
       return {
         success: true,
         message: "Category updated successfully",
@@ -192,7 +219,11 @@ export class CategoryService {
   /**
    * Delete Category with usage check
    */
-  async deleteCategory(id: number): Promise<ServiceResponse<any>> {
+  async deleteCategory(
+    id: number,
+    userId?: string,
+    ipAddress?: string,
+  ): Promise<ServiceResponse<any>> {
     try {
       // Validate ID
       if (!id || id <= 0) {
@@ -243,6 +274,16 @@ export class CategoryService {
           message: "Failed to delete category",
           data: null,
         };
+      }
+
+      if (userId) {
+        await auditService.createLog({
+          userId,
+          action: "delete",
+          entity: "category",
+          entityId: id.toString(),
+          ipAddress,
+        });
       }
 
       return {

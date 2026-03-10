@@ -73,8 +73,13 @@ export class CategoryController {
         return;
       }
 
+      const userId = (req as any).user?.id || "";
+      const ipAddress = req.ip || "";
+
       const result = await categoryService.createCategory(
         validation.data as any,
+        userId,
+        ipAddress,
       );
       res.status(201).json(result);
     } catch (err: any) {
@@ -112,9 +117,14 @@ export class CategoryController {
         return;
       }
 
+      const userId = (req as any).user?.id || "";
+      const ipAddress = req.ip || "";
+
       const result = await categoryService.updateCategory(
         categoryId,
         validation.data as any,
+        userId,
+        ipAddress,
       );
       if (!result.success) {
         res.status(404).json(result);
@@ -147,7 +157,14 @@ export class CategoryController {
         return;
       }
 
-      const result = await categoryService.deleteCategory(categoryId);
+      const userId = (req as any).user?.id || "";
+      const ipAddress = req.ip || "";
+
+      const result = await categoryService.deleteCategory(
+        categoryId,
+        userId,
+        ipAddress,
+      );
       if (!result.success) {
         res.status(404).json(result);
         return;

@@ -55,6 +55,9 @@ export const logsEntityEnum = pgEnum("logs_entity", [
   "item",
   "fine",
   "Users",
+  "category",
+  "collection",
+  "reservation",
 ]);
 
 export const recommendationStatusEnum = pgEnum("recommendation_status", [
