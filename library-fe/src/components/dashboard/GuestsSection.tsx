@@ -1,6 +1,6 @@
 // src/components/dashboard/GuestsSection.tsx
 import { Link } from "react-router";
-import { Plus, Trash2, Users, ArrowRight, UserPlus } from "lucide-react";
+import { Trash2, Users, ArrowRight, UserPlus } from "lucide-react";
 
 interface GuestLog {
   id: string;
@@ -20,12 +20,11 @@ interface GuestsSectionProps {
   onRefresh: () => void;
 }
 
-export default function GuestsSection({ 
-  guests, 
-  searchTerm, 
-  onSearchChange,
+export default function GuestsSection({
+  guests,
+  searchTerm,
   onDelete,
-  onRefresh
+  onRefresh,
 }: GuestsSectionProps) {
   const filteredGuests = guests.filter(
     (item) =>
@@ -41,13 +40,13 @@ export default function GuestsSection({
       <div className="p-8 flex items-center justify-between border-b border-slate-50">
         <h3 className="text-xl font-bold text-slate-900">Data Pengunjung</h3>
         <div className="flex items-center gap-4">
-          <Link 
-            to="/dashboard/super-admin/guests/add" 
+          <Link
+            to="/dashboard/super-admin/guests/add"
             className="bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-red-900/20 hover:bg-[#a01818] transition-all"
           >
             <UserPlus size={16} /> Tambah Pengunjung
           </Link>
-          <button 
+          <button
             onClick={onRefresh}
             className="text-[#B91C1C] text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all"
           >
@@ -74,15 +73,22 @@ export default function GuestsSection({
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filteredGuests.map((guest) => (
-                <tr key={guest.id} className="hover:bg-slate-50/50 transition-colors group">
+                <tr
+                  key={guest.id}
+                  className="hover:bg-slate-50/50 transition-colors group"
+                >
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold">
                         {guest.name[0]}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900 text-sm">{guest.name}</p>
-                        <p className="text-[11px] text-slate-400 font-medium">{guest.email}</p>
+                        <p className="font-bold text-slate-900 text-sm">
+                          {guest.name}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium">
+                          {guest.email}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -92,12 +98,16 @@ export default function GuestsSection({
                     </span>
                   </td>
                   <td className="px-6 py-5 text-center">
-                    <p className="text-xs font-bold text-slate-700 uppercase">{guest.faculty}</p>
-                    <p className="text-[10px] text-slate-400 font-medium italic">{guest.major}</p>
+                    <p className="text-xs font-bold text-slate-700 uppercase">
+                      {guest.faculty}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium italic">
+                      {guest.major}
+                    </p>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <button 
-                      onClick={() => onDelete(guest.id, guest.name)} 
+                    <button
+                      onClick={() => onDelete(guest.id, guest.name)}
                       className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all shadow-sm"
                     >
                       <Trash2 size={18} />

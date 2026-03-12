@@ -18,14 +18,10 @@ import {
   Search,
   LogOut,
   Home,
-  Trash2,
-  Edit,
-  LayoutDashboard,
-  Bell,
   ScanLine,
   Tag,
   BarChart3,
-  Home
+  Bell,
 } from "lucide-react";
 
 import { API_BASE_URL } from "@/lib/api-config";
@@ -72,7 +68,7 @@ interface Stats {
 export default function SuperAdminDashboard() {
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
-  
+
   // State untuk data
   const [collections, setCollections] = useState<Collection[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -84,7 +80,7 @@ export default function SuperAdminDashboard() {
     activeBorrowings: 346,
     totalFines: 50000,
   });
-  
+
   // State untuk UI
   const [searchTerm, setSearchTerm] = useState("");
   const [activeMenu, setActiveMenu] = useState<
@@ -98,7 +94,9 @@ export default function SuperAdminDashboard() {
     try {
       const collectionsRes = await fetch(`${API_BASE_URL}/api/collections`);
       const collectionsData = await collectionsRes.json();
-      const collectionsList = collectionsData.success ? collectionsData.data : [];
+      const collectionsList = collectionsData.success
+        ? collectionsData.data
+        : [];
       setCollections(collectionsList);
 
       const categoriesRes = await fetch(`${API_BASE_URL}/api/categories`);
@@ -147,39 +145,39 @@ export default function SuperAdminDashboard() {
   const handleDeleteCategory = async (id: number, name: string) => {
     if (!confirm(`Hapus kategori "${name}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, { 
-        method: "DELETE", 
-        credentials: "include" 
+      const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
+        method: "DELETE",
+        credentials: "include",
       });
       if ((await res.json()).success) fetchData();
-    } catch (error) { 
-      console.error(error); 
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handleDeleteCollection = async (id: string, title: string) => {
     if (!confirm(`Hapus koleksi "${title}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/collections/${id}`, { 
-        method: "DELETE", 
-        credentials: "include" 
+      const res = await fetch(`${API_BASE_URL}/api/collections/${id}`, {
+        method: "DELETE",
+        credentials: "include",
       });
       if ((await res.json()).success) fetchData();
-    } catch (error) { 
-      console.error(error); 
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handleDeleteGuest = async (id: string, name: string) => {
     if (!confirm(`Hapus log pengunjung "${name}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/guests/${id}`, { 
-        method: "DELETE", 
-        credentials: "include" 
+      const res = await fetch(`${API_BASE_URL}/api/guests/${id}`, {
+        method: "DELETE",
+        credentials: "include",
       });
       if ((await res.json()).success) fetchData();
-    } catch (error) { 
-      console.error(error); 
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -188,10 +186,10 @@ export default function SuperAdminDashboard() {
     switch (activeMenu) {
       case "dashboard":
         return <DashboardSection stats={stats} />;
-      
+
       case "collections":
         return (
-          <CollectionsSection 
+          <CollectionsSection
             collections={collections}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -199,10 +197,10 @@ export default function SuperAdminDashboard() {
             onRefresh={fetchData}
           />
         );
-      
+
       case "categories":
         return (
-          <CategoriesSection 
+          <CategoriesSection
             categories={categories}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -210,10 +208,10 @@ export default function SuperAdminDashboard() {
             onRefresh={fetchData}
           />
         );
-      
+
       case "guests":
         return (
-          <GuestsSection 
+          <GuestsSection
             guests={guests}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -221,10 +219,10 @@ export default function SuperAdminDashboard() {
             onRefresh={fetchData}
           />
         );
-      
+
       case "reports":
         return <ReportsSection />;
-      
+
       default:
         return <DashboardSection stats={stats} />;
     }
@@ -243,7 +241,9 @@ export default function SuperAdminDashboard() {
             />
           </div>
           <div>
-            <h1 className="text-white text-sm font-bold tracking-tight">UMC Library</h1>
+            <h1 className="text-white text-sm font-bold tracking-tight">
+              UMC Library
+            </h1>
             <p className="text-slate-500 text-[10px]">Digital Library System</p>
           </div>
         </div>
@@ -253,14 +253,14 @@ export default function SuperAdminDashboard() {
           <button
             onClick={() => setActiveMenu("dashboard")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-              activeMenu === "dashboard" 
-                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" 
+              activeMenu === "dashboard"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
                 : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
             <Home size={18} /> Dashboard
           </button>
-          
+
           <div className="py-4 px-4">
             <div className="h-[1px] bg-slate-800/50 w-full" />
           </div>
@@ -270,11 +270,11 @@ export default function SuperAdminDashboard() {
           </button>
 
           {/* Menu Data Koleksi */}
-          <button 
+          <button
             onClick={() => setActiveMenu("collections")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-              activeMenu === "collections" 
-                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" 
+              activeMenu === "collections"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
                 : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
@@ -282,11 +282,11 @@ export default function SuperAdminDashboard() {
           </button>
 
           {/* Menu Data Pengunjung */}
-          <button 
+          <button
             onClick={() => setActiveMenu("guests")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-              activeMenu === "guests" 
-                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" 
+              activeMenu === "guests"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
                 : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
@@ -294,11 +294,11 @@ export default function SuperAdminDashboard() {
           </button>
 
           {/* Menu Manajemen Kategori */}
-          <button 
+          <button
             onClick={() => setActiveMenu("categories")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-              activeMenu === "categories" 
-                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" 
+              activeMenu === "categories"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
                 : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
@@ -306,11 +306,11 @@ export default function SuperAdminDashboard() {
           </button>
 
           {/* Menu Laporan & Statistik */}
-          <button 
+          <button
             onClick={() => setActiveMenu("reports")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-              activeMenu === "reports" 
-                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" 
+              activeMenu === "reports"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
                 : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
@@ -319,8 +319,8 @@ export default function SuperAdminDashboard() {
         </nav>
 
         <div className="p-4 mt-auto border-t border-slate-800/50">
-          <button 
-            onClick={handleSignOut} 
+          <button
+            onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:text-red-400 transition-all"
           >
             <LogOut size={18} /> Keluar
@@ -358,6 +358,12 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
         </header>
+
+        {loading && (
+          <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
+          </div>
+        )}
 
         <div className="p-10 max-w-7xl mx-auto">
           {/* Render section berdasarkan menu yang dipilih */}

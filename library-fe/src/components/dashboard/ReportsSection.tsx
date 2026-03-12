@@ -1,12 +1,10 @@
 // src/components/dashboard/ReportsSection.tsx
 import { useState } from "react";
-import { Link } from "react-router";
 import {
   Eye,
   BookOpen,
   Wallet,
   Calendar,
-  ArrowRight,
   Clock,
   Award,
   ChevronUp,

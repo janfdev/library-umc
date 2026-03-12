@@ -20,7 +20,6 @@ interface CategoriesSectionProps {
 export default function CategoriesSection({ 
   categories, 
   searchTerm, 
-  onSearchChange,
   onDelete,
   onRefresh
 }: CategoriesSectionProps) {

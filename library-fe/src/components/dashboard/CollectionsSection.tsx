@@ -1,7 +1,6 @@
 // src/components/dashboard/CollectionsSection.tsx
 import { Link, useNavigate } from "react-router";
 import { Plus, Edit, Trash2, Book, ArrowRight } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api-config";
 
 interface Collection {
   id: string;
@@ -27,7 +26,6 @@ interface CollectionsSectionProps {
 export default function CollectionsSection({ 
   collections, 
   searchTerm, 
-  onSearchChange,
   onDelete,
   onRefresh
 }: CollectionsSectionProps) {
