@@ -5,13 +5,11 @@ import Logo from "@/assets/logo_umc.png"
 import {
   Book,
   Users,
-  TrendingUp,
   Search,
   Plus,
   Tag,
   UserPlus,
   LogOut,
-  Home,
   Trash2,
   Edit,
   LayoutDashboard,

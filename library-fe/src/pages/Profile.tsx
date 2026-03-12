@@ -135,15 +135,19 @@ const Profile = () => {
           {/* Content Section */}
           <div className="py-8">
             {activeTab === "riwayat-peminjaman" && (
-              <RiwayatPeminjaman loans={loanHistory} />
+              <RiwayatPeminjaman type="history" />
             )}
 
             {activeTab === "peminjaman-aktif" && (
-              <RiwayatPeminjaman loans={activeLoans} />
+              <RiwayatPeminjaman type="active" />
             )}
 
             {activeTab === "reservasi" && (
-              <ReservationList />
+              <ReservationList 
+                isOpen={true}
+                onClose={() => setActiveTab("riwayat-peminjaman")}
+                memberId={session.user?.id}
+              />
             )}
 
             {activeTab === "tagihan-denda" && (

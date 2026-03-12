@@ -2,7 +2,13 @@
 import { useState, useEffect, useRef } from "react";
 import LogoUmc from "@/assets/logo_umc.png";
 import { authClient } from "@/lib/auth-client";
-import { LogOut, User, ChevronDown, LayoutDashboard, BookOpen } from "lucide-react";
+import {
+  LogOut,
+  User,
+  ChevronDown,
+  LayoutDashboard,
+  BookOpen,
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
 
 // Interface untuk user dari JWT
@@ -11,6 +17,7 @@ interface JwtUser {
   name: string;
   email: string;
   role: string;
+  image?: string;
   token?: string;
 }
 
@@ -18,10 +25,10 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [jwtUser, setJwtUser] = useState<JwtUser | null>(null);
-  
+
   // Ambil session dari SSO
   const { data: session } = authClient.useSession();
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -47,7 +54,7 @@ const Navbar = () => {
             name: "User",
             email: "",
             role: "member",
-            token: token
+            token: token,
           });
         }
       } else {
@@ -62,8 +69,8 @@ const Navbar = () => {
       loadJwtUser();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   // Close dropdown when clicking outside
@@ -110,11 +117,11 @@ const Navbar = () => {
     if (session) {
       await authClient.signOut();
     }
-    
+
     // Hapus data JWT dari localStorage
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_data");
-    
+
     setJwtUser(null);
     setIsDropdownOpen(false);
     navigate("/login");
@@ -132,7 +139,7 @@ const Navbar = () => {
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
-    const names = name.split(' ');
+    const names = name.split(" ");
     if (names.length >= 2) {
       return `${names[0][0]}${names[1][0]}`.toUpperCase();
     }
@@ -142,15 +149,15 @@ const Navbar = () => {
   // Tentukan user aktif (prioritas: SSO > JWT)
   const activeUser = session?.user || jwtUser;
   const isLoggedIn = !!activeUser;
-  
+
   // Tentukan role
-  const isSuperAdmin = 
-    (session?.user as any)?.role === "super_admin" || 
+  const isSuperAdmin =
+    (session?.user as any)?.role === "super_admin" ||
     jwtUser?.role === "super_admin";
 
   // Nama yang ditampilkan
   const displayName = activeUser?.name || (jwtUser ? "User" : "");
-  
+
   // Email yang ditampilkan
   const displayEmail = activeUser?.email || jwtUser?.email || "";
 
@@ -159,7 +166,10 @@ const Navbar = () => {
       {/* NAVBAR UTAMA */}
       <div className="flex justify-between items-center p-4 px-6 bg-white shadow-sm sticky top-0 z-50">
         {/* Logo & Teks */}
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
+        <div
+          className="flex items-center space-x-2 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <img
             src={LogoUmc}
             alt="UMC Library Logo"
@@ -182,16 +192,18 @@ const Navbar = () => {
                 navigate(item.href);
               }}
               className={`hover:text-red-600 transition-colors relative group ${
-                isActive(item.href) ? 'text-red-700 font-semibold' : ''
+                isActive(item.href) ? "text-red-700 font-semibold" : ""
               }`}
             >
               {item.name}
               {isActive(item.href) && (
                 <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-red-700"></span>
               )}
-              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full ${
-                isActive(item.href) ? 'hidden' : ''
-              }`}></span>
+              <span
+                className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full ${
+                  isActive(item.href) ? "hidden" : ""
+                }`}
+              ></span>
             </a>
           ))}
         </nav>
@@ -208,7 +220,7 @@ const Navbar = () => {
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white shadow-sm">
                   {activeUser?.image ? (
                     <img
-                      src={activeUser.image}z
+                      src={activeUser.image}
                       alt={displayName || "User"}
                       className="w-full h-full rounded-full object-cover"
                     />
@@ -222,10 +234,10 @@ const Navbar = () => {
                 <span className="text-sm font-semibold text-gray-800 max-w-[120px] truncate hidden sm:block">
                   {displayName || "User"}
                 </span>
-                <ChevronDown 
+                <ChevronDown
                   className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
-                    isDropdownOpen ? 'rotate-180' : ''
-                  }`} 
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 
@@ -240,10 +252,14 @@ const Navbar = () => {
                     <p className="text-xs text-gray-500 truncate">
                       {displayEmail || "Email tidak tersedia"}
                     </p>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full mt-1 inline-block ${
-                      isSuperAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {isSuperAdmin ? 'Super Admin' : 'Member'}
+                    <span
+                      className={`text-[10px] font-bold px-2 py-1 rounded-full mt-1 inline-block ${
+                        isSuperAdmin
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {isSuperAdmin ? "Super Admin" : "Member"}
                     </span>
                   </div>
 
@@ -299,7 +315,7 @@ const Navbar = () => {
             </div>
           ) : (
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center space-x-2 hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <span>Login</span>
@@ -362,10 +378,10 @@ const Navbar = () => {
         <div className="p-6 flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <div 
-              className="flex items-center space-x-2 cursor-pointer" 
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
               onClick={() => {
-                navigate('/');
+                navigate("/");
                 setIsMenuOpen(false);
               }}
             >
@@ -413,9 +429,9 @@ const Navbar = () => {
                   setIsMenuOpen(false);
                 }}
                 className={`text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors relative ${
-                  isActive(item.href) 
-                    ? 'bg-red-50 text-red-700 font-semibold' 
-                    : 'hover:bg-gray-50 hover:text-red-600'
+                  isActive(item.href)
+                    ? "bg-red-50 text-red-700 font-semibold"
+                    : "hover:bg-gray-50 hover:text-red-600"
                 }`}
               >
                 <span>{item.name}</span>
@@ -427,9 +443,7 @@ const Navbar = () => {
           </nav>
 
           {/* Divider */}
-          {isLoggedIn && (
-            <div className="my-4 border-t border-gray-200"></div>
-          )}
+          {isLoggedIn && <div className="my-4 border-t border-gray-200"></div>}
 
           {/* User Menu / Login - Mobile */}
           <div className="mt-auto pt-4">
@@ -506,7 +520,7 @@ const Navbar = () => {
                     }}
                     className="w-full bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-2 hover:bg-red-100 transition-colors"
                   >
-                    <LogOut className="w-4 h-4"/>
+                    <LogOut className="w-4 h-4" />
                     <span>Keluar</span>
                   </button>
                 </div>
@@ -514,7 +528,7 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => {
-                  navigate('/login');
+                  navigate("/login");
                   setIsMenuOpen(false);
                 }}
                 className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center space-x-2 hover:from-red-700 hover:to-red-800 transition-all duration-200"
