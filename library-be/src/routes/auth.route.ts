@@ -74,7 +74,8 @@ const authController = new AuthController();
  *       500:
  *         description: Server Error
  */
-router.post("/auth/register", authLimiter, authController.register);
+// router.post("/auth/register", authLimiter, authController.register);
+router.post("/auth/register", authController.register);
 
 /**
  * @swagger
@@ -139,7 +140,8 @@ router.post("/auth/register", authLimiter, authController.register);
  *       500:
  *         description: Server Error
  */
-router.post("/auth/login", authLimiter, authController.loginCredential);
+// router.post("/auth/login", authLimiter, authController.loginCredential);
+router.post("/auth/login", authController.loginCredential);
 
 /**
  * @swagger
