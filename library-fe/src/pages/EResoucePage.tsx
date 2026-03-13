@@ -523,7 +523,7 @@ export default function EResourcePage() {
                         value={yearStart}
                         onChange={(e) => setYearStart(e.target.value)}
                         placeholder="2020"
-                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all placeholder:text-slate-300"
+                        className="w-full bg-white text-black border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all placeholder:text-slate-300"
                       />
                     </div>
                     <div className="flex-1">
@@ -535,7 +535,7 @@ export default function EResourcePage() {
                         value={yearEnd}
                         onChange={(e) => setYearEnd(e.target.value)}
                         placeholder="2026"
-                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all placeholder:text-slate-300"
+                        className="w-full bg-white text-black border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all placeholder:text-slate-300"
                       />
                     </div>
                   </div>
