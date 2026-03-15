@@ -1,10 +1,13 @@
 // src/pages/KatalogDetail.tsx
+
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { API_BASE_URL } from '../lib/api-config';
 import Navbar from '@/components/ui/navbar';
 import Footer from '@/components/Footer';
 import ReservationList from '@/components/ReservationList';
+import loanService from '@/services/loanService';
+import { authClient } from '@/lib/auth-client';
 import { 
   Share2, 
   Bookmark, 
@@ -15,10 +18,11 @@ import {
   Bell,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 
-// Interface untuk Collection (sesuai schema backend)
+// ✅ Interface Collection (item di schema backend)
 interface Collection {
   id: string;
   title: string;
@@ -27,7 +31,7 @@ interface Collection {
   publicationYear: number;
   isbn?: string;
   type: string;
-  categoryId: number;  // Perhatikan: categoryId, bukan category_id
+  categoryId: number;
   description?: string;
   image?: string;
   createdAt: string;
@@ -37,58 +41,86 @@ interface Collection {
     name: string;
     description?: string;
   };
+  stock?: number;
 }
 
-// Interface untuk User
+// ✅ Interface User
 interface User {
   id: string;
-  memberId?: string;  // ID di tabel Member
+  memberId?: string;
   name: string;
   email: string;
   role: 'admin' | 'mahasiswa';
   nim?: string;
 }
 
-// Interface untuk Reservation
-interface Reservation {
+// ✅ Interface Loan sesuai schema backend
+// Field: id, memberId, itemId, loanDate, dueDate, returnDate, status, approvedBy, createdAt, updatedAt
+interface LoanRequest {
   id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'active' | 'returned' | 'overdue';
+  itemId: string;      // ✅ bukan collectionId
   memberId: string;
-  collectionId: string;
-  status: 'waiting' | 'fulfilled' | 'canceled';
-  createdAt: string;
-  updatedAt: string;
+  loanDate?: string;   // ✅ bukan startDate
+  dueDate?: string;    // ✅ bukan endDate
+  returnDate?: string;
+  approvedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  member?: Record<string, any>;
+  item?: Record<string, any>;
 }
 
 const KatalogDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
+  // ✅ Ambil session dari authClient
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+
+  // ✅ Bangun currentUser dari session nyata
+  const currentUser: User | null = session?.user
+    ? {
+        id: session.user.id,
+        // Sesuaikan field memberId dengan yang ada di session/DB Anda
+        // Jika memberId sama dengan user id, gunakan session.user.id
+        memberId: (session.user as any).memberId ?? session.user.id,
+        name: session.user.name ?? '',
+        email: session.user.email ?? '',
+        role: ((session.user as any).role as 'admin' | 'mahasiswa') ?? 'mahasiswa',
+        nim: (session.user as any).nim,
+      }
+    : null;
+
   const [collection, setCollection] = useState<Collection | null>(null);
-  const [activeReservations, setActiveReservations] = useState<Reservation[]>([]);
-  const [userReservations, setUserReservations] = useState<Reservation[]>([]);
-  
+  const [activeLoans, setActiveLoans] = useState<LoanRequest[]>([]);
+  const [userLoans, setUserLoans] = useState<LoanRequest[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<LoanRequest[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [showReservationList, setShowReservationList] = useState(false);
   const [borrowLoading, setBorrowLoading] = useState(false);
-  const [notification, setNotification] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+  const [showLoanForm, setShowLoanForm] = useState(false);
+
+  // ✅ Form field disesuaikan dengan schema: loanDate & dueDate
+  const [loanFormData, setLoanFormData] = useState({
+    loanDate: '',
+    dueDate: '',
+    notes: ''
+  });
+
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
     show: false,
     message: '',
     type: 'success'
   });
 
-  // Mock user - ganti dengan auth context yang sebenarnya
-  const [currentUser] = useState<User>({
-    id: 'user-123',
-    memberId: 'member-456',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'mahasiswa',
-    nim: '2021001'
-  });
-
-  // Mock data untuk "Buku Serupa"
   const [similarBooks, setSimilarBooks] = useState([
     { id: '1', title: 'Bulan', author: 'Tere Liye', image: null, color: 'bg-slate-800' },
     { id: '2', title: 'Matahari', author: 'Tere Liye', image: null, color: 'bg-red-900' },
@@ -100,36 +132,54 @@ const KatalogDetail = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // 1. Fetch detail koleksi
+
+        // 1. Fetch detail koleksi/item
         const collectionResponse = await fetch(`${API_BASE_URL}/api/collections/${id}`);
         if (!collectionResponse.ok) throw new Error(`HTTP error! status: ${collectionResponse.status}`);
         const collectionJson = await collectionResponse.json();
-        
+
         if (collectionJson.success && collectionJson.data) {
           setCollection(collectionJson.data);
-          
-          // 2. Fetch semua reservasi aktif untuk buku ini (status fulfilled)
-          const activeResResponse = await fetch(`${API_BASE_URL}/api/reservations?collectionId=${id}&status=fulfilled`);
-          if (activeResResponse.ok) {
-            const activeResJson = await activeResResponse.json();
-            if (activeResJson.success && Array.isArray(activeResJson.data)) {
-              setActiveReservations(activeResJson.data);
+
+          // 2. Fetch active loans untuk item ini
+          // ✅ Gunakan itemId bukan collectionId
+          const activeLoansResponse = await fetch(
+            `${API_BASE_URL}/api/loans?itemId=${id}&status=active`
+          );
+          if (activeLoansResponse.ok) {
+            const activeLoansJson = await activeLoansResponse.json();
+            if (activeLoansJson.success && Array.isArray(activeLoansJson.data)) {
+              setActiveLoans(activeLoansJson.data);
             }
           }
-          
-          // 3. Jika user login, fetch reservasi user untuk buku ini
-          if (currentUser?.memberId) {
-            const userResResponse = await fetch(`${API_BASE_URL}/api/reservations?memberId=${currentUser.memberId}&collectionId=${id}`);
-            if (userResResponse.ok) {
-              const userResJson = await userResResponse.json();
-              if (userResJson.success && Array.isArray(userResJson.data)) {
-                setUserReservations(userResJson.data);
+
+          // 3. Jika user login, fetch loans user untuk item ini
+          const memberId = currentUser?.memberId;
+          if (memberId) {
+            // Fetch pending requests user untuk item ini
+            const pendingResponse = await fetch(
+              `${API_BASE_URL}/api/loans?memberId=${memberId}&itemId=${id}&status=pending`
+            );
+            if (pendingResponse.ok) {
+              const pendingJson = await pendingResponse.json();
+              if (pendingJson.success && Array.isArray(pendingJson.data)) {
+                setPendingRequests(pendingJson.data);
+              }
+            }
+
+            // Fetch active loans user untuk item ini
+            const userLoansResponse = await fetch(
+              `${API_BASE_URL}/api/loans?memberId=${memberId}&itemId=${id}&status=active`
+            );
+            if (userLoansResponse.ok) {
+              const userLoansJson = await userLoansResponse.json();
+              if (userLoansJson.success && Array.isArray(userLoansJson.data)) {
+                setUserLoans(userLoansJson.data);
               }
             }
           }
-          
-          // 4. Fetch similar books berdasarkan kategori yang sama
+
+          // 4. Fetch similar books
           if (collectionJson.data.categoryId) {
             fetchSimilarBooks(collectionJson.data.categoryId);
           }
@@ -155,112 +205,140 @@ const KatalogDetail = () => {
       }
     };
 
-    if (id) fetchData();
+    // ✅ Tunggu session selesai sebelum fetch
+    if (id && !sessionLoading) fetchData();
     window.scrollTo(0, 0);
-  }, [id, currentUser]);
+  }, [id, sessionLoading, currentUser?.memberId]);
 
   // Helper: Cek status buku
   const getBookStatus = (): 'available' | 'borrowed' | 'reserved' => {
-    // Cek apakah ada reservasi aktif (fulfilled) untuk buku ini
-    const isBorrowed = activeReservations.length > 0;
-    
-    if (isBorrowed) return 'borrowed';
-    
-    // Cek apakah user memiliki reservasi waiting
-    const hasUserWaiting = userReservations.some(res => res.status === 'waiting');
-    if (hasUserWaiting) return 'reserved';
-    
+    if (activeLoans.length > 0) return 'borrowed';
+    if (pendingRequests.length > 0) return 'reserved';
     return 'available';
   };
 
-  // Helper: Cek apakah user sudah meminjam buku ini
-  const isUserBorrowing = (): boolean => {
-    return userReservations.some(res => res.status === 'fulfilled');
+  const isUserBorrowing = (): boolean => userLoans.length > 0;
+  const isUserPending = (): boolean => pendingRequests.length > 0;
+
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setLoanFormData({ ...loanFormData, [e.target.name]: e.target.value });
   };
 
-  // Helper: Cek apakah user sudah reservasi (waiting)
-  const isUserWaiting = (): boolean => {
-    return userReservations.some(res => res.status === 'waiting');
-  };
-
-  // Fungsi untuk meminjam buku
-  const handleBorrow = async () => {
-    // Cek apakah user sudah login
+  // Handle klik tombol pinjam
+  const handleBorrow = () => {
     if (!currentUser) {
       navigate('/login');
       return;
     }
-
-    // Cek apakah user sudah meminjam buku ini
     if (isUserBorrowing()) {
-      showNotification('Anda sudah meminjam buku ini', 'error');
+      showNotification('Anda sedang meminjam buku ini', 'error');
+      return;
+    }
+    if (isUserPending()) {
+      showNotification('Anda sudah mengajukan peminjaman untuk buku ini', 'error');
+      return;
+    }
+    if (getBookStatus() === 'borrowed') {
+      if (confirm('Buku sedang dipinjam orang lain. Ingin masuk antrian reservasi?')) {
+        navigate(`/reservasi/${id}`);
+      }
+      return;
+    }
+    setShowLoanForm(true);
+  };
+
+  // Submit form peminjaman
+  const handleSubmitLoan = async () => {
+    // ✅ Validasi lengkap sebelum kirim request
+    if (!currentUser) {
+      showNotification('Anda harus login terlebih dahulu', 'error');
+      navigate('/login');
       return;
     }
 
-    // Cek apakah user sudah waiting
-    if (isUserWaiting()) {
-      showNotification('Anda sudah melakukan reservasi untuk buku ini', 'error');
+    if (!currentUser.memberId) {
+      showNotification('ID member tidak ditemukan. Silakan login ulang.', 'error');
       return;
     }
 
-    // Cek status buku
-    const bookStatus = getBookStatus();
-    if (bookStatus === 'borrowed') {
-      showNotification('Buku sedang dipinjam orang lain', 'error');
+    if (!collection?.id) {
+      showNotification('Data buku tidak ditemukan', 'error');
+      return;
+    }
+
+    if (!loanFormData.loanDate || !loanFormData.dueDate) {
+      showNotification('Pilih tanggal peminjaman dan pengembalian', 'error');
+      return;
+    }
+
+    // Validasi tanggal
+    const start = new Date(loanFormData.loanDate);
+    const end = new Date(loanFormData.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (start < today) {
+      showNotification('Tanggal peminjaman tidak boleh kurang dari hari ini', 'error');
+      return;
+    }
+
+    if (end <= start) {
+      showNotification('Tanggal pengembalian harus setelah tanggal peminjaman', 'error');
+      return;
+    }
+
+    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+    if (diffDays > 14) {
+      showNotification('Maksimal peminjaman 14 hari', 'error');
       return;
     }
 
     setBorrowLoading(true);
     try {
-      // Kirim request peminjaman (status: waiting)
-      const response = await fetch(`${API_BASE_URL}/api/reservations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          memberId: currentUser.memberId,
-          collectionId: collection?.id,
-          status: 'waiting' // Menunggu konfirmasi petugas
-        }),
+      // ✅ Kirim dengan field sesuai schema backend
+      const loan = await loanService.requestLoan({
+        memberId: currentUser.memberId,   // ✅ ID dari session nyata
+        itemId: collection.id,             // ✅ itemId bukan collectionId
+        loanDate: loanFormData.loanDate,  // ✅ loanDate bukan startDate
+        dueDate: loanFormData.dueDate,    // ✅ dueDate bukan endDate
+        notes: loanFormData.notes
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        showNotification('Permintaan peminjaman berhasil dikirim! Menunggu konfirmasi petugas.', 'success');
-        
-        // Update user reservations
-        setUserReservations([...userReservations, data.data]);
-      } else {
-        throw new Error(data.message || 'Gagal melakukan peminjaman');
-      }
+      showNotification('Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.', 'success');
+      setPendingRequests([...pendingRequests, loan as any]);
+      setShowLoanForm(false);
+      setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
+
     } catch (error) {
-      showNotification(error instanceof Error ? error.message : 'Terjadi kesalahan', 'error');
+      showNotification(
+        error instanceof Error ? error.message : 'Terjadi kesalahan saat mengajukan peminjaman',
+        'error'
+      );
     } finally {
       setBorrowLoading(false);
     }
   };
 
-  // Fungsi untuk cek daftar reservasi user (modal)
-  const handleCheckReservations = () => {
+  const handleCheckLoans = () => {
     if (!currentUser) {
       navigate('/login');
       return;
     }
-    setShowReservationList(true);
+    navigate('/loans/history');
   };
 
-  const showNotification = (message: string, type: 'success' | 'error') => {
+  const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 5000);
   };
 
   const bookStatus = getBookStatus();
   const isBorrowing = isUserBorrowing();
-  const isWaiting = isUserWaiting();
+  const isPending = isUserPending();
 
-  if (loading) return (
+  // ✅ Loading saat session atau data sedang dimuat
+  if (loading || sessionLoading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-700"></div>
     </div>
@@ -273,18 +351,113 @@ const KatalogDetail = () => {
       {/* Notification Toast */}
       {notification.show && (
         <div className={`fixed top-4 right-4 z-50 p-4 rounded-2xl shadow-lg border ${
-          notification.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+          notification.type === 'success' ? 'bg-green-50 border-green-200' :
+          notification.type === 'error' ? 'bg-red-50 border-red-200' :
+          'bg-blue-50 border-blue-200'
         } flex items-center gap-3 animate-slide-down`}>
           {notification.type === 'success' ? (
             <CheckCircle size={20} className="text-green-600" />
-          ) : (
+          ) : notification.type === 'error' ? (
             <XCircle size={20} className="text-red-600" />
+          ) : (
+            <AlertCircle size={20} className="text-blue-600" />
           )}
           <p className={`text-sm font-medium ${
-            notification.type === 'success' ? 'text-green-800' : 'text-red-800'
+            notification.type === 'success' ? 'text-green-800' :
+            notification.type === 'error' ? 'text-red-800' :
+            'text-blue-800'
           }`}>
             {notification.message}
           </p>
+        </div>
+      )}
+
+      {/* Modal Form Peminjaman */}
+      {showLoanForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Ajukan Peminjaman Buku</h3>
+
+            <div className="space-y-4 mb-6">
+              {/* Info Buku */}
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <p className="font-medium text-slate-900">{collection?.title}</p>
+                <p className="text-sm text-slate-600">{collection?.author}</p>
+              </div>
+
+              {/* ✅ Tanggal Peminjaman — field: loanDate */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Tanggal Peminjaman
+                </label>
+                <input
+                  type="date"
+                  name="loanDate"
+                  value={loanFormData.loanDate}
+                  onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
+                  required
+                />
+              </div>
+
+              {/* ✅ Tanggal Pengembalian — field: dueDate */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Tanggal Pengembalian
+                </label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={loanFormData.dueDate}
+                  onChange={handleInputChange}
+                  min={loanFormData.loanDate || new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
+                  required
+                />
+              </div>
+
+              {/* Catatan */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Catatan (opsional)
+                </label>
+                <textarea
+                  name="notes"
+                  value={loanFormData.notes}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: untuk tugas akhir, dll"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
+                  rows={3}
+                />
+              </div>
+
+              <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl space-y-1">
+                <p>• Maksimal peminjaman 14 hari</p>
+                <p>• Denda keterlambatan Rp 2.000/hari</p>
+                <p>• Permintaan akan diproses oleh petugas</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowLoanForm(false);
+                  setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
+                }}
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSubmitLoan}
+                disabled={borrowLoading}
+                className="flex-1 bg-[#9a1b1b] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#7a1515] disabled:bg-slate-400 transition-all"
+              >
+                {borrowLoading ? 'Memproses...' : 'Ajukan Peminjaman'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -313,12 +486,12 @@ const KatalogDetail = () => {
             </div>
             <div className="flex gap-5">
               {[
-                { icon: <Share2 size={18} />, label: "Bagikan", onClick: () => {/* Implement share */} },
-                { icon: <Bookmark size={18} />, label: "Simpan", onClick: () => {/* Implement bookmark */} },
-                { icon: <QrCode size={18} />, label: "QR Code", onClick: () => {/* Implement QR */} }
+                { icon: <Share2 size={18} />, label: 'Bagikan', onClick: () => {} },
+                { icon: <Bookmark size={18} />, label: 'Simpan', onClick: () => {} },
+                { icon: <QrCode size={18} />, label: 'QR Code', onClick: () => {} }
               ].map((btn, idx) => (
-                <button 
-                  key={idx} 
+                <button
+                  key={idx}
                   onClick={btn.onClick}
                   className="flex flex-col items-center gap-1.5 group"
                 >
@@ -333,17 +506,17 @@ const KatalogDetail = () => {
 
           {/* Sisi Kanan - Konten */}
           <div className="md:w-[65%] p-8 md:p-10 flex flex-col">
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 flex-wrap">
               {/* Status Badge */}
               {isBorrowing ? (
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-purple-50 text-purple-600">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                   Sedang Anda Pinjam
                 </span>
-              ) : isWaiting ? (
+              ) : isPending ? (
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-yellow-50 text-yellow-600">
                   <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-                  Menunggu Konfirmasi
+                  Menunggu Persetujuan
                 </span>
               ) : bookStatus === 'available' ? (
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-green-50 text-green-600">
@@ -356,15 +529,25 @@ const KatalogDetail = () => {
                   Sedang Dipinjam
                 </span>
               )}
-              
+
               <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
                 {collection?.type === 'physical_book' ? 'Buku Fisik' : 'E-Book'}
               </span>
+
+              {collection?.stock !== undefined && (
+                <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
+                  Stok: {collection.stock - activeLoans.length}
+                </span>
+              )}
             </div>
-            
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-1 tracking-tight">{collection?.title}</h1>
-            <p className="text-md text-slate-400 font-medium mb-8">Oleh <span className="text-red-600 font-bold">{collection?.author}</span></p>
-            
+
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-1 tracking-tight">
+              {collection?.title}
+            </h1>
+            <p className="text-md text-slate-400 font-medium mb-8">
+              Oleh <span className="text-red-600 font-bold">{collection?.author}</span>
+            </p>
+
             <div className="grid grid-cols-3 gap-4 mb-8 border-b border-slate-50 pb-8">
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ISBN</p>
@@ -382,20 +565,16 @@ const KatalogDetail = () => {
 
             <div className="mb-10 flex-grow">
               <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase tracking-tight">Sinopsis</h3>
-              <p className="text-slate-600 leading-relaxed text-sm">{collection?.description || 'Deskripsi tidak tersedia.'}</p>
+              <p className="text-slate-600 leading-relaxed text-sm">
+                {collection?.description || 'Deskripsi tidak tersedia.'}
+              </p>
             </div>
 
             {/* Tombol Aksi */}
             <div className="flex gap-3 mt-auto">
-              {/* Tombol PINJAM BUKU - untuk meminjam */}
-              <button 
+              <button
                 onClick={handleBorrow}
-                disabled={
-                  borrowLoading || 
-                  isBorrowing || 
-                  isWaiting || 
-                  bookStatus === 'borrowed'
-                }
+                disabled={borrowLoading || isBorrowing}
                 className="flex-[2] bg-[#9a1b1b] hover:bg-[#7a1515] disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
               >
                 {borrowLoading ? (
@@ -404,44 +583,36 @@ const KatalogDetail = () => {
                     Memproses...
                   </>
                 ) : isBorrowing ? (
-                  <>
-                    <CheckCircle size={18} /> 
-                    Sedang Anda Pinjam
-                  </>
-                ) : isWaiting ? (
-                  <>
-                    <Clock size={18} /> 
-                    Menunggu Konfirmasi
-                  </>
+                  <><CheckCircle size={18} /> Sedang Anda Pinjam</>
+                ) : isPending ? (
+                  <><Clock size={18} /> Menunggu Persetujuan</>
                 ) : bookStatus === 'borrowed' ? (
-                  <>
-                    <Calendar size={18} /> 
-                    Tidak Tersedia
-                  </>
+                  <><Calendar size={18} /> Reservasi Buku</>
                 ) : (
-                  <>
-                    <Bookmark size={18} /> 
-                    Pinjam Buku
-                  </>
+                  <><Bookmark size={18} /> Pinjam Buku</>
                 )}
               </button>
-              
-              {/* Tombol CEK RESERVASI - untuk melihat daftar reservasi user */}
+
               {currentUser && (
-                <button 
-                  onClick={handleCheckReservations}
+                <button
+                  onClick={handleCheckLoans}
                   className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
                 >
-                  <Bell size={18} /> 
-                  Cek Reservasi Saya
+                  <Bell size={18} />
+                  Cek Status
                 </button>
               )}
             </div>
 
-            {/* Info untuk user yang belum login */}
             {!currentUser && (
               <p className="text-xs text-center text-slate-400 mt-4">
                 Silakan <Link to="/login" className="text-red-700 font-bold">login</Link> untuk meminjam buku
+              </p>
+            )}
+
+            {isPending && (
+              <p className="text-xs text-center text-yellow-600 mt-3 bg-yellow-50 p-2 rounded-xl">
+                Permintaan peminjaman Anda sedang diproses oleh petugas.
               </p>
             )}
           </div>
@@ -468,8 +639,8 @@ const KatalogDetail = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {similarBooks.map((book) => (
-              <Link 
-                key={book.id} 
+              <Link
+                key={book.id}
                 to={`/katalog/${book.id}`}
                 className="group bg-white p-4 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300"
               >
@@ -496,7 +667,7 @@ const KatalogDetail = () => {
 
       {/* Modal Daftar Reservasi User */}
       {currentUser && (
-        <ReservationList 
+        <ReservationList
           isOpen={showReservationList}
           onClose={() => setShowReservationList(false)}
           memberId={currentUser.memberId}

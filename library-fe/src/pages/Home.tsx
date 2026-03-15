@@ -152,7 +152,7 @@ export default function Home() {
 
           {/* Card 2 */}
           <a
-            href="#"
+            href="e-resource"
             className="flex flex-col items-center text-center shadow-lg rounded-lg p-6 bg-white hover:shadow-xl transition-shadow h-full"
           >
             <span>

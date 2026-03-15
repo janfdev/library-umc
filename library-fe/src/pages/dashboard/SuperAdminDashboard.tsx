@@ -10,10 +10,12 @@ import CollectionsSection from "@/components/dashboard/CollectionsSection";
 import CategoriesSection from "@/components/dashboard/CategoriesSection";
 import GuestsSection from "@/components/dashboard/GuestsSection";
 import ReportsSection from "@/components/dashboard/ReportsSection";
+import LoansSection from "@/components/dashboard/LoansSection";
 
 // Import icons untuk sidebar
 import {
   Book,
+  BookOpen,
   Users,
   Search,
   LogOut,
@@ -84,7 +86,7 @@ export default function SuperAdminDashboard() {
   // State untuk UI
   const [searchTerm, setSearchTerm] = useState("");
   const [activeMenu, setActiveMenu] = useState<
-    "dashboard" | "collections" | "categories" | "guests" | "reports"
+    "dashboard" | "collections" | "categories" | "guests" | "reports" | "loans"
   >("dashboard");
   const [loading, setLoading] = useState(false);
 
@@ -220,6 +222,14 @@ export default function SuperAdminDashboard() {
           />
         );
 
+      case "loans":
+        return (
+          <LoansSection 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+        );
+
       case "reports":
         return <ReportsSection />;
 
@@ -237,7 +247,7 @@ export default function SuperAdminDashboard() {
             <img
               src={Logo}
               alt="UMC Library Logo"
-              className="w-10 h-10 rounded-full sm:w-12 sm:h-12"
+              className="w-10 h-10 rounded-full"
             />
           </div>
           <div>
@@ -265,6 +275,7 @@ export default function SuperAdminDashboard() {
             <div className="h-[1px] bg-slate-800/50 w-full" />
           </div>
 
+          {/* Menu Sirkulasi & Scan */}
           <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
             <ScanLine size={18} /> Sirkulasi & Scan
           </button>
@@ -291,6 +302,18 @@ export default function SuperAdminDashboard() {
             }`}
           >
             <Users size={18} /> Data Pengunjung
+          </button>
+
+          {/* Menu Peminjaman & Persetujuan */}
+          <button
+            onClick={() => setActiveMenu("loans")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+              activeMenu === "loans"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
+            }`}
+          >
+            <BookOpen size={18} /> Peminjaman & Persetujuan
           </button>
 
           {/* Menu Manajemen Kategori */}
@@ -351,7 +374,7 @@ export default function SuperAdminDashboard() {
                   {session?.user?.name || "Admin"}
                 </p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Admin Role
+                  Super Admin
                 </p>
               </div>
               <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm" />
@@ -360,7 +383,7 @@ export default function SuperAdminDashboard() {
         </header>
 
         {loading && (
-          <div className="flex items-center justify-center h-screen">
+          <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
           </div>
         )}
