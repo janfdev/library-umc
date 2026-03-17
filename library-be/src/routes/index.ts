@@ -12,6 +12,7 @@ import finesRoutes from "./fines.route";
 import { recommendationRoutes } from "./recommendations.route";
 import { auditRoutes } from "./audit.route";
 import { reportRoutes } from "./report.route";
+import { locationRoutes } from "./location.route";
 
 const router = Router();
 
@@ -53,5 +54,8 @@ router.use(auditRoutes);
 
 // Reports & Export
 router.use(reportRoutes);
+
+// Locations (Rak & Ruangan)
+router.use(locationRoutes);
 
 export const routes = router;
