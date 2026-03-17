@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useNavigate } from "react-router";
 import Navbar from "@/components/ui/navbar";
@@ -6,11 +6,25 @@ import Footer from "@/components/Footer";
 import RiwayatPeminjaman from "@/components/RiwayatPeminjaman";
 import MemberCard from "@/components/MemberCard";
 import ReservationList from "@/components/ReservationList";
+import memberService, { type MemberProfile, type UpdateProfilePayload } from "@/services/memberService";
 
 const Profile = () => {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("riwayat-peminjaman");
+
+  // ── State untuk data member dari API ──────────────────
+  const [member, setMember] = useState<MemberProfile | null>(null);
+
+  // ── State form edit profil ─────────────────────────────
+  const [editForm, setEditForm] = useState<UpdateProfilePayload>({
+    nimNidn: "",
+    faculty: "",
+    phone: "",
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   // Redirect ke login jika tidak ada session
   useEffect(() => {
@@ -19,17 +33,57 @@ const Profile = () => {
     }
   }, [session, isPending, navigate]);
 
-  // Data dummy untuk development (akan diganti dengan API nanti)
-  const activeLoans = [
-    { id: "1", bookTitle: "Basis Data Dasar", loanDate: "1 Februari 2026", returnDate: "8 Februari 2026", status: "Tepat Waktu" },
-    { id: "2", bookTitle: "Metode Penelitian", loanDate: "21 Januari 2026", returnDate: "28 Januari 2026", status: "Tepat Waktu" },
-    { id: "3", bookTitle: "Pemrograman Dasar", loanDate: "21 Januari 2026", returnDate: "28 Januari 2026", status: "Tepat Waktu" },
-  ];
+  // Fetch profil member dari API
+  const fetchMemberProfile = useCallback(async () => {
+    if (!session) return;
+    try {
+      const profile = await memberService.getMyProfile();
+      setMember(profile);
+      setEditForm({
+        nimNidn: profile.nimNidn ?? "",
+        faculty: profile.faculty ?? "",
+        phone: profile.phone ?? "",
+      });
+    } catch {
+      // Member belum ada di DB atau error — pakai fallback dari session
+      setMember(null);
+    }
+  }, [session]);
 
-  const loanHistory = [
-    { id: "1", bookTitle: "Basis Data Dasar", loanDate: "15 Desember 2025", returnDate: "22 Desember 2025", status: "Tepat Waktu" },
-    { id: "2", bookTitle: "Metode Penelitian", loanDate: "5 Desember 2025", returnDate: "12 Desember 2025", status: "Tepat Waktu" },
-  ];
+  useEffect(() => {
+    fetchMemberProfile();
+  }, [fetchMemberProfile]);
+
+  // Handler simpan edit profil
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError(null);
+    setEditSuccess(false);
+    try {
+      const updated = await memberService.updateMyProfile({
+        nimNidn: editForm.nimNidn || undefined,
+        faculty: editForm.faculty || undefined,
+        phone: editForm.phone || undefined,
+      });
+      setMember(updated);
+      setEditSuccess(true);
+      setTimeout(() => setEditSuccess(false), 3000);
+    } catch (err: unknown) {
+      setEditError(
+        err instanceof Error ? err.message : "Gagal menyimpan perubahan"
+      );
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ── Data gabungan: API + session fallback ──────────────
+  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || "User";
+  const userEmail = session?.user?.email || "email@domain.com";
+  const userImage = session?.user?.image || null;
+  const userNim   = member?.nimNidn    || String((session?.user as any)?.nim || "202400000");
+  const userFaculty = member?.faculty  || (session?.user as any)?.jurusan || "Teknik Informatika";
 
   // Loading state
   if (isPending) {
@@ -43,17 +97,9 @@ const Profile = () => {
     );
   }
 
-  // Error state jika session null setelah loading selesai
   if (!session) {
     return null;
   }
-
-  // Ambil data user dari session
-  const userName = session.user?.name || session.user?.email?.split('@')[0] || "User";
-  const userEmail = session.user?.email || "email@domain.com";
-  const userImage = session.user?.image || null;
-  const userNim = String((session.user as any)?.nim || "202400000");
-  const userJurusan = (session.user as any)?.jurusan || "Teknik Informatika";
 
   return (
     <>
@@ -97,7 +143,7 @@ const Profile = () => {
               <h1 className="text-3xl font-extrabold text-gray-900 drop-shadow-sm">
                 {userName}
               </h1>
-              <p className="text-lg font-medium text-blue-400">{userJurusan}</p>
+              <p className="text-lg font-medium text-blue-400">{userFaculty}</p>
               <p className="text-sm text-gray-400 mt-1">{userEmail}</p>
               <p className="text-sm text-gray-500 mt-1">NIM: {userNim}</p>
             </div>
@@ -106,11 +152,12 @@ const Profile = () => {
           {/* Navigasi Tab */}
           <div className="flex flex-wrap gap-4 md:gap-8 border-b border-gray-100 mt-12 pb-0">
             {[
-              { id: "peminjaman-aktif", label: "Peminjaman Aktif", count: activeLoans.length },
-              { id: "riwayat-peminjaman", label: "Riwayat Peminjaman", count: loanHistory.length },
-              { id: "reservasi", label: "Reservasi", count: 0 },
-              { id: "tagihan-denda", label: "Tagihan & Denda", count: 0 },
-              { id: "kartu-member", label: "Kartu Member", count: 0 }
+              { id: "peminjaman-aktif",   label: "Peminjaman Aktif" },
+              { id: "riwayat-peminjaman", label: "Riwayat Peminjaman" },
+              { id: "reservasi",          label: "Reservasi" },
+              { id: "tagihan-denda",      label: "Tagihan & Denda" },
+              { id: "kartu-member",       label: "Kartu Member" },
+              { id: "edit-profil",        label: "Edit Profil" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -120,11 +167,6 @@ const Profile = () => {
                 }`}
               >
                 {tab.label}
-                {tab.count && tab.count > 0 && (
-                  <span className="absolute -top-1 -right-3 text-[10px] font-bold text-white bg-red-600 px-1.5 py-0.5 rounded-full">
-                    {tab.count}
-                  </span>
-                )}
                 {activeTab === tab.id && (
                   <div className="absolute bottom-0 left-0 w-full h-[3px] bg-red-700 rounded-full" />
                 )}
@@ -169,12 +211,127 @@ const Profile = () => {
               <MemberCard
                 name={userName}
                 nim={userNim}
-                major={userJurusan}
+                major={userFaculty}
                 category="Mahasiswa"
                 onPrint={() => {
                   alert(`Kartu anggota ${userName} sedang dicetak...`);
                 }}
               />
+            )}
+
+            {/* ── Tab Edit Profil (BARU) ──────────────────── */}
+            {activeTab === "edit-profil" && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-1">Edit Profil</h2>
+                <p className="text-sm text-gray-400 mb-6">
+                  Perbarui data NIM/NIDN, fakultas, dan nomor telepon kamu
+                </p>
+
+                {editSuccess && (
+                  <div className="mb-5 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium">
+                    ✓ Profil berhasil diperbarui!
+                  </div>
+                )}
+
+                {editError && (
+                  <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+                    {editError}
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveProfile} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      NIM / NIDN
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: 20240001"
+                      value={editForm.nimNidn ?? ""}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, nimNidn: e.target.value }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Fakultas / Jurusan
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Teknik Informatika"
+                      value={editForm.faculty ?? ""}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, faculty: e.target.value }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Nomor Telepon
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="Contoh: 08123456789"
+                      value={editForm.phone ?? ""}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, phone: e.target.value }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition"
+                    />
+                  </div>
+
+                  {/* Read-only: nama & email */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Nama Lengkap
+                      </label>
+                      <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-400">
+                        {userName}
+                        <span className="float-right text-xs italic">hanya baca</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Email
+                      </label>
+                      <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-400 truncate">
+                        {userEmail}
+                        <span className="float-right text-xs italic">hanya baca</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditForm({
+                          nimNidn: member?.nimNidn ?? "",
+                          faculty: member?.faculty ?? "",
+                          phone: member?.phone ?? "",
+                        });
+                        setEditError(null);
+                      }}
+                      className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition-all"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editLoading}
+                      className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all"
+                    >
+                      {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                    </button>
+                  </div>
+                </form>
+              </div>
             )}
           </div>
         </div>

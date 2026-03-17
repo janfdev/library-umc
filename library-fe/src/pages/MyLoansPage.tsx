@@ -1,6 +1,5 @@
 // src/pages/MyLoansPage.tsx
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
 import { 
@@ -10,17 +9,8 @@ import {
   AlertCircle, 
   CheckCircle, 
   XCircle,
-  Calendar,
-  Clock,
-  ChevronRight,
-  Filter,
-  Info,
-  Bell,
-  Bookmark,
-  ArrowLeft
+  Filter
 } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { API_BASE_URL } from "@/lib/api-config";
 
 // Tipe data untuk peminjaman
 interface Loan {
@@ -50,8 +40,6 @@ interface User {
 }
 
 export default function MyLoansPage() {
-  const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [loans, setLoans] = useState<Loan[]>([]);
