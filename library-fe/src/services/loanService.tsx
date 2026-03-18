@@ -1,28 +1,27 @@
-// src/services/loanService.ts
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/utils/api-config';
 
 export interface Loan {
   id: string;
   requestId?: string;
-  itemId: string;           // ✅ ganti dari collectionId → itemId
+  itemId: string;           
   memberId: string;
   memberName?: string;
   memberNim?: string;
   collectionTitle?: string;
   collectionAuthor?: string;
-  loanDate: string;         // ✅ ganti dari startDate → loanDate
-  dueDate: string;          // ✅ ganti dari endDate → dueDate
-  returnDate?: string;      // ✅ ganti dari returnedAt → returnDate
-  status: 'pending' | 'approved' | 'rejected' | 'active' | 'returned' | 'overdue';
+  loanDate: string;         
+  dueDate: string;          
+  returnDate?: string;      
+  status: 'pending' | 'approved' | 'rejected' | 'returned' | 'extended';
   requestDate?: string;
-  approvedBy?: string;      // ✅ ganti dari approvedAt → approvedBy (sesuai schema)
+  approvedBy?: string;     
   createdAt?: string;
   updatedAt?: string;
   notes?: string;
   rejectReason?: string;
   fine?: number;
-  member?: Record<string, any>;
-  item?: Record<string, any>;
+  member?: Record<string, unknown>;
+  item?: Record<string, unknown>;
 }
 
 class LoanService {
@@ -112,7 +111,7 @@ class LoanService {
   }
 
   // GET /loans/verify/{token} - Verify loan token
-  async verifyLoanToken(token: string): Promise<any> {
+  async verifyLoanToken(token: string): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}/api/loans/verify/${token}`, {
       credentials: 'include',
     });

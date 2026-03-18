@@ -1,7 +1,7 @@
 // src/pages/Register.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { API_BASE_URL } from "@/lib/api-config";
+import { API_BASE_URL } from "@/utils/api-config";
 import { Mail, Lock, User, UserCircle2, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 
 const Register = () => {

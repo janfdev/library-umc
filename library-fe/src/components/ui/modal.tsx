@@ -1,7 +1,7 @@
 import React, { type ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 interface ModalProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Calendar, AlertCircle } from 'lucide-react'; // ✅ Hapus Clock (tidak digunakan)
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/utils/api-config';
 
 interface Loan {
   id: string;

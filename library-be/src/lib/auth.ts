@@ -44,8 +44,16 @@ export const auth = betterAuth({
   },
   advanced: {
     defaultCookieAttributes: {
-      sameSite: "lax",
+      // Must be "none" for cross-site requests (frontend on Vercel, backend on Render/Railway)
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      // Secure must be true when sameSite is "none"
       secure: process.env.NODE_ENV === "production",
+      // Set to true so cookie can be sent over HTTP only 
+      httpOnly: true,
+    },
+    // Help cookies behave properly if using custom subdomains
+    crossSubDomainCookies: {
+      enabled: process.env.NODE_ENV === "production",
     },
   },
   plugins: [

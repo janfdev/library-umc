@@ -1,7 +1,7 @@
 // src/components/BookList.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router';
-import { API_BASE_URL } from '../lib/api-config';
+import { API_BASE_URL } from '../utils/api-config';
 
 interface Collection {
   id: string;

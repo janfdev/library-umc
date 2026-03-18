@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Book } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api-config";
+import { API_BASE_URL } from "@/utils/api-config";
 
 interface CollectionFormProps {
   onSuccess: () => void;

@@ -9,11 +9,6 @@ import Login from "../pages/LoginPage";
 import Register from "../pages/Register";
 import HandleLogout from "../pages/Handlelogout";
 import SuperAdminDashboard from "../pages/dashboard/SuperAdminDashboard";
-import AddCollectionPage from "../pages/dashboard/AddCollectionPage";
-import AddCategoryPage from "../pages/dashboard/AddCategoryPage";
-import AddGuestPage from "../pages/dashboard/AddGuestPage";
-import EditCollectionPage from "../pages/dashboard/EditCollectionPage";
-import EditCategoryPage from "../pages/dashboard/EditCategoryPage";
 import Profile from "../pages/Profile";
 import Eresource from "../pages/EResoucePage"
 import MyLoans from "../pages/MyLoansPage"
@@ -42,46 +37,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="super_admin">
             <SuperAdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/super-admin/collections/add"
-        element={
-          <ProtectedRoute requiredRole="super_admin">
-            <AddCollectionPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/super-admin/categories/add"
-        element={
-          <ProtectedRoute requiredRole="super_admin">
-            <AddCategoryPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/super-admin/guests/add"
-        element={
-          <ProtectedRoute requiredRole="super_admin">
-            <AddGuestPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/collections/edit/:id"
-        element={
-          <ProtectedRoute requiredRole="super_admin">
-            <EditCollectionPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/categories/edit/:id"
-        element={
-          <ProtectedRoute requiredRole="super_admin">
-            <EditCategoryPage />
           </ProtectedRoute>
         }
       />

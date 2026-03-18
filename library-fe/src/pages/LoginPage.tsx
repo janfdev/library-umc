@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { authClient } from "@/lib/auth-client";
-import { API_BASE_URL } from "@/lib/api-config";
+import { authClient } from "@/utils/auth-client";
+import { API_BASE_URL } from "@/utils/api-config";
 import { Mail, Lock, LogIn, UserCircle2, UserPlus } from "lucide-react";
 
 const LoginPage = () => {

@@ -1,6 +1,6 @@
 // src/pages/SuperAdminDashboard.tsx
 import { useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/utils/auth-client";
 import { useNavigate } from "react-router";
 import Logo from "@/assets/logo_umc.png";
 
@@ -11,6 +11,8 @@ import CategoriesSection from "@/components/dashboard/CategoriesSection";
 import GuestsSection from "@/components/dashboard/GuestsSection";
 import ReportsSection from "@/components/dashboard/ReportsSection";
 import LoansSection from "@/components/dashboard/LoansSection";
+import CirculationSection from "@/components/dashboard/CirculationSection";
+import FinesSection from "@/components/dashboard/FinesSection";
 
 // Import icons untuk sidebar
 import {
@@ -24,9 +26,10 @@ import {
   Tag,
   BarChart3,
   Bell,
+  Wallet,
 } from "lucide-react";
 
-import { API_BASE_URL } from "@/lib/api-config";
+import { API_BASE_URL } from "@/utils/api-config";
 
 // Types
 interface Collection {
@@ -86,7 +89,7 @@ export default function SuperAdminDashboard() {
   // State untuk UI
   const [searchTerm, setSearchTerm] = useState("");
   const [activeMenu, setActiveMenu] = useState<
-    "dashboard" | "collections" | "categories" | "guests" | "reports" | "loans"
+    "dashboard" | "collections" | "categories" | "guests" | "reports" | "loans" | "circulation" | "fines"
   >("dashboard");
   const [loading, setLoading] = useState(false);
 
@@ -230,6 +233,12 @@ export default function SuperAdminDashboard() {
           />
         );
 
+      case "circulation":
+        return <CirculationSection />;
+
+      case "fines":
+        return <FinesSection />;
+
       case "reports":
         return <ReportsSection />;
 
@@ -276,7 +285,14 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* Menu Sirkulasi & Scan */}
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+          <button
+            onClick={() => setActiveMenu("circulation")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+              activeMenu === "circulation"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
+            }`}
+          >
             <ScanLine size={18} /> Sirkulasi & Scan
           </button>
 
@@ -328,6 +344,18 @@ export default function SuperAdminDashboard() {
             <Tag size={18} /> Manajemen Kategori
           </button>
 
+          {/* Menu Manajemen Denda */}
+          <button
+            onClick={() => setActiveMenu("fines")}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+              activeMenu === "fines"
+                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
+            }`}
+          >
+            <Wallet size={18} /> Manajemen Denda
+          </button>
+
           {/* Menu Laporan & Statistik */}
           <button
             onClick={() => setActiveMenu("reports")}
@@ -352,45 +380,54 @@ export default function SuperAdminDashboard() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto">
-        <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-10">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4 flex-1 max-w-xl">
             <div className="relative w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Pencarian cepat..."
-                className="w-[400px] pl-11 pr-4 py-2.5 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-red-500/10"
+                className="w-full md:w-[400px] pl-11 pr-4 py-2.5 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-red-500/10 transition-all focus:outline-none"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <Bell size={20} className="text-slate-400 cursor-pointer" />
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors relative">
+              <Bell size={20} />
+              <span className="absolute top-1 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
             <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
-              <div className="text-right">
+              <div className="hidden sm:block text-right">
                 <p className="text-sm font-bold text-slate-900 leading-tight">
                   {session?.user?.name || "Admin"}
                 </p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                   Super Admin
                 </p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm" />
+              <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center">
+                <span className="text-sm font-bold text-slate-500">
+                  {session?.user?.name?.charAt(0) || "A"}
+                </span>
+              </div>
             </div>
           </div>
         </header>
 
-        {loading && (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
+          {loading ? (
+            <div className="absolute inset-0 z-10 bg-[#F8FAFC]/50 flex items-center justify-center backdrop-blur-sm">
+              <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-slate-200 border-t-[#B91C1C]"></div>
+            </div>
+          ) : null}
+          
+          <div className="max-w-7xl mx-auto space-y-8">
+            {/* Render section berdasarkan menu yang dipilih */}
+            {renderSection()}
           </div>
-        )}
-
-        <div className="p-10 max-w-7xl mx-auto">
-          {/* Render section berdasarkan menu yang dipilih */}
-          {renderSection()}
         </div>
       </main>
     </div>

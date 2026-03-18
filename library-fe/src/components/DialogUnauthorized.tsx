@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/utils/auth-client";
 import { useNavigate } from "react-router";
 import Modal from "./ui/modal";
 import { Button } from "./ui/button";

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { API_BASE_URL } from '../lib/api-config';
+import { API_BASE_URL } from '@/utils/api-config';
 import Navbar from '@/components/ui/navbar';
 import Footer from '@/components/Footer';
 import ReservationList from '@/components/ReservationList';
 import loanService from '@/services/loanService';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/utils/auth-client';
 import { 
   Share2, 
   Bookmark, 
@@ -66,9 +66,8 @@ interface LoanRequest {
   returnDate?: string;
   approvedBy?: string;
   createdAt?: string;
-  updatedAt?: string;
-  member?: Record<string, any>;
-  item?: Record<string, any>;
+  member?: Record<string, unknown>;
+  item?: Record<string, unknown>;
 }
 
 const KatalogDetail = () => {
@@ -82,13 +81,11 @@ const KatalogDetail = () => {
   const currentUser: User | null = session?.user
     ? {
         id: session.user.id,
-        // Sesuaikan field memberId dengan yang ada di session/DB Anda
-        // Jika memberId sama dengan user id, gunakan session.user.id
-        memberId: (session.user as any).memberId ?? session.user.id,
+        memberId: (session.user as { memberId?: string }).memberId ?? session.user.id,
         name: session.user.name ?? '',
         email: session.user.email ?? '',
-        role: ((session.user as any).role as 'admin' | 'mahasiswa') ?? 'mahasiswa',
-        nim: (session.user as any).nim,
+        role: ((session.user as { role?: 'admin' | 'mahasiswa' }).role) ?? 'mahasiswa',
+        nim: (session.user as { nim?: string }).nim,
       }
     : null;
 
@@ -306,7 +303,7 @@ const KatalogDetail = () => {
       });
 
       showNotification('Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.', 'success');
-      setPendingRequests([...pendingRequests, loan as any]);
+      setPendingRequests([...pendingRequests, loan as unknown as LoanRequest]);
       setShowLoanForm(false);
       setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
 

@@ -1,5 +1,4 @@
-// src/services/memberService.ts
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/utils/api-config';
 
 export interface MemberProfile {
   id: string;
@@ -10,7 +9,6 @@ export interface MemberProfile {
   phone: string | null;
   createdAt: string;
   updatedAt: string;
-  // Join dari tabel Users
   user?: {
     id: string;
     name: string;
@@ -29,10 +27,7 @@ export interface UpdateProfilePayload {
 class MemberService {
   private baseUrl = API_BASE_URL;
 
-  /**
-   * GET /api/members/me
-   * Ambil profil member yang sedang login
-   */
+
   async getMyProfile(): Promise<MemberProfile> {
     const response = await fetch(`${this.baseUrl}/api/members/me`, {
       method: 'GET',
@@ -47,10 +42,6 @@ class MemberService {
     return result.data;
   }
 
-  /**
-   * PATCH /api/members/me
-   * Update profil member (nimNidn, faculty, phone)
-   */
   async updateMyProfile(payload: UpdateProfilePayload): Promise<MemberProfile> {
     const response = await fetch(`${this.baseUrl}/api/members/me`, {
       method: 'PATCH',

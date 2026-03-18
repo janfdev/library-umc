@@ -1,7 +1,7 @@
 // src/components/ReservationList.tsx
 import { useState, useEffect } from 'react';
 import { X, BookOpen, Calendar, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { API_BASE_URL } from '@/utils/api-config';
 
 interface Reservation {
   id: string;
