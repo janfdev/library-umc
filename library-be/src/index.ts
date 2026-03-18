@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 // Trust proxy fully for secure cookie (X-Forwarded-Proto) from PaaS like Railway, Render, etc.
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
 
 app.use(
   cors({
