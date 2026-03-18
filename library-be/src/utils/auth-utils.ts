@@ -31,11 +31,13 @@ export async function getSession(req: Request) {
   if (bearerToken) {
     const existingCookie = headers.get("cookie");
     const sessionCookie = `better-auth.session_token=${bearerToken}`;
+    const secureSessionCookie = `__Secure-better-auth.session_token=${bearerToken}`;
+    const injectedCookies = `${sessionCookie}; ${secureSessionCookie}`;
 
     if (existingCookie) {
-      headers.set("cookie", `${existingCookie}; ${sessionCookie}`);
+      headers.set("cookie", `${existingCookie}; ${injectedCookies}`);
     } else {
-      headers.set("cookie", sessionCookie);
+      headers.set("cookie", injectedCookies);
     }
   }
 

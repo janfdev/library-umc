@@ -25,7 +25,6 @@ app.use(
       "https://library-fe-one.vercel.app",
     ],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json());
