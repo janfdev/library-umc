@@ -1,19 +1,13 @@
 meta {
-  name: Loginn
+  name: Loginn Google
   type: http
   seq: 6
 }
 
 post {
   url: {{port_api}}/auth/google-callback
-  body: json
+  body: none
   auth: inherit
-}
-
-body:json {
-  {
-    "email": "fauzanrizqinoor@gmail.com"
-  }
 }
 
 settings {

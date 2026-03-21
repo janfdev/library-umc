@@ -38,11 +38,14 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // General rate limiter for all API routes (baseline protection)
 app.use("/api", generalLimiter);
 
+// Better Auth Handler — harus SEBELUM custom routes
+// agar semua /api/auth/* (sign-in/email, sign-up/email, dll) ditangani oleh
+// better-auth yang bisa meng-set cookie session ke browser
+app.all("/api/auth/*path", toNodeHandler(auth));
+
 // Routes
 app.use("/api", routes);
 
-// Better Auth Handler
-app.all("/api/auth/*path", toNodeHandler(auth));
 
 app.get("/", (req, res) => {
   res.redirect("/docs");

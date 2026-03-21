@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "../controller/AuthController";
 import { isAuthenticated, requireRole } from "../middlewares/auth.middleware";
-import { authLimiter, generalLimiter } from "../middlewares/rateLimiter";
+import { authLimiter } from "../middlewares/rateLimiter";
 
 const router = Router();
 const authController = new AuthController();
@@ -74,8 +74,11 @@ const authController = new AuthController();
  *       500:
  *         description: Server Error
  */
-// router.post("/auth/register", authLimiter, authController.register);
-router.post("/auth/register", authController.register);
+// ⚠️  DINONAKTIFKAN: Route ini digantikan oleh better-auth native handler di index.ts
+// Frontend kini memanggil POST /api/auth/sign-up/email (via authClient.signUp.email())
+// yang secara otomatis meng-set cookie session ke browser.
+// router.post("/auth/register", authController.register);
+
 
 /**
  * @swagger
@@ -140,8 +143,11 @@ router.post("/auth/register", authController.register);
  *       500:
  *         description: Server Error
  */
-// router.post("/auth/login", authLimiter, authController.loginCredential);
-router.post("/auth/login", authController.loginCredential);
+// ⚠️  DINONAKTIFKAN: Route ini digantikan oleh better-auth native handler di index.ts
+// Frontend kini memanggil POST /api/auth/sign-in/email (via authClient.signIn.email())
+// yang secara otomatis meng-set cookie session ke browser.
+// router.post("/auth/login", authController.loginCredential);
+
 
 /**
  * @swagger

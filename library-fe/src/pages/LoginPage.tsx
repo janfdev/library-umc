@@ -1,112 +1,91 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { authClient } from "@/utils/auth-client";
-import { API_BASE_URL } from "@/utils/api-config";
 import { Mail, Lock, LogIn, UserCircle2, UserPlus } from "lucide-react";
+import Notification from "@/components/ui/toast";
+import { useToast } from "@/hooks/useToast";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const { notifications, success, error, info, loading, removeToast } = useToast();
 
+  // ─── Google SSO ───────────────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      setError("");
+      info("SSO", "Menghubungkan ke Google...", 3000);
       await authClient.signIn.social({
         provider: "google",
         callbackURL: window.location.origin,
       });
-    } catch (err) {
-      setError("Gagal login SSO.");
+    } catch {
+      error("Gagal!", "Gagal login SSO. Coba lagi.", 5000);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ─── Login Manual via better-auth (email + password) ─────────────────────────
+  // Menggunakan authClient.signIn.email() agar:
+  //   1. Cookie session (better-auth_token) di-set otomatis oleh browser
+  //   2. authClient.useSession() langsung tersedia di seluruh app
+  //   3. Konsisten dengan alur Google SSO — tidak perlu simpan token manual
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validasi sederhana
+
     if (!email || !password) {
-      setError("Email dan password harus diisi");
+      error("Form Tidak Lengkap", "Email dan password harus diisi.");
       return;
     }
 
+    const loadingId = loading("Memproses...", "Sedang memverifikasi akun Anda");
     setIsLoading(true);
-    setError("");
 
     try {
-      // URL dengan prefix /api
-      const url = `${API_BASE_URL}/api/auth/login`;
-      console.log('Login URL:', url);
-      console.log('Email:', email);
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ 
-          email: email.trim(), 
-          password 
-        }),
+      const { data, error: authError } = await authClient.signIn.email({
+        email: email.toLowerCase().trim(),
+        password,
+        rememberMe,
       });
 
-      const responseText = await response.text();
-      console.log('Response status:', response.status);
-      console.log('Response text:', responseText);
+      removeToast(loadingId);
 
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error("Server mengembalikan respons tidak valid");
-      }
-
-      if (!response.ok) {
-        // Handle berbagai kode error
-        if (response.status === 401) {
+      if (authError) {
+        const msg = authError.message ?? "";
+        if (
+          msg.toLowerCase().includes("invalid") ||
+          msg.toLowerCase().includes("credentials") ||
+          msg.toLowerCase().includes("password")
+        ) {
           throw new Error("Email atau password salah");
-        } else if (response.status === 400) {
-          throw new Error(data.message || "Data tidak valid");
-        } else if (response.status === 404) {
-          throw new Error("Endpoint tidak ditemukan. Cek URL backend");
-        } else {
-          throw new Error(data.message || `Gagal login (${response.status})`);
         }
+        if (
+          msg.toLowerCase().includes("not found") ||
+          msg.toLowerCase().includes("user")
+        ) {
+          throw new Error("Akun tidak ditemukan. Silakan daftar terlebih dahulu.");
+        }
+        throw new Error(msg || "Gagal login. Silakan coba lagi.");
       }
 
-      // Simpan token
-      if (data.token || data.data?.token) {
-        const token = data.token || data.data?.token;
-        localStorage.setItem("access_token", token);
-        
-        // Simpan data user juga - PERBAIKAN: gunakan email, bukan formData
-        const userData = {
-          id: data.data?.user?.id || data.user?.id || "",
-          name: data.data?.user?.name || data.user?.name || email.split('@')[0],
-          email: data.data?.user?.email || data.user?.email || email,
-          role: data.data?.user?.role || data.user?.role || "member",
-          token: token
-        };
-        localStorage.setItem("user_data", JSON.stringify(userData));
-        
-        // Trigger event storage untuk navbar
-        window.dispatchEvent(new Event('storage'));
-        
-        navigate("/katalog");
-      } else {
-        throw new Error("Token tidak ditemukan dalam response");
+      if (data?.user) {
+        success(
+          "Login Berhasil!",
+          `Selamat datang, ${data.user.name || data.user.email}! 🎉`,
+          2500
+        );
+        setTimeout(() => navigate("/katalog"), 1500);
       }
-
     } catch (err) {
+      removeToast(loadingId);
+      const msg =
+        err instanceof Error ? err.message : "Gagal login. Silakan coba lagi.";
+      error("Login Gagal", msg);
       console.error("Login error:", err);
-      setError(err instanceof Error ? err.message : "Gagal login. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
@@ -114,8 +93,20 @@ const LoginPage = () => {
 
   return (
     <div className="h-screen bg-[#F1F3F6] flex items-center justify-center p-2 font-sans overflow-hidden">
+
+      {/* Toast Container */}
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80">
+        {notifications.map((toast) => (
+          <Notification
+            key={toast.id}
+            {...toast}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </div>
+
       <div className="w-full max-w-[380px] bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col">
-        
+
         {/* Header Merah */}
         <div className="bg-[#B21F24] pt-5 pb-7 px-6 text-center relative">
           <div className="flex justify-center mb-2">
@@ -129,13 +120,6 @@ const LoginPage = () => {
         </div>
 
         <div className="px-8 pb-6 pt-1 space-y-3.5">
-          {/* Error Message */}
-          {error && (
-            <div className="py-2 px-3 bg-red-50 text-red-600 text-[10px] rounded-lg text-center border border-red-100">
-              {error}
-            </div>
-          )}
-
           {/* Tombol SSO */}
           <button
             onClick={handleGoogleLogin}
@@ -180,8 +164,8 @@ const LoginPage = () => {
                 <label className="text-gray-700 text-[10px] font-bold">
                   Kata Sandi
                 </label>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => navigate("/forgot-password")}
                   className="text-[#B21F24] text-[9px] font-bold hover:underline"
                 >

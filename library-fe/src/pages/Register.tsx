@@ -1,8 +1,10 @@
 // src/pages/Register.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { API_BASE_URL } from "@/utils/api-config";
-import { Mail, Lock, User, UserCircle2, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { authClient } from "@/utils/auth-client";
+import { Mail, Lock, User, UserCircle2, ArrowLeft, Loader2 } from "lucide-react";
+import Notification from "@/components/ui/toast";
+import { useToast } from "@/hooks/useToast";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,11 +13,10 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+  const { notifications, success, error, loading, removeToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,47 +29,36 @@ const Register = () => {
         return newErrors;
       });
     }
-    setError("");
-    setSuccess("");
   };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    // Validasi nama
     if (!formData.name.trim()) {
       errors.name = "Nama harus diisi";
-    } else if (formData.name.length < 3) {
-      errors.name = "Nama minimal 3 karakter";
-    } else if (formData.name.length > 50) {
-      errors.name = "Nama maksimal 50 karakter";
+    } else if (formData.name.trim().length < 2) {
+      errors.name = "Nama minimal 2 karakter";
+    } else if (formData.name.trim().length > 100) {
+      errors.name = "Nama maksimal 100 karakter";
     }
 
-    // Validasi email - lebih fleksibel
     if (!formData.email) {
       errors.email = "Email harus diisi";
     } else {
-      // Cek format email dasar
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
         errors.email = "Format email tidak valid";
-      } 
-      // Opsional: validasi domain tertentu
-      else if (!formData.email.includes('@')) {
-        errors.email = "Email harus mengandung @";
       }
     }
 
-    // Validasi password
     if (!formData.password) {
       errors.password = "Password harus diisi";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password minimal 6 karakter";
-    } else if (formData.password.length > 20) {
-      errors.password = "Password maksimal 20 karakter";
+    } else if (formData.password.length < 8) {
+      errors.password = "Password minimal 8 karakter";
+    } else if (formData.password.length > 128) {
+      errors.password = "Password maksimal 128 karakter";
     }
 
-    // Validasi konfirmasi password
     if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = "Password tidak cocok";
     }
@@ -78,65 +68,77 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validasi form
+
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
+      error("Form Tidak Valid", "Periksa kembali data yang Anda isi.", 4000);
       return;
     }
 
+    const loadingId = loading("Mendaftarkan...", "Mohon tunggu sebentar");
     setIsLoading(true);
-    setError("");
-    
+
     try {
-      console.log("Mengirim request registrasi ke:", `${API_BASE_URL}/api/auth/register`);
-      
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "Accept": "application/json" 
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.toLowerCase().trim(), // Normalisasi email
-          password: formData.password,
-        }),
+      // Gunakan authClient.signUp.email() agar better-auth yang handle:
+      //   1. Registrasi user & simpan ke DB via better-auth
+      //   2. Set cookie session otomatis setelah register
+      //   3. Konsisten dengan Google SSO — tidak perlu custom fetch
+      const { data, error: authError } = await authClient.signUp.email({
+        name: formData.name.trim(),
+        email: formData.email.toLowerCase().trim(),
+        password: formData.password,
       });
 
-      console.log("Status response:", response.status);
-      
-      const data = await response.json();
-      console.log("Data response:", data);
+      removeToast(loadingId);
 
-      if (response.ok) {
-        setSuccess("✅ Registrasi berhasil! Mengalihkan ke halaman login...");
-        setTimeout(() => navigate("/login"), 2000);
-      } else {
-        // Tangani berbagai kode error
-        if (response.status === 409) {
+      if (authError) {
+        const msg = authError.message ?? "";
+        if (
+          msg.toLowerCase().includes("already") ||
+          msg.toLowerCase().includes("exist") ||
+          msg.toLowerCase().includes("duplicate") ||
+          msg.toLowerCase().includes("taken")
+        ) {
           throw new Error("Email sudah terdaftar. Gunakan email lain atau login.");
-        } else if (response.status === 400) {
-          throw new Error(data.message || "Data yang dikirim tidak valid");
-        } else if (response.status === 429) {
-          throw new Error("Terlalu banyak percobaan. Silakan tunggu 5 menit.");
-        } else {
-          throw new Error(data.message || "Gagal mendaftar. Silakan coba lagi.");
         }
+        throw new Error(msg || "Gagal mendaftar. Silakan coba lagi.");
       }
-    } catch (err: any) {
-      console.error("Error detail:", err);
-      setError(err.message || "Terjadi kesalahan jaringan. Periksa koneksi internet Anda.");
+
+      if (data?.user) {
+        success("Registrasi Berhasil! 🎉", "Akun Anda berhasil dibuat. Silakan login.", 4000);
+        setTimeout(() => navigate("/login"), 2500);
+      }
+    } catch (err: unknown) {
+      removeToast(loadingId);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Terjadi kesalahan jaringan. Periksa koneksi internet Anda.";
+      error("Registrasi Gagal", errorMessage, 6000);
+      console.error("Register error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+
+      {/* Toast Container */}
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80">
+        {notifications.map((toast) => (
+          <Notification
+            key={toast.id}
+            {...toast}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </div>
+
       <div className="w-full max-w-[420px] bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-        
+
         {/* Header dengan Gradasi */}
         <div className="bg-gradient-to-br from-[#B21F24] to-[#8a181b] pt-10 pb-12 px-6 text-center relative">
           <div className="flex justify-center mb-4">
@@ -151,21 +153,6 @@ const Register = () => {
         </div>
 
         <div className="px-8 pb-10 space-y-5">
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 bg-red-50 text-red-600 text-xs font-medium rounded-xl border border-red-100 flex items-start gap-3">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-          
-          {/* Success Message */}
-          {success && (
-            <div className="p-4 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-xl border border-emerald-100 text-center">
-              {success}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Nama Field */}
             <div className="space-y-1.5">
@@ -185,15 +172,13 @@ const Register = () => {
                 />
               </div>
               {validationErrors.name && (
-                <p className="text-red-500 text-[10px] font-medium ml-1 flex items-center gap-1">
-                  <AlertCircle size={10} /> {validationErrors.name}
-                </p>
+                <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.name}</p>
               )}
             </div>
 
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-slate-700 text-xs font-semibold ml-1">Email Mahasiswa</label>
+              <label className="text-slate-700 text-xs font-semibold ml-1">Email</label>
               <div className="relative group">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors" size={18} />
                 <input
@@ -209,9 +194,7 @@ const Register = () => {
                 />
               </div>
               {validationErrors.email && (
-                <p className="text-red-500 text-[10px] font-medium ml-1 flex items-center gap-1">
-                  <AlertCircle size={10} /> {validationErrors.email}
-                </p>
+                <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.email}</p>
               )}
             </div>
 
@@ -226,7 +209,7 @@ const Register = () => {
                     type="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Min. 6 karakter"
+                    placeholder="Min. 8 karakter"
                     className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
                       validationErrors.password ? 'border-red-300 bg-red-50/50' : 'border-slate-200 focus:border-[#B21F24]'
                     }`}
@@ -234,9 +217,7 @@ const Register = () => {
                   />
                 </div>
                 {validationErrors.password && (
-                  <p className="text-red-500 text-[10px] font-medium ml-1 flex items-center gap-1">
-                    <AlertCircle size={10} /> {validationErrors.password}
-                  </p>
+                  <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.password}</p>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -256,9 +237,7 @@ const Register = () => {
                   />
                 </div>
                 {validationErrors.confirmPassword && (
-                  <p className="text-red-500 text-[10px] font-medium ml-1 flex items-center gap-1">
-                    <AlertCircle size={10} /> {validationErrors.confirmPassword}
-                  </p>
+                  <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.confirmPassword}</p>
                 )}
               </div>
             </div>

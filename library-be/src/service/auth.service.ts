@@ -2,9 +2,11 @@ import { db } from "../db";
 import { Users as UserTable, members as MemberTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import {
+  AppError,
   BadRequestError,
   InternalServerError,
   NotFoundError,
+  UnauthorizedError,
 } from "../exceptions/AppError";
 
 export interface CampusUserData {
@@ -172,7 +174,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new BadRequestError("Email sudah terdaftar");
+      throw new AppError("Email sudah terdaftar", 409);
     }
 
     const { auth } = await import("../lib/auth");
@@ -198,15 +200,14 @@ export class AuthService {
       };
     } catch (err: unknown) {
       if (
-        err instanceof BadRequestError ||
-        err instanceof InternalServerError
+        err instanceof AppError
       ) {
         throw err;
       }
 
       const error = err as Error;
       if (error.message?.includes("already exists")) {
-        throw new BadRequestError("Email sudah terdaftar");
+        throw new AppError("Email sudah terdaftar", 409);
       }
       throw new InternalServerError(
         error.message || "Gagal melakukan registrasi",
@@ -229,7 +230,7 @@ export class AuthService {
       });
 
       if (!result?.user) {
-        throw new BadRequestError("Email atau password salah");
+        throw new UnauthorizedError("Email atau password salah");
       }
 
       return {
@@ -244,8 +245,7 @@ export class AuthService {
       };
     } catch (err: unknown) {
       if (
-        err instanceof BadRequestError ||
-        err instanceof InternalServerError
+        err instanceof AppError
       ) {
         throw err;
       }
@@ -253,9 +253,10 @@ export class AuthService {
       const error = err as Error;
       if (
         error.message?.includes("Invalid") ||
-        error.message?.includes("credentials")
+        error.message?.includes("credentials") ||
+        error.message?.includes("authenticated")
       ) {
-        throw new BadRequestError("Email atau password salah");
+        throw new UnauthorizedError("Email atau password salah");
       }
       throw new InternalServerError(error.message || "Gagal melakukan login");
     }

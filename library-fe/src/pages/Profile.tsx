@@ -26,7 +26,8 @@ const Profile = () => {
   const [editSuccess, setEditSuccess] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
-  // Redirect ke login jika tidak ada session
+  // Redirect ke login jika tidak ada session better-auth
+  // (berlaku untuk login manual AND Google SSO — keduanya pakai authClient sekarang)
   useEffect(() => {
     if (!isPending && !session) {
       navigate('/login');
@@ -78,12 +79,16 @@ const Profile = () => {
     }
   };
 
-  // ── Data gabungan: API + session fallback ──────────────
-  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || "User";
+  // ── Data dari session better-auth + API ──────────────
+  const userName =
+    session?.user?.name ||
+    session?.user?.email?.split('@')[0] ||
+    "User";
   const userEmail = session?.user?.email || "email@domain.com";
   const userImage = session?.user?.image || null;
-  const userNim   = member?.nimNidn    || String((session?.user as any)?.nim || "202400000");
-  const userFaculty = member?.faculty  || (session?.user as any)?.jurusan || "Teknik Informatika";
+  const userNim   = member?.nimNidn || String((session?.user as unknown as Record<string, unknown>)?.nim || "202400000");
+  const userFaculty = member?.faculty || (session?.user as unknown as Record<string, unknown>)?.jurusan as string || "Teknik Informatika";
+  const userId = session?.user?.id || "";
 
   // Loading state
   if (isPending) {
@@ -188,7 +193,7 @@ const Profile = () => {
               <ReservationList 
                 isOpen={true}
                 onClose={() => setActiveTab("riwayat-peminjaman")}
-                memberId={session.user?.id}
+                memberId={userId}
               />
             )}
 
