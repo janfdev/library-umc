@@ -1,0 +1,242 @@
+import { Router } from "express";
+import { LoanController } from "../controller/loan.controller";
+import {
+  isAuthenticated,
+  requireRole,
+} from "../../../middlewares/auth.middleware";
+import { publicApiLimiter } from "../../../middlewares/rateLimiter";
+
+const router = Router();
+const loanController = new LoanController();
+
+/**
+ * @swagger
+ * /loans/request:
+ *   post:
+ *     summary: Request a book loan
+ *     description: Member requests to borrow a book. System generates a defined token.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - itemId
+ *             properties:
+ *               itemId:
+ *                 type: string
+ *                 description: ID of the item (book copy) to borrow
+ *     responses:
+ *       200:
+ *         description: Loan requested successfully
+ *       400:
+ *         description: Item not available or validation error
+ *       401:
+ *         description: Unauthorized
+ */
+router.post(
+  "/loans/request",
+  publicApiLimiter,
+  isAuthenticated,
+  loanController.createRequest,
+);
+
+/**
+ * @swagger
+ * /loans/verify/{token}:
+ *   get:
+ *     summary: Verify loan token
+ *     description: Admin scans qr code/token to verify loan request validity.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Verification token
+ *     responses:
+ *       200:
+ *         description: Token verified, returns loan data
+ *       400:
+ *         description: Invalid or expired token
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  "/loans/verify/:token",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.verifyToken,
+);
+
+/**
+ * @swagger
+ * /loans/{requestId}/approve:
+ *   post:
+ *     summary: Approve loan
+ *     description: Admin approves the loan request after verification. item status becomes 'loaned'.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Loan Request ID
+ *     responses:
+ *       200:
+ *         description: Loan approved
+ *       404:
+ *         description: Loan request not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin/Staff only
+ */
+router.post(
+  "/loans/:requestId/approve",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.approveLoan,
+);
+
+/**
+ * @swagger
+ * /loans/{requestId}/reject:
+ *   post:
+ *     summary: Reject loan
+ *     description: Admin rejects the loan request. item status becomes 'available' again.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Loan Request ID
+ *     responses:
+ *       200:
+ *         description: Loan rejected
+ *       404:
+ *         description: Loan request not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin/Staff only
+ */
+router.post(
+  "/loans/:requestId/reject",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.rejectLoan,
+);
+
+/**
+ * @swagger
+ * /loans/{loanId}/return:
+ *   post:
+ *     summary: Return a book
+ *     description: Admin/Staff marks a loan as returned. Item status becomes 'available' again.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Loan ID
+ *     responses:
+ *       200:
+ *         description: Book returned successfully
+ *       404:
+ *         description: Loan not found or not in 'approved' status
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin/Staff only
+ */
+router.post(
+  "/loans/:loanId/return",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.returnLoan,
+);
+
+/**
+ * @swagger
+ * /loans:
+ *   get:
+ *     summary: Get all loans
+ *     description: Admin gets all loans. Staff gets all loans.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, returned, extended, rejected]
+ *         description: Filter by loan status
+ *       - in: query
+ *         name: memberId
+ *         schema:
+ *           type: string
+ *         description: Filter by member ID
+ *     responses:
+ *       200:
+ *         description: List of loans
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.get(
+  "/loans",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.getAllLoans,
+);
+
+/**
+ * @swagger
+ * /loans/history:
+ *   get:
+ *     summary: Get my loan history
+ *     description: Member view their own loan history.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: My loan history
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  "/loans/history",
+  publicApiLimiter,
+  isAuthenticated,
+  loanController.getMyLoans,
+);
+
+export const loanRoutes = router;

@@ -1,18 +1,18 @@
 import { Router } from "express";
-import { authRoutes } from "./auth.route";
-import { memberRoutes } from "./member.route";
-import { collectionRoutes } from "./collection.route";
-import { categoryRoutes } from "./category.route";
-import { guestRoutes } from "./guest.route";
-import { loanRoutes } from "./loan.route";
-import { itemRoutes } from "./item.route";
-import { notificationRoutes } from "./notification.route";
-import { reservationRoutes } from "./reservation.route";
-import finesRoutes from "./fines.route";
-import { recommendationRoutes } from "./recommendations.route";
-import { auditRoutes } from "./audit.route";
-import { reportRoutes } from "./report.route";
-import { locationRoutes } from "./location.route";
+import { authRoutes } from "../modules/auth/route/auth.route";
+import { memberRoutes } from "../modules/member/route/member.route";
+import { collectionRoutes } from "../modules/collection/route/collection.route";
+import { categoryRoutes } from "../modules/category/route/category.route";
+import { guestRoutes } from "../modules/guest/route/guest.route";
+import { loanRoutes } from "../modules/loan/route/loan.route";
+import { itemRoutes } from "../modules/item/route/item.route";
+import { notificationRoutes } from "../modules/notification/route/notification.route";
+import { reservationRoutes } from "../modules/reservation/route/reservation.route";
+import finesRoutes from "../modules/fines/route/fines.route";
+import { recommendationRoutes } from "../modules/recommendation/route/recommendations.route";
+import { auditRoutes } from "../modules/audit/route/audit.route";
+import { reportRoutes } from "../modules/report/route/report.route";
+import { locationRoutes } from "../modules/location/route/location.route";
 
 const router = Router();
 
