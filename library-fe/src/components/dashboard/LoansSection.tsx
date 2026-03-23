@@ -1,17 +1,20 @@
 // src/components/dashboard/LoansSection.tsx
 import { useState, useEffect } from "react";
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
   BookOpen,
+  Search,
   User,
   Calendar,
-  Search,
   ChevronDown,
-  RefreshCw
+  RefreshCw,
+  RotateCcw,
+  AlertTriangle
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Loan {
   id: string;
@@ -53,6 +56,8 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
   const [actionNotes, setActionNotes] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [returnModalLoan, setReturnModalLoan] = useState<Loan | null>(null);
+  const [returnResult, setReturnResult] = useState<{ message: string; isLate: boolean } | null>(null);
 
   useEffect(() => {
     fetchLoans();
@@ -68,10 +73,6 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         credentials: "include",
       });
       const data = await response.json();
-      
-      // Debug: lihat struktur data dari API
-      console.log("Loans API Response:", data);
-      
       if (data.success) {
         // Pastikan data.data adalah array
         if (Array.isArray(data.data)) {
@@ -142,6 +143,33 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     } catch (error) {
       console.error("Error rejecting loan:", error);
       alert("Gagal menolak peminjaman");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // ─── Handler: Return Book ───────────────────────────────────────────
+  const handleReturn = async (loanId: string) => {
+    setProcessingId(loanId);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}/return`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({}),
+      });
+      const data = await response.json();
+      if (data.success) {
+        const isLate = data.message?.toLowerCase().includes("terlambat");
+        setReturnResult({ message: data.message, isLate });
+        fetchLoans();
+      } else {
+        alert(data.message || "Gagal memproses pengembalian");
+        setReturnModalLoan(null);
+      }
+    } catch {
+      alert("Gagal terhubung ke server");
+      setReturnModalLoan(null);
     } finally {
       setProcessingId(null);
     }
@@ -315,8 +343,10 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         {/* Content Area */}
         <div className="flex-1 p-6 md:px-8">
           {loading ? (
-            <div className="h-full min-h-[300px] flex items-center justify-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#B91C1C]"></div>
+            <div className="space-y-4 animate-in fade-in duration-500">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-[140px] w-full rounded-[20px]" />
+              ))}
             </div>
           ) : filteredLoans.length === 0 ? (
             <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center text-slate-400">
@@ -380,7 +410,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                     )}
                   </div>
 
-                  {/* Action Buttons - Hanya tampil untuk status pending */}
+                  {/* Action Buttons - Pending: Setujui / Tolak */}
                   {loan.status === 'pending' && (
                     <div className="flex flex-col sm:flex-row gap-3 pt-5 mt-5 border-t border-slate-200">
                       <button
@@ -403,6 +433,24 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                     </div>
                   )}
 
+                  {/* Action Buttons - Approved: Proses Pengembalian */}
+                  {loan.status === 'approved' && (
+                    <div className="pt-5 mt-5 border-t border-slate-200">
+                      <button
+                        id={`btn-return-${loan.id}`}
+                        onClick={() => {
+                          setReturnModalLoan(loan);
+                          setReturnResult(null);
+                        }}
+                        disabled={processingId === loan.id}
+                        className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
+                      >
+                        <RotateCcw size={14} />
+                        {processingId === loan.id ? 'Memproses...' : 'Proses Pengembalian'}
+                      </button>
+                    </div>
+                  )}
+
                   {/* Info untuk status lainnya */}
                   {loan.status === 'rejected' && loan.rejectReason && (
                     <div className="mt-4 p-3 bg-red-50/50 rounded-xl text-[13px] border border-red-100">
@@ -417,25 +465,27 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         </div>
       </div>
 
-      {/* Modal Approval */}
+      {/* ── Modal: Approve Loan ── */}
       {selectedLoan && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-[24px] p-6 max-w-md w-full shadow-2xl animate-slide-up">
             <h3 className="text-[18px] font-extrabold text-slate-900 mb-5">Setujui Peminjaman</h3>
-            
+
             <div className="space-y-4 mb-6">
               <div className="p-4 bg-slate-50 rounded-xl space-y-3 border border-slate-100">
                 <p className="text-[13px] text-slate-600 flex justify-between">
-                  <span className="font-bold text-slate-400">Buku</span> 
+                  <span className="font-bold text-slate-400">Buku</span>
                   <span className="font-bold text-slate-900 text-right">{selectedLoan.item?.collection?.title}</span>
                 </p>
                 <div className="h-px bg-slate-200"></div>
                 <p className="text-[13px] text-slate-600 flex justify-between">
-                  <span className="font-bold text-slate-400">Peminjam</span> 
-                  <span className="font-bold text-slate-900 text-right">{selectedLoan.member?.user?.name} <span className="text-slate-400">({selectedLoan.member?.nimNidn})</span></span>
+                  <span className="font-bold text-slate-400">Peminjam</span>
+                  <span className="font-bold text-slate-900 text-right">
+                    {selectedLoan.member?.user?.name} <span className="text-slate-400">({selectedLoan.member?.nimNidn})</span>
+                  </span>
                 </p>
               </div>
-              
+
               <div>
                 <label className="text-[12px] font-bold text-slate-700 mb-2 block">Catatan Tambahan (Opsional)</label>
                 <textarea
@@ -450,10 +500,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
 
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setSelectedLoan(null);
-                  setActionNotes('');
-                }}
+                onClick={() => { setSelectedLoan(null); setActionNotes(''); }}
                 className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50 transition-all"
               >
                 Batal
@@ -466,6 +513,88 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 {processingId === selectedLoan.id ? 'Memproses...' : 'Setujui Sekarang'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Return Book ── */}
+      {returnModalLoan && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[24px] p-6 max-w-md w-full shadow-2xl animate-slide-up">
+            {returnResult ? (
+              <>
+                {/* ── Result State ── */}
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  returnResult.isLate ? 'bg-orange-100' : 'bg-green-100'
+                }`}>
+                  {returnResult.isLate
+                    ? <AlertTriangle size={28} className="text-orange-500" />
+                    : <CheckCircle size={28} className="text-green-500" />
+                  }
+                </div>
+                <h3 className="text-[18px] font-extrabold text-slate-900 mb-3 text-center">
+                  {returnResult.isLate ? 'Pengembalian Terlambat' : 'Buku Berhasil Dikembalikan!'}
+                </h3>
+                <p className="text-sm text-slate-600 font-medium text-center leading-relaxed mb-6">
+                  {returnResult.message}
+                </p>
+                <button
+                  onClick={() => { setReturnModalLoan(null); setReturnResult(null); }}
+                  className="w-full bg-[#B91C1C] hover:bg-[#991b1b] text-white px-4 py-3 rounded-xl text-[13px] font-bold transition-all"
+                >
+                  Tutup
+                </button>
+              </>
+            ) : (
+              <>
+                {/* ── Confirm State ── */}
+                <h3 className="text-[18px] font-extrabold text-slate-900 mb-5">Konfirmasi Pengembalian Buku</h3>
+
+                <div className="p-4 bg-slate-50 rounded-xl space-y-3 border border-slate-100 mb-6">
+                  <p className="text-[13px] text-slate-600 flex justify-between">
+                    <span className="font-bold text-slate-400">Buku</span>
+                    <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">{returnModalLoan.item?.collection?.title}</span>
+                  </p>
+                  <div className="h-px bg-slate-200"></div>
+                  <p className="text-[13px] text-slate-600 flex justify-between">
+                    <span className="font-bold text-slate-400">Peminjam</span>
+                    <span className="font-bold text-slate-900">{returnModalLoan.member?.user?.name}</span>
+                  </p>
+                  <div className="h-px bg-slate-200"></div>
+                  <p className="text-[13px] text-slate-600 flex justify-between">
+                    <span className="font-bold text-slate-400">Batas Kembali</span>
+                    <span className={`font-bold ${
+                      new Date(returnModalLoan.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0)
+                        ? 'text-red-600' : 'text-slate-900'
+                    }`}>
+                      {new Date(returnModalLoan.dueDate).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})}
+                    </span>
+                  </p>
+                </div>
+
+                <p className="text-[12px] text-slate-500 font-medium mb-5 text-center">
+                  Denda keterlambatan: <strong className="text-[#B91C1C]">Rp 500 / hari</strong> jika melewati batas kembali.
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setReturnModalLoan(null)}
+                    className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    id="btn-confirm-return"
+                    onClick={() => handleReturn(returnModalLoan.id)}
+                    disabled={processingId === returnModalLoan.id}
+                    className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl text-[13px] font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw size={14} />
+                    {processingId === returnModalLoan.id ? 'Memproses...' : 'Kembalikan Buku'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

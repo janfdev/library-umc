@@ -1,4 +1,11 @@
-import { Book, Users, Clock, Wallet, User as UserIcon } from "lucide-react";
+import { Book, Users, Clock, Wallet, User as UserIcon, DownloadCloud } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api-config";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardSectionProps {
   stats: {
@@ -21,7 +28,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
     },
     { 
       label: 'Sedang Dipinjam', 
-      value: stats.activeBorrowings || 346, 
+      value: stats.activeBorrowings ?? 0, 
       icon: <Clock />, 
       color: 'text-orange-600', 
       bg: 'bg-orange-50' 
@@ -35,7 +42,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
     },
     { 
       label: 'Denda Terkumpul', 
-      value: `Rp ${(stats.totalFines || 50000).toLocaleString()}`, 
+      value: `Rp ${(stats.totalFines ?? 0).toLocaleString()}`, 
       icon: <Wallet />, 
       color: 'text-red-600', 
       bg: 'bg-red-50' 
@@ -45,11 +52,58 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
   return (
     <div className="space-y-6">
       {/* Section Ringkasan */}
-      <div className="mb-8 text-left">
-        <h2 className="text-2xl font-bold text-slate-900">Ringkasan Sistem</h2>
-        <p className="text-slate-400 text-sm font-medium mt-1">
-          Pantau aktivitas perpustakaan hari ini.
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Ringkasan Sistem</h2>
+          <p className="text-slate-400 text-sm font-medium mt-1">
+            Pantau aktivitas perpustakaan hari ini.
+          </p>
+        </div>
+        
+        {/* Export Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-900/20">
+              <DownloadCloud size={18} />
+              Export Laporan
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white">
+            <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Format Laporan (PDF)
+            </div>
+            <DropdownMenuItem 
+              onClick={() => window.open(`${API_BASE_URL}/api/reports/loans/export?format=pdf`, '_blank')}
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+            >
+              Laporan Peminjaman
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => window.open(`${API_BASE_URL}/api/reports/fines/export?format=pdf`, '_blank')}
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+            >
+              Laporan Denda
+            </DropdownMenuItem>
+            
+            <div className="h-px bg-slate-100 my-1 mx-2" />
+            
+            <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Format Excel (CSV)
+            </div>
+            <DropdownMenuItem 
+              onClick={() => window.open(`${API_BASE_URL}/api/reports/loans/export?format=csv`, '_blank')}
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+            >
+              Laporan Peminjaman
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => window.open(`${API_BASE_URL}/api/reports/fines/export?format=csv`, '_blank')}
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+            >
+              Laporan Denda
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Stats Grid */}

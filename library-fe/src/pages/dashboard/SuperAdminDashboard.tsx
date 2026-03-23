@@ -1,10 +1,9 @@
-// src/pages/SuperAdminDashboard.tsx
 import { useEffect, useState } from "react";
 import { authClient } from "@/utils/auth-client";
 import { useNavigate } from "react-router";
 import Logo from "@/assets/logo_umc.png";
 
-// Import komponen section
+import { Skeleton } from "@/components/ui/skeleton";
 import DashboardSection from "@/components/dashboard/DashboardSection";
 import CollectionsSection from "@/components/dashboard/CollectionsSection";
 import CategoriesSection from "@/components/dashboard/CategoriesSection";
@@ -39,9 +38,13 @@ interface Collection {
   publisher: string;
   publicationYear: string;
   type: string;
-  category: {
+  category?: {
+    id: string;
     name: string;
   };
+  categoryId?: string;
+  isbn?: string;
+  stock: number;
   image: string | null;
 }
 
@@ -82,14 +85,21 @@ export default function SuperAdminDashboard() {
     totalCollections: 0,
     totalCategories: 0,
     totalGuests: 0,
-    activeBorrowings: 346,
-    totalFines: 50000,
+    activeBorrowings: 0,
+    totalFines: 0,
   });
 
   // State untuk UI
   const [searchTerm, setSearchTerm] = useState("");
   const [activeMenu, setActiveMenu] = useState<
-    "dashboard" | "collections" | "categories" | "guests" | "reports" | "loans" | "circulation" | "fines"
+    | "dashboard"
+    | "collections"
+    | "categories"
+    | "guests"
+    | "reports"
+    | "loans"
+    | "circulation"
+    | "fines"
   >("dashboard");
   const [loading, setLoading] = useState(false);
 
@@ -123,12 +133,45 @@ export default function SuperAdminDashboard() {
         console.error("Failed to fetch guest logs:", guestError);
       }
 
+      // Fetch jumlah pinjaman aktif (approved) & denda
+      let activeBorrowings = 0;
+      let totalFines = 0;
+      try {
+        const [loansRes, finesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/loans?status=approved&limit=200`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=200`, {
+            credentials: "include",
+          }),
+        ]);
+        const [loansData, finesData] = await Promise.all([
+          loansRes.json(),
+          finesRes.json(),
+        ]);
+
+        if (loansData.success && Array.isArray(loansData.data)) {
+          activeBorrowings = loansData.data.length;
+        }
+
+        // Hitung denda unpaid fix
+        if (finesData.success && Array.isArray(finesData.data)) {
+          totalFines = finesData.data.reduce(
+            (sum: number, fine: { amount: number }) =>
+              sum + (Number(fine.amount) || 0),
+            0,
+          );
+        }
+      } catch (statsError) {
+        console.error("Failed to fetch stats:", statsError);
+      }
+
       setStats({
         totalCollections: collectionsList.length,
         totalCategories: categoriesList.length,
         totalGuests: guestsList.length,
-        activeBorrowings: 346,
-        totalFines: 50000,
+        activeBorrowings,
+        totalFines,
       });
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
@@ -227,7 +270,7 @@ export default function SuperAdminDashboard() {
 
       case "loans":
         return (
-          <LoansSection 
+          <LoansSection
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
           />
@@ -281,7 +324,7 @@ export default function SuperAdminDashboard() {
           </button>
 
           <div className="py-4 px-4">
-            <div className="h-[1px] bg-slate-800/50 w-full" />
+            <div className="h-px bg-slate-800/50 w-full" />
           </div>
 
           {/* Menu Sirkulasi & Scan */}
@@ -419,15 +462,27 @@ export default function SuperAdminDashboard() {
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
           {loading ? (
-            <div className="absolute inset-0 z-10 bg-[#F8FAFC]/50 flex items-center justify-center backdrop-blur-sm">
-              <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-slate-200 border-t-[#B91C1C]"></div>
+            <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+              <div className="space-y-2 mb-8 text-left">
+                <Skeleton className="h-8 w-[250px] rounded-lg" />
+                <Skeleton className="h-4 w-[350px] rounded-md" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Skeleton className="h-[120px] rounded-[24px]" />
+                <Skeleton className="h-[120px] rounded-[24px]" />
+                <Skeleton className="h-[120px] rounded-[24px]" />
+                <Skeleton className="h-[120px] rounded-[24px]" />
+              </div>
+
+              <Skeleton className="h-[400px] w-full rounded-[32px] mt-8" />
             </div>
-          ) : null}
-          
-          <div className="max-w-7xl mx-auto space-y-8">
-            {/* Render section berdasarkan menu yang dipilih */}
-            {renderSection()}
-          </div>
+          ) : (
+            <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 delay-150">
+              {/* Render section berdasarkan menu yang dipilih */}
+              {renderSection()}
+            </div>
+          )}
         </div>
       </main>
     </div>

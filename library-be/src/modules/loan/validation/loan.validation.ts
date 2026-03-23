@@ -5,6 +5,6 @@ export const createLoanSchema = z.object({
 });
 
 export const getLoansQuerySchema = z.object({
-  status: z.enum(["waiting", "approved", "rejected", "returned", "overdue", "canceled"]).optional(),
+  status: z.enum(["pending", "approved", "rejected", "returned", "overdue", "canceled"]).optional(),
   memberId: z.string().optional(),
 });
