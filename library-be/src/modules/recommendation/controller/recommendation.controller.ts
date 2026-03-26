@@ -1,9 +1,9 @@
 import { type Request, type Response, type NextFunction } from "express";
 import recommendationsService from "../service/recommendation.service";
-import { 
-  createRecommendationSchema, 
+import {
+  createRecommendationSchema,
   updateRecommendationStatusSchema,
-  getRecommendationsQuerySchema
+  getRecommendationsQuerySchema,
 } from "../validation/recommendation.validation";
 
 class RecommendationsController {

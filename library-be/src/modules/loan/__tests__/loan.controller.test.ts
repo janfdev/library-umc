@@ -15,33 +15,33 @@ const loanController = new LoanController();
 // Route palsu — kita bypass middleware auth dengan menyuntikkan req.user secara manual
 app.post('/loans/request', (req, res) => {
   (req as any).user = { id: 'user-student-1', role: 'student' };
-  loanController.createRequest(req, res);
+  loanController.createRequest(req, res, {} as any);
 });
 
 app.post('/loans/:requestId/approve', (req, res) => {
   (req as any).user = { id: 'admin-1', role: 'super_admin' };
-  loanController.approveLoan(req, res);
+  loanController.approveLoan(req, res, {} as any);
 });
 
 app.post('/loans/:requestId/reject', (req, res) => {
   (req as any).user = { id: 'admin-1', role: 'super_admin' };
-  loanController.rejectLoan(req, res);
+  loanController.rejectLoan(req, res, {} as any);
 });
 
 app.post('/loans/:loanId/return', (req, res) => {
   (req as any).user = { id: 'admin-1', role: 'super_admin' };
-  loanController.returnLoan(req, res);
+  loanController.returnLoan(req, res, {} as any);
 });
 
 app.get('/loans', (req, res) => {
   (req as any).user = { id: 'admin-1', role: 'super_admin' };
-  loanController.getAllLoans(req, res);
+  loanController.getAllLoans(req, res, {} as any);
 });
 
 // Route untuk simulasi request tanpa role admin (untuk test Forbidden)
 app.post('/loans/:requestId/approve-noadmin', (req, res) => {
   (req as any).user = { id: 'student-1', role: 'student' }; // role salah!
-  loanController.approveLoan(req, res);
+  loanController.approveLoan(req, res, {} as any);
 });
 
 // ============================================================

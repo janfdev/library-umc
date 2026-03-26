@@ -1,57 +1,59 @@
-import { type Request, type Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import { NotificationService } from "../service/notification.service";
-import { sendFinesNotificationSchema, sendLoansNotificationSchema } from "../validation/notification.validation";
+import {
+  sendFinesNotificationSchema,
+  sendLoansNotificationSchema,
+} from "../validation/notification.validation";
+import { sendValidationError } from "../../../utils/api-utils";
 
 const notificationService = new NotificationService();
 
-export async function sendFinesNotification(req: Request, res: Response) {
-  try {
-    const validation = sendFinesNotificationSchema.safeParse(req.body);
-    if (!validation.success) {
-      res.status(400).json({ message: "Validation Error", data: validation.error.flatten() });
-      return;
-    }
+class NotificationController {
+  async sendFinesNotification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = sendFinesNotificationSchema.safeParse(req.body);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
 
-    const { email, name, amount, bookTitle } = validation.data;
-    await notificationService.sendFinesNotification(
-      email,
-      name,
-      amount,
-      bookTitle,
-    );
-    res.status(200).json({ message: "Fine notification sent successfully" });
-  } catch (error) {
-    console.error(
-      "[NotificationController] Failed to send fine notification:",
-      error,
-    );
-    res.status(500).json({ message: "Failed to send fine notification" });
+      const { email, name, amount, bookTitle } = validation.data;
+      await notificationService.sendFinesNotification(email, name, amount, bookTitle);
+
+      res.status(200).json({
+        success: true,
+        message: "Notifikasi denda berhasil dikirim",
+        data: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async sendLoansNotification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = sendLoansNotificationSchema.safeParse(req.body);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+
+      const { email, name, bookTitle, tanggalPengembalian } = validation.data;
+      await notificationService.sendLoansNotification(email, name, bookTitle, tanggalPengembalian);
+
+      res.status(200).json({
+        success: true,
+        message: "Notifikasi peminjaman berhasil dikirim",
+        data: null,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
-export async function sendLoansNotification(req: Request, res: Response) {
-  try {
-    const validation = sendLoansNotificationSchema.safeParse(req.body);
-    if (!validation.success) {
-      res.status(400).json({ message: "Validation Error", data: validation.error.flatten() });
-      return;
-    }
+const notificationController = new NotificationController();
 
-    const { email, name, bookTitle, tanggalPengembalian } = validation.data;
+// Named exports untuk backward-compat dengan route lama
+export const sendFinesNotification = notificationController.sendFinesNotification.bind(notificationController);
+export const sendLoansNotification = notificationController.sendLoansNotification.bind(notificationController);
 
-    await notificationService.sendLoansNotification(
-      email,
-      name,
-      bookTitle,
-      tanggalPengembalian,
-    );
-
-    res.status(200).json({ message: "Loan notification sent successfully" });
-  } catch (error) {
-    console.error(
-      "[NotificationController] Failed to send loan notification:",
-      error,
-    );
-    res.status(500).json({ message: "Failed to send loan notification" });
-  }
-}
+export default notificationController;

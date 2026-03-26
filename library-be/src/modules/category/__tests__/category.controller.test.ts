@@ -10,12 +10,12 @@ app.use(express.json());
 const categoryController = new CategoryController();
 
 // Setup routing palsu untuk testing fungsi Controller
-app.get('/categories', (req, res) => categoryController.getAllCategories(req, res));
-app.get('/categories/:id', (req, res) => categoryController.getCategoryById(req, res));
+app.get('/categories', (req, res) => categoryController.getAllCategories(req, res, {} as any));
+app.get('/categories/:id', (req, res) => categoryController.getCategoryById(req, res, {} as any));
 app.post('/categories', (req, res) => {
   // Mock req.user karena kita tidak memakai Middleware asli dari express di test file ini
   (req as any).user = { id: "admin-id", role: "admin" };
-  categoryController.createCategory(req, res);
+  categoryController.createCategory(req, res, {} as any);
 });
 
 describe('CategoryController Unit Tests', () => {

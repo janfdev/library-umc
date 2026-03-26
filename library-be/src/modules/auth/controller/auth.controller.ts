@@ -6,6 +6,7 @@ import {
   loginCredentialSchema,
 } from "../validation/auth.validation";
 import { UserService } from "../service/user.service";
+import { sendValidationError } from "../../../utils/api-utils";
 
 const authService = new AuthService();
 
@@ -13,29 +14,14 @@ export class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = registerSchema.safeParse(req.body);
-
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const { name, email, password } = validation.data;
+      const result = await authService.registerWithCredentials(name, email, password);
 
-      const result = await authService.registerWithCredentials(
-        name,
-        email,
-        password,
-      );
-
-      res.status(201).json({
-        success: true,
-        message: "Registrasi berhasil",
-        data: result,
-      });
+      res.status(201).json(result);
     } catch (error) {
       next(error);
     }
@@ -44,25 +30,14 @@ export class AuthController {
   async loginCredential(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = loginCredentialSchema.safeParse(req.body);
-
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const { email, password } = validation.data;
-
       const result = await authService.loginWithCredentials(email, password);
 
-      res.status(200).json({
-        success: true,
-        message: "Login berhasil",
-        data: result,
-      });
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -71,25 +46,14 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = loginSchema.safeParse(req.body);
-
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const { email } = validation.data;
-
       const result = await authService.verifyWithCampus(email);
 
-      res.status(200).json({
-        success: true,
-        message: "User verified with Campus API",
-        data: result,
-      });
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }

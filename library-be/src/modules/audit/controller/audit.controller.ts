@@ -1,7 +1,11 @@
-import { type Request, type Response, type NextFunction } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import auditService from "../service/audit.service";
 
+
 class AuditController {
+  /**
+   * GET /audit — Ambil log aktivitas sistem (Admin)
+   */
   async getLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const { action, entity, limit, offset } = req.query;
@@ -13,7 +17,7 @@ class AuditController {
         offset: offset ? Number(offset) : undefined,
       });
 
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }

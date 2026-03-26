@@ -1,6 +1,10 @@
 import { type Request, type Response, type NextFunction } from "express";
 import finesService from "../service/fines.service";
-import { getFinesQuerySchema, createFineSchema, payFineSchema } from "../validation/fines.validation";
+import {
+  getFinesQuerySchema,
+  createFineSchema,
+  payFineSchema,
+} from "../validation/fines.validation";
 
 class FinesController {
   async getAllFines(req: Request, res: Response, next: NextFunction) {
@@ -62,10 +66,7 @@ class FinesController {
 
       const { loanId, amount } = validation.data;
 
-      const result = await finesService.createFineManual(
-        loanId,
-        amount,
-      );
+      const result = await finesService.createFineManual(loanId, amount);
 
       if (!result.success) {
         return res.status(404).json(result);
@@ -89,7 +90,7 @@ class FinesController {
           data: validation.error.flatten(),
         });
       }
-      
+
       const { paymentMethod } = validation.data;
 
       const result = await finesService.payFine(

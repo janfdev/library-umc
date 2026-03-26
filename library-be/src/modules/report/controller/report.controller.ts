@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type Request, type Response, type NextFunction } from "express";
 import reportService from "../service/report.service";
-import { 
-  getPopularBooksQuerySchema, 
-  exportLoansQuerySchema, 
-  exportFinesQuerySchema 
+import {
+  getPopularBooksQuerySchema,
+  exportLoansQuerySchema,
+  exportFinesQuerySchema,
 } from "../validation/report.validation";
+import { sendValidationError } from "../../../utils/api-utils";
 
 class ReportController {
   // GET /reports/dashboard
   async getDashboardStats(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await reportService.getDashboardStats();
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -23,16 +24,12 @@ class ReportController {
     try {
       const validation = getPopularBooksQuerySchema.safeParse(req.query);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const limit = validation.data.limit ? Number(validation.data.limit) : 10;
       const result = await reportService.getPopularBooks(limit);
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -42,7 +39,7 @@ class ReportController {
   async getGuestStats(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await reportService.getGuestStats();
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -53,11 +50,7 @@ class ReportController {
     try {
       const validation = exportLoansQuerySchema.safeParse(req.query);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const { format, status, from, to } = validation.data;
@@ -118,11 +111,7 @@ class ReportController {
     try {
       const validation = exportFinesQuerySchema.safeParse(req.query);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const { format, status } = validation.data;

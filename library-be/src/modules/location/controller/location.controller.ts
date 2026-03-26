@@ -1,36 +1,24 @@
-import { type Request, type Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import locationService from "../service/location.service";
-import { createLocationSchema, updateLocationSchema } from "../validation/location.validation";
+import {
+  createLocationSchema,
+  updateLocationSchema,
+} from "../validation/location.validation";
+import { sendValidationError } from "../../../utils/api-utils";
 
 class LocationController {
-  /**
-   * GET /locations
-   * Semua user terautentikasi bisa akses
-   */
-  async getAllLocations(req: Request, res: Response) {
+  async getAllLocations(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await locationService.getAllLocations();
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
-      console.error("[LocationController] Error getting all locations:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to get all locations",
-        data: null,
-      });
+      next(error);
     }
   }
 
-  /**
-   * GET /locations/:id
-   * Semua user terautentikasi bisa akses
-   */
-  async getLocationById(req: Request, res: Response) {
+  async getLocationById(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-
-      // Validasi: id harus bilangan bulat positif
-      const numericId = parseInt(id as string, 10);
+      const numericId = parseInt(String(req.params.id), 10);
       if (isNaN(numericId) || numericId <= 0) {
         return res.status(400).json({
           success: false,
@@ -38,41 +26,21 @@ class LocationController {
           data: null,
         });
       }
-
       const result = await locationService.getLocationById(numericId);
-
-      // Service mengembalikan success: false jika not found
       if (!result.success) {
         return res.status(404).json(result);
       }
-
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
-      console.error(
-        "[LocationController] Error getting location by ID:",
-        error,
-      );
-      return res.status(500).json({
-        success: false,
-        message: "Failed to get location by ID",
-        data: null,
-      });
+      next(error);
     }
   }
 
-  /**
-   * POST /locations
-   * Hanya Admin / Staff
-   */
-  async createLocation(req: Request, res: Response) {
+  async createLocation(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = createLocationSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const result = await locationService.createLocation({
@@ -81,32 +49,18 @@ class LocationController {
         shelf: validation.data.shelf,
       });
 
-      // Service mengembalikan success: false jika sudah ada (duplicate)
       if (!result.success) {
         return res.status(409).json(result);
       }
-
-      return res.status(201).json(result);
+      res.status(201).json(result);
     } catch (error) {
-      console.error("[LocationController] Error creating location:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to create location",
-        data: null,
-      });
+      next(error);
     }
   }
 
-  /**
-   * PUT /locations/:id
-   * Hanya Admin / Staff
-   */
-  async updateLocation(req: Request, res: Response) {
+  async updateLocation(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-
-      // Validasi ID
-      const numericId = parseInt(id as string, 10);
+      const numericId = parseInt(String(req.params.id), 10);
       if (isNaN(numericId) || numericId <= 0) {
         return res.status(400).json({
           success: false,
@@ -114,14 +68,9 @@ class LocationController {
           data: null,
         });
       }
-
       const validation = updateLocationSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const result = await locationService.updateLocation(numericId, {
@@ -130,32 +79,18 @@ class LocationController {
         shelf: validation.data.shelf,
       } as any);
 
-      // Service mengembalikan success: false jika not found
       if (!result.success) {
         return res.status(404).json(result);
       }
-
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
-      console.error("[LocationController] Error updating location:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to update location",
-        data: null,
-      });
+      next(error);
     }
   }
 
-  /**
-   * DELETE /locations/:id
-   * Hanya Super Admin — soft delete
-   */
-  async deleteLocation(req: Request, res: Response) {
+  async deleteLocation(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-
-      // Validasi ID
-      const numericId = parseInt(id as string, 10);
+      const numericId = parseInt(String(req.params.id), 10);
       if (isNaN(numericId) || numericId <= 0) {
         return res.status(400).json({
           success: false,
@@ -163,22 +98,13 @@ class LocationController {
           data: null,
         });
       }
-
       const result = await locationService.deleteLocation(numericId);
-
-      // Service mengembalikan success: false jika not found
       if (!result.success) {
         return res.status(404).json(result);
       }
-
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
-      console.error("[LocationController] Error deleting location:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to delete location",
-        data: null,
-      });
+      next(error);
     }
   }
 }

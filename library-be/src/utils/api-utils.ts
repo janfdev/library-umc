@@ -17,18 +17,14 @@ type User = typeof auth.$Infer.Session.user;
  */
 export async function getAuthenticatedUser(req: Request) {
   try {
-    // Convert Express headers to HeadersInit compatible format
     const headers: Record<string, string> = {};
     for (const [key, value] of Object.entries(req.headers)) {
       if (value !== undefined) {
-        // If value is an array, take the first element; otherwise use the string value
         headers[key] = Array.isArray(value) ? value[0] : value;
       }
     }
 
-    const session = await auth.api.getSession({
-      headers,
-    });
+    const session = await auth.api.getSession({ headers });
 
     if (!session?.user) {
       return null;
@@ -42,7 +38,8 @@ export async function getAuthenticatedUser(req: Request) {
 }
 
 /**
- * Create error response
+ * @deprecated Gunakan `sendError()` sebagai gantinya.
+ * Menggunakan { error: message } yang tidak konsisten dengan standar proyek.
  */
 export function createErrorResponse(
   res: Response,
@@ -53,7 +50,7 @@ export function createErrorResponse(
 }
 
 /**
- * Create success response
+ * @deprecated Gunakan `sendSuccess()` sebagai gantinya.
  */
 export function createSuccessResponse(
   res: Response,
@@ -71,7 +68,6 @@ export function validateRequestBody<T>(
   schema: ZodSchema<T>,
 ): { data: T; error: null } | { data: null; error: string } {
   try {
-    // In Express, ensure you have bodyParser or express.json() middleware used before this
     const body = req.body;
     const validatedData = schema.parse(body);
     return { data: validatedData, error: null };
@@ -129,39 +125,38 @@ export function generateSlug(name: string): string {
 
 /**
  * Higher-order function to wrap a controller with authentication
- * Usage: router.get('/protected', withAuth(async (req, res, user) => { ... }))
  */
 export function withAuth(
-  handler: (req: Request, res: Response, user: User) => Promise<any>,
+  handler: (req: Request, res: Response, user: User) => Promise<unknown>,
 ) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, _next: NextFunction) => {
     const user = await getAuthenticatedUser(req);
 
     if (!user) {
-      return createErrorResponse(res, "Unauthorized", 401);
+      return sendError(res, "Unauthorized", 401);
     }
 
     try {
       await handler(req, res, user);
     } catch (error) {
       console.error("API Error:", error);
-      createErrorResponse(res, "Internal server error", 500);
+      sendError(res, "Internal Server Error", 500);
     }
   };
 }
 
 /**
- * Higher-order function to wrap a controller without authentication (just error handling)
+ * Higher-order function to wrap a controller without authentication
  */
 export function withoutAuth(
-  handler: (req: Request, res: Response) => Promise<any>,
+  handler: (req: Request, res: Response) => Promise<unknown>,
 ) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, _next: NextFunction) => {
     try {
       await handler(req, res);
     } catch (error) {
       console.error("API Error:", error);
-      createErrorResponse(res, "Internal server error", 500);
+      sendError(res, "Internal Server Error", 500);
     }
   };
 }
@@ -191,4 +186,88 @@ export function createPaginationMeta(
     hasNext: page < totalPages,
     hasPrev: page > 1,
   };
+}
+
+// ============================================================
+// ✅ STANDAR FORMAT RESPONSE — gunakan fungsi-fungsi di bawah
+//    untuk semua controller, baik baru maupun yang direfactor
+// ============================================================
+
+/**
+ * Format standar envelope response seluruh proyek:
+ *   { success: boolean, message: string, data: T | null }
+ */
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  message: string;
+  data: T | null;
+}
+
+/**
+ * Kirim response **sukses** dengan format standar.
+ *
+ * @param res     - Express Response object
+ * @param message - Pesan singkat deskriptif (bahasa Indonesia)
+ * @param data    - Payload data yang dikembalikan ke klien
+ * @param status  - HTTP status code (default: 200, gunakan 201 untuk create)
+ *
+ * @example
+ * sendSuccess(res, "Data berhasil diambil", items);
+ * sendSuccess(res, "Koleksi berhasil dibuat", newCollection, 201);
+ */
+export function sendSuccess<T>(
+  res: Response,
+  message: string,
+  data: T,
+  status: number = 200,
+): void {
+  res.status(status).json({
+    success: true,
+    message,
+    data,
+  } satisfies ApiResponse<T>);
+}
+
+/**
+ * Kirim response **error** dengan format standar.
+ * Field `data` selalu `null` pada response error.
+ *
+ * @param res     - Express Response object
+ * @param message - Pesan error yang jelas (bahasa Indonesia)
+ * @param status  - HTTP status code (default: 400)
+ *
+ * @example
+ * sendError(res, "Data tidak ditemukan", 404);
+ * sendError(res, "Tidak memiliki akses", 403);
+ * sendError(res, "Token tidak valid", 401);
+ */
+export function sendError(
+  res: Response,
+  message: string,
+  status: number = 400,
+): void {
+  res.status(status).json({
+    success: false,
+    message,
+    data: null,
+  } satisfies ApiResponse<null>);
+}
+
+/**
+ * Kirim response **validation error** (400) dengan detail field error dari Zod.
+ * Gunakan ini setelah `schema.safeParse()` gagal.
+ *
+ * @example
+ * const v = schema.safeParse(req.body);
+ * if (!v.success) return sendValidationError(res, v.error.flatten());
+ */
+export function sendValidationError(
+  res: Response,
+  errors: ReturnType<ZodError["flatten"]>,
+): void {
+  res.status(400).json({
+    success: false,
+    message: "Validation Error",
+    data: errors,
+  });
 }
