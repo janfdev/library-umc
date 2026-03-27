@@ -1,4 +1,4 @@
-import { and, eq, isNull, SQL } from "drizzle-orm";
+import { and, eq, isNull, type SQL } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   Users,
@@ -20,12 +20,13 @@ class FinesService {
     filters: {
       status?: "paid" | "unpaid";
       loanId?: string;
+      memberId?: string;
       limit?: number;
       offset?: number;
     } = {},
   ) {
     try {
-      const { status, loanId, limit = 10, offset = 0 } = filters;
+      const { status, loanId, memberId, limit = 10, offset = 0 } = filters;
 
       const conditions: SQL[] = [isNull(fines.deletedAt)];
       if (status) {
@@ -33,6 +34,9 @@ class FinesService {
       }
       if (loanId) {
         conditions.push(eq(fines.loanId, loanId));
+      }
+      if (memberId) {
+        conditions.push(eq(loans.memberId, memberId));
       }
 
       const rows = await db

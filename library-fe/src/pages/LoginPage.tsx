@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { authClient } from "@/utils/auth-client";
 import { Mail, Lock, LogIn, UserCircle2, UserPlus } from "lucide-react";
-import Notification from "@/components/ui/toast";
 import { useToast } from "@/hooks/useToast";
 
 const LoginPage = () => {
@@ -11,7 +10,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
-  const { notifications, success, error, info, loading, removeToast } = useToast();
+  const { success, error, info, loading, removeToast } = useToast();
 
   // ─── Google SSO ───────────────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
@@ -93,17 +92,6 @@ const LoginPage = () => {
 
   return (
     <div className="h-screen bg-[#F1F3F6] flex items-center justify-center p-2 font-sans overflow-hidden">
-
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80">
-        {notifications.map((toast) => (
-          <Notification
-            key={toast.id}
-            {...toast}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
 
       <div className="w-full max-w-[380px] bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col">
 

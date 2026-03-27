@@ -285,6 +285,9 @@ export class CollectionService {
       // Check if collection exists
       const existingCollection = await db.query.collections.findFirst({
         where: and(eq(collections.id, id), isNull(collections.deletedAt)),
+        with: {
+          items: true
+        }
       });
 
       if (!existingCollection) {

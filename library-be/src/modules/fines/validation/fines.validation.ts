@@ -3,6 +3,7 @@ import z from "zod";
 export const getFinesQuerySchema = z.object({
   status: z.enum(["paid", "unpaid"]).optional(),
   loanId: z.string().optional(),
+  memberId: z.string().optional(),
   limit: z.string().regex(/^\d+$/, "Limit harus berupa angka").optional(),
   offset: z.string().regex(/^\d+$/, "Offset harus berupa angka").optional(),
 });

@@ -1,6 +1,6 @@
 import { db } from "../../../db";
 import { eq, and, sql, isNull } from "drizzle-orm";
-import { items, loans, members, fines } from "../../../db/schema";
+import { items, loans, members, fines, reservations } from "../../../db/schema";
 import crypto from "crypto";
 import { NotificationService } from "../../notification/service/notification.service";
 import reservationService from "../../reservation/service/reservation.service";
@@ -11,7 +11,7 @@ export class LoanService {
   /**
    * 1. Mahasiswa Request Pinjam Buku
    */
-  async requestLoan(memberId: string, itemId: string) {
+  async requestLoan(memberId: string, collectionId: string, reqLoanDate?: string, reqDueDate?: string) {
     // Best Practice: Cek apakah member sudah meminjam terlalu banyak (Limit: 3 buku aktif)
     const activeLoansCount = await db
       .select({ count: sql<number>`count(*)` })
@@ -30,29 +30,65 @@ export class LoanService {
       );
     }
 
-    // Validasi item
+    // Validasi antrian reservasi untuk koleksi ini
+    // Jangan izinkan pinjam jika ada antrian menunggu (FIFO)
+    const [waitingResCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.collectionId, collectionId),
+          eq(reservations.status, "waiting"),
+          isNull(reservations.deletedAt)
+        )
+      );
+
+    // Hitung item yang tersedia
+    const [availableItemsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(items)
+      .where(
+        and(
+          eq(items.collectionId, collectionId),
+          eq(items.status, "available"),
+          isNull(items.deletedAt)
+        )
+      );
+
+    if (Number(availableItemsCount.count) <= Number(waitingResCount.count)) {
+       // Cek apakah member ini ada di urutan pertama reservasi? 
+       // (Logika ini bisa dikembangkan, tapi untuk sekarang kita proteksi secara umum)
+       throw new Error("Buku ini sedang dipesan (reserved) oleh orang lain di antrian. Silakan masuk antrian reservasi.");
+    }
+
+    // Validasi item: Cari salinan pertama yang tersedia untuk collectionId ini
     const item = await db.query.items.findFirst({
-      where: and(eq(items.id, itemId), isNull(items.deletedAt)),
+      where: and(
+        eq(items.collectionId, collectionId), 
+        eq(items.status, "available"), 
+        isNull(items.deletedAt)
+      ),
     });
 
-    if (!item || item.status !== "available") {
-      throw new Error("Buku ini tidak tersedia untuk dipinjam");
+    if (!item) {
+      throw new Error("Buku ini sedang tidak tersedia untuk dipinjam");
     }
 
     // Generate token & expire (2 jam) untuk verifikasi di tempat
     const token = crypto.randomBytes(16).toString("hex");
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 jam
 
+    const finalLoanDate = reqLoanDate || new Date().toISOString().split("T")[0];
+    const finalDueDate = reqDueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
     const [loan] = await db
       .insert(loans)
       .values({
         memberId,
-        itemId,
+        itemId: item.id, // Gunakan itemId yang available
         status: "pending",
-        loanDate: new Date().toISOString().split("T")[0],
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0], // Standar: 7 hari
+        loanDate: finalLoanDate,
+        dueDate: finalDueDate,
         verificationToken: token,
         verificationExpiresAt: expiresAt,
       })

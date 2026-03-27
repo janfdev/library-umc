@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/useToast";
+
 
 interface Loan {
   id: string;
@@ -58,6 +60,9 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
   const [error, setError] = useState<string | null>(null);
   const [returnModalLoan, setReturnModalLoan] = useState<Loan | null>(null);
   const [returnResult, setReturnResult] = useState<{ message: string; isLate: boolean } | null>(null);
+  // Modal reject: menggantikan prompt() native browser
+  const [rejectModal, setRejectModal] = useState<{ loanId: string; reason: string } | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     fetchLoans();
@@ -97,6 +102,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
 
   const handleApprove = async (loanId: string) => {
     setProcessingId(loanId);
+    const loadingId = toast.loading("Memproses...", "Menyetujui peminjaman");
     try {
       const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}/approve`, {
         method: "POST",
@@ -105,27 +111,39 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         body: JSON.stringify({ notes: actionNotes }),
       });
       const data = await response.json();
+      toast.removeToast(loadingId);
       if (data.success) {
-        alert("Peminjaman disetujui!");
+        toast.success("Disetujui!", "Peminjaman berhasil disetujui");
         setSelectedLoan(null);
         setActionNotes("");
         fetchLoans();
       } else {
-        alert(data.message || "Gagal menyetujui peminjaman");
+        toast.error("Gagal", data.message || "Gagal menyetujui peminjaman");
       }
-    } catch (error) {
-      console.error("Error approving loan:", error);
-      alert("Gagal menyetujui peminjaman");
+    } catch {
+      toast.removeToast(loadingId);
+      toast.error("Error", "Gagal terhubung ke server");
     } finally {
       setProcessingId(null);
     }
   };
 
-  const handleReject = async (loanId: string) => {
-    const reason = prompt("Alasan penolakan:");
-    if (!reason) return;
+  // Buka modal reject — menggantikan prompt() agar konsisten dengan design system
+  const openRejectModal = (loanId: string) => {
+    setRejectModal({ loanId, reason: "" });
+  };
+
+  const handleReject = async () => {
+    if (!rejectModal) return;
+    const { loanId, reason } = rejectModal;
+    if (!reason.trim()) {
+      toast.warning("Isi Alasan", "Alasan penolakan tidak boleh kosong");
+      return;
+    }
 
     setProcessingId(loanId);
+    setRejectModal(null);
+    const loadingId = toast.loading("Memproses...", "Menolak peminjaman");
     try {
       const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}/reject`, {
         method: "POST",
@@ -134,15 +152,16 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         body: JSON.stringify({ reason }),
       });
       const data = await response.json();
+      toast.removeToast(loadingId);
       if (data.success) {
-        alert("Peminjaman ditolak!");
+        toast.success("Ditolak", "Peminjaman berhasil ditolak");
         fetchLoans();
       } else {
-        alert(data.message || "Gagal menolak peminjaman");
+        toast.error("Gagal", data.message || "Gagal menolak peminjaman");
       }
-    } catch (error) {
-      console.error("Error rejecting loan:", error);
-      alert("Gagal menolak peminjaman");
+    } catch {
+      toast.removeToast(loadingId);
+      toast.error("Error", "Gagal terhubung ke server");
     } finally {
       setProcessingId(null);
     }
@@ -151,6 +170,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
   // ─── Handler: Return Book ───────────────────────────────────────────
   const handleReturn = async (loanId: string) => {
     setProcessingId(loanId);
+    const loadingId = toast.loading("Memproses...", "Memproses pengembalian buku");
     try {
       const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}/return`, {
         method: "POST",
@@ -159,16 +179,18 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         body: JSON.stringify({}),
       });
       const data = await response.json();
+      toast.removeToast(loadingId);
       if (data.success) {
         const isLate = data.message?.toLowerCase().includes("terlambat");
         setReturnResult({ message: data.message, isLate });
         fetchLoans();
       } else {
-        alert(data.message || "Gagal memproses pengembalian");
+        toast.error("Gagal", data.message || "Gagal memproses pengembalian");
         setReturnModalLoan(null);
       }
     } catch {
-      alert("Gagal terhubung ke server");
+      toast.removeToast(loadingId);
+      toast.error("Error", "Gagal terhubung ke server");
       setReturnModalLoan(null);
     } finally {
       setProcessingId(null);
@@ -424,7 +446,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                          {processingId === loan.id ? 'Memproses...' : '✓ Setujui Peminjaman'}
                       </button>
                       <button
-                        onClick={() => handleReject(loan.id)}
+                        onClick={() => openRejectModal(loan.id)}
                         disabled={processingId === loan.id}
                         className="flex-none bg-white text-slate-400 border border-slate-200 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all disabled:opacity-50"
                       >
@@ -595,6 +617,40 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Reject Loan (menggantikan prompt() native) ── */}
+      {rejectModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[24px] p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-[18px] font-extrabold text-slate-900 mb-2">Tolak Peminjaman</h3>
+            <p className="text-sm text-slate-500 mb-5">Berikan alasan penolakan yang jelas kepada peminjam.</p>
+
+            <textarea
+              autoFocus
+              value={rejectModal.reason}
+              onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
+              placeholder="Contoh: Buku sedang dalam perbaikan, kartu tidak valid, dll."
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-medium focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all outline-none mb-5 resize-none"
+              rows={3}
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRejectModal(null)}
+                className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50 transition-all"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleReject}
+                className="flex-1 bg-red-600 text-white px-4 py-3 rounded-xl text-[13px] font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
+              >
+                Tolak Peminjaman
+              </button>
+            </div>
           </div>
         </div>
       )}

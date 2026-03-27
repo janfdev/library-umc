@@ -1,348 +1,266 @@
-import { useState, useEffect, useCallback } from "react";
-import { authClient } from "@/utils/auth-client";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
+import { authClient } from "@/utils/auth-client";
+import memberService, {
+  type MemberProfile,
+  type UpdateProfilePayload,
+} from "@/services/memberService";
 import RiwayatPeminjaman from "@/components/RiwayatPeminjaman";
+import FinesList from "@/components/FinesList";
 import MemberCard from "@/components/MemberCard";
-import ReservationList from "@/components/ReservationList";
-import memberService, { type MemberProfile, type UpdateProfilePayload } from "@/services/memberService";
+import Notification from "@/components/ui/toast";
+import { useToast } from "@/hooks/useToast";
+import { Settings, Mail } from "lucide-react";
 
 const Profile = () => {
-  const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("riwayat-peminjaman");
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const [profile, setProfile] = useState<MemberProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("peminjaman-aktif");
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const { notifications, success, error, removeToast } = useToast();
 
-  // ── State untuk data member dari API ──────────────────
-  const [member, setMember] = useState<MemberProfile | null>(null);
-
-  // ── State form edit profil ─────────────────────────────
-  const [editForm, setEditForm] = useState<UpdateProfilePayload>({
+  const [formData, setFormData] = useState<UpdateProfilePayload>({
     nimNidn: "",
     faculty: "",
     phone: "",
   });
-  const [editLoading, setEditLoading] = useState(false);
-  const [editSuccess, setEditSuccess] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  // Redirect ke login jika tidak ada session better-auth
-  // (berlaku untuk login manual AND Google SSO — keduanya pakai authClient sekarang)
-  useEffect(() => {
-    if (!isPending && !session) {
-      navigate('/login');
-    }
-  }, [session, isPending, navigate]);
-
-  // Fetch profil member dari API
-  const fetchMemberProfile = useCallback(async () => {
-    if (!session) return;
-    try {
-      const profile = await memberService.getMyProfile();
-      setMember(profile);
-      setEditForm({
-        nimNidn: profile.nimNidn ?? "",
-        faculty: profile.faculty ?? "",
-        phone: profile.phone ?? "",
-      });
-    } catch {
-      // Member belum ada di DB atau error — pakai fallback dari session
-      setMember(null);
-    }
-  }, [session]);
 
   useEffect(() => {
-    fetchMemberProfile();
-  }, [fetchMemberProfile]);
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const data = await memberService.getMyProfile();
+        setProfile(data);
+        setFormData({
+          nimNidn: data.nimNidn || "",
+          faculty: data.faculty || "",
+          phone: data.phone || "",
+        });
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Handler simpan edit profil
-  const handleSaveProfile = async (e: React.FormEvent) => {
+    if (session?.user) {
+      fetchProfile();
+    } else if (!sessionLoading && !session) {
+      navigate("/login");
+    }
+  }, [session, sessionLoading, navigate]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEditLoading(true);
-    setEditError(null);
-    setEditSuccess(false);
     try {
-      const updated = await memberService.updateMyProfile({
-        nimNidn: editForm.nimNidn || undefined,
-        faculty: editForm.faculty || undefined,
-        phone: editForm.phone || undefined,
-      });
-      setMember(updated);
-      setEditSuccess(true);
-      setTimeout(() => setEditSuccess(false), 3000);
-    } catch (err: unknown) {
-      setEditError(
-        err instanceof Error ? err.message : "Gagal menyimpan perubahan"
-      );
+      setUpdateLoading(true);
+      const updated = await memberService.updateMyProfile(formData);
+      setProfile(updated);
+      success("Berhasil", "Profil berhasil diperbarui", 3000);
+    } catch (err) {
+      console.error("Update profile error:", err);
+      error("Gagal", "Gagal memperbarui profil", 5000);
     } finally {
-      setEditLoading(false);
+      setUpdateLoading(false);
     }
   };
 
-  // ── Data dari session better-auth + API ──────────────
-  const userName =
-    session?.user?.name ||
-    session?.user?.email?.split('@')[0] ||
-    "User";
-  const userEmail = session?.user?.email || "email@domain.com";
-  const userImage = session?.user?.image || null;
-  const userNim   = member?.nimNidn || String((session?.user as unknown as Record<string, unknown>)?.nim || "202400000");
-  const userFaculty = member?.faculty || (session?.user as unknown as Record<string, unknown>)?.jurusan as string || "Teknik Informatika";
-  const userId = session?.user?.id || "";
 
-  // Loading state
-  if (isPending) {
+  if (sessionLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat profil...</p>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-700"></div>
       </div>
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  const userId = profile?.id || "";
+  const initials =
+    profile?.user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2) || "U";
+
+  const tabs = [
+    { id: "peminjaman-aktif", label: "Peminjaman Aktif", count: 3 },
+    { id: "riwayat-peminjaman", label: "Riwayat Peminjaman", count: null },
+    { id: "tagihan-denda", label: "Tagihan & Denda", count: 1 },
+    { id: "kartu-member", label: "Kartu Member", count: null },
+    { id: "edit-profil", label: "Pengaturan", icon: <Settings size={14} /> },
+  ];
 
   return (
-    <>
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="min-h-screen bg-white">
-        {/* Header Section */}
-        <div className="relative h-48 w-full overflow-hidden bg-white">
-          <div 
-            className="absolute inset-0 opacity-10"
+
+      {/* Toast Container */}
+      <div className="fixed top-24 right-4 z-[9999] flex flex-col gap-2 w-80">
+        {notifications.map((toast) => (
+          <Notification
+            key={toast.id}
+            {...toast}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </div>
+
+      <main className="w-full mx-auto md:px-8 px-4 pt-10 pb-16">
+        {/* Banner with Wavy Pattern placeholder */}
+        <div className="relative rounded-t-[24px] overflow-hidden h-44 bg-red-900 shadow-sm">
+          <div
+            className="absolute inset-0 opacity-30"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 86c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm66 3c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-46-45c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm26 18c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm16-34c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM24 7c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm34 35c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM92 80c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM70 14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM56 21c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-4 72c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM16 47c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm52 38c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm24-39c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM32 6c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm36 20c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-4-18c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM42 55c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-26 23c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm24-32c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm44-17c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-38 1c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-6 40c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-12-67c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm31-16c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm24 33c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-6-8c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-18-12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-12 16c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-16 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm20 22c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm20-10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-40 10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM38 58c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM62 48c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM72 80c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM48 80c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm10-30c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM56 40c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-10-20c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm40 10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-10-10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm10 20c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-10-10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z' fill='%239b1c1c' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-              backgroundColor: '#f8f8f8',
-              backgroundSize: '300px'
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928l2.105.842c.399.16.812.32 1.25.48a12.82 12.82 0 0 0 4.19.75h14.195a14.28 14.28 0 0 0 3.631-.469L100 20H21.184zM100 0h-5.263l-1.052.42c-10.272 4.11-15.363 5.333-24.63 9.038l-2.105.842c-.399.16-.812.32-1.25.48A12.82 12.82 0 0 1 62.5 11.533H48.305a14.28 14.28 0 0 1-3.631-.469L41.184 10c-.357-.13-.72-.264-1.088-.402l-1.768-.661C28.36 5.347 22.353 4 12 4 1.729 4-3.362 5.222-12.629 8.928l-2.105.842c-.399.16-.812.32-1.25.48A12.82 12.82 0 0 0-20.174 11H-100V0h100z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
             }}
-          ></div>
+          />
         </div>
 
-        {/* Profile Info Container */}
-        <div className="max-w-6xl mx-auto px-4 relative -mt-24">
-          <div className="flex flex-col md:flex-row items-end md:items-center space-y-4 md:space-y-0 md:space-x-6">
-            {/* Foto Profil */}
-            <div className="relative group">
-              <div className="w-44 h-44 rounded-3xl bg-red-400 overflow-hidden shadow-xl border-4 border-white">
-                {userImage ? (
-                  <img 
-                    src={userImage} 
-                    alt={userName} 
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-5xl font-bold bg-gradient-to-br from-red-400 to-red-600">
-                    {userName.charAt(0).toUpperCase()}
-                    {userName.split(' ')[1]?.charAt(0).toUpperCase() || ''}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Nama & Detail */}
-            <div className="flex-1 pb-2">
-              <h1 className="text-3xl font-extrabold text-gray-900 drop-shadow-sm">
-                {userName}
-              </h1>
-              <p className="text-lg font-medium text-blue-400">{userFaculty}</p>
-              <p className="text-sm text-gray-400 mt-1">{userEmail}</p>
-              <p className="text-sm text-gray-500 mt-1">NIM: {userNim}</p>
+        {/* Profile Card Section */}
+        <div className="px-10 -mt-20 flex flex-col md:flex-row items-end gap-8 mb-12 relative z-10">
+          <div className="w-48 h-56 bg-white rounded-[32px] shadow-xl border border-slate-50 overflow-hidden flex items-center justify-center p-1">
+            <div className="w-full h-full bg-slate-100 rounded-[28px] overflow-hidden flex items-center justify-center">
+              {profile?.user?.image ? (
+                <img
+                  src={profile.user.image}
+                  alt={profile.user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 font-bold text-5xl">
+                  {initials}
+                </div>
+              )}
             </div>
           </div>
+          <div className="flex-1 pb-4">
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-2 underline decoration-red-600/10 underline-offset-8">
+              {profile?.user?.name}
+            </h2>
+            <p className="text-lg text-slate-500 font-bold mb-2">
+              {profile?.faculty || "Teknik Informatika"}
+            </p>
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest">
+              <Mail size={14} className="text-red-700" />
+              {profile?.user?.email}
+            </div>
+          </div>
+        </div>
 
-          {/* Navigasi Tab */}
-          <div className="flex flex-wrap gap-4 md:gap-8 border-b border-gray-100 mt-12 pb-0">
-            {[
-              { id: "peminjaman-aktif",   label: "Peminjaman Aktif" },
-              { id: "riwayat-peminjaman", label: "Riwayat Peminjaman" },
-              { id: "reservasi",          label: "Reservasi" },
-              { id: "tagihan-denda",      label: "Tagihan & Denda" },
-              { id: "kartu-member",       label: "Kartu Member" },
-              { id: "edit-profil",        label: "Edit Profil" },
-            ].map((tab) => (
+        {/* Custom Navigation Tabs */}
+        <div className="border-b border-slate-100 mb-10 px-2 overflow-x-auto scroller-hide">
+          <div className="flex gap-10 min-w-max">
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-1 py-4 text-sm font-semibold transition-all ${
-                  activeTab === tab.id ? "text-red-700" : "text-gray-500 hover:text-gray-700"
+                className={`relative pb-5 text-xs font-black uppercase tracking-[0.15em] transition-all ${
+                  activeTab === tab.id
+                    ? "text-red-700 scale-105"
+                    : "text-slate-400 hover:text-slate-600"
                 }`}
               >
                 {tab.label}
+                {tab.count !== null && (
+                  <sup className="ml-1 text-[8px] font-black text-red-600">
+                    {tab.count}
+                  </sup>
+                )}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 w-full h-[3px] bg-red-700 rounded-full" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-700 rounded-full" />
                 )}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Content Section */}
-          <div className="py-8">
-            {activeTab === "riwayat-peminjaman" && (
-              <RiwayatPeminjaman type="history" />
-            )}
-
-            {activeTab === "peminjaman-aktif" && (
-              <RiwayatPeminjaman type="active" />
-            )}
-
-            {activeTab === "reservasi" && (
-              <ReservationList 
-                isOpen={true}
-                onClose={() => setActiveTab("riwayat-peminjaman")}
-                memberId={userId}
-              />
-            )}
-
-            {activeTab === "tagihan-denda" && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-                <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+        {/* Tab Content */}
+        <div className="min-h-[500px]">
+          {activeTab === "peminjaman-aktif" && (
+            <RiwayatPeminjaman type="active" view="grid" />
+          )}
+          {activeTab === "riwayat-peminjaman" && (
+            <RiwayatPeminjaman type="history" view="table" />
+          )}
+          {activeTab === "tagihan-denda" && <FinesList memberId={userId} />}
+          {activeTab === "kartu-member" && (
+            <div className="flex justify-center">
+              <MemberCard profile={profile} />
+            </div>
+          )}
+          {activeTab === "edit-profil" && (
+            <div className="bg-slate-50/50 rounded-[40px] p-10 max-w-3xl border border-slate-100 shadow-sm">
+              <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center text-red-600">
+                  <Settings size={20} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Tidak Ada Tagihan</h3>
-                <p className="text-gray-500 mb-6">Anda tidak memiliki tagihan atau denda saat ini</p>
-                <button className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                  Lihat Riwayat Pembayaran
-                </button>
-              </div>
-            )}
-
-            {activeTab === "kartu-member" && (
-              <MemberCard
-                name={userName}
-                nim={userNim}
-                major={userFaculty}
-                category="Mahasiswa"
-                onPrint={() => {
-                  alert(`Kartu anggota ${userName} sedang dicetak...`);
-                }}
-              />
-            )}
-
-            {/* ── Tab Edit Profil (BARU) ──────────────────── */}
-            {activeTab === "edit-profil" && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">Edit Profil</h2>
-                <p className="text-sm text-gray-400 mb-6">
-                  Perbarui data NIM/NIDN, fakultas, dan nomor telepon kamu
-                </p>
-
-                {editSuccess && (
-                  <div className="mb-5 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium">
-                    ✓ Profil berhasil diperbarui!
-                  </div>
-                )}
-
-                {editError && (
-                  <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
-                    {editError}
-                  </div>
-                )}
-
-                <form onSubmit={handleSaveProfile} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Pengaturan Profil
+              </h3>
+              <form onSubmit={handleUpdateProfile} className="space-y-8">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
                       NIM / NIDN
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: 20240001"
-                      value={editForm.nimNidn ?? ""}
+                      value={formData.nimNidn || ""}
                       onChange={(e) =>
-                        setEditForm((f) => ({ ...f, nimNidn: e.target.value }))
+                        setFormData({ ...formData, nimNidn: e.target.value })
                       }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition"
+                      className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      Fakultas / Jurusan
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                      Fakultas
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: Teknik Informatika"
-                      value={editForm.faculty ?? ""}
+                      value={formData.faculty || ""}
                       onChange={(e) =>
-                        setEditForm((f) => ({ ...f, faculty: e.target.value }))
+                        setFormData({ ...formData, faculty: e.target.value })
                       }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition"
+                      className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      Nomor Telepon
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="Contoh: 08123456789"
-                      value={editForm.phone ?? ""}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, phone: e.target.value }))
-                      }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition"
-                    />
-                  </div>
-
-                  {/* Read-only: nama & email */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Nama Lengkap
-                      </label>
-                      <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-400">
-                        {userName}
-                        <span className="float-right text-xs italic">hanya baca</span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Email
-                      </label>
-                      <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-400 truncate">
-                        {userEmail}
-                        <span className="float-right text-xs italic">hanya baca</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditForm({
-                          nimNidn: member?.nimNidn ?? "",
-                          faculty: member?.faculty ?? "",
-                          phone: member?.phone ?? "",
-                        });
-                        setEditError(null);
-                      }}
-                      className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-xl transition-all"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={editLoading}
-                      className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-sm font-bold rounded-xl transition-all"
-                    >
-                      {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                    WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.phone || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                    placeholder="081234567890"
+                  />
+                </div>
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={updateLoading}
+                    className="bg-red-700 text-white px-12 py-4 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-red-200 hover:bg-red-800 disabled:bg-slate-300 transition-all active:scale-95"
+                  >
+                    {updateLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
+
       <Footer />
-    </>
+    </div>
   );
 };
 

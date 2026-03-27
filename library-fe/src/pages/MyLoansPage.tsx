@@ -1,318 +1,482 @@
 // src/pages/MyLoansPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
-import { 
-  Search, 
-  RefreshCw, 
-  BookOpen, 
-  AlertCircle, 
-  CheckCircle, 
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Search,
+  RefreshCw,
+  BookOpen,
+  AlertCircle,
+  CheckCircle,
   XCircle,
-  Filter
+  Clock,
+  Filter,
+  CalendarDays,
+  RotateCcw,
 } from "lucide-react";
+import loanService, { type Loan } from "@/services/loanService";
+import { authClient } from "@/utils/auth-client";
+import { useToast } from "@/hooks/useToast";
+import { formatDateID, calcLateDays } from "@/utils/format";
 
-// Tipe data untuk peminjaman
-interface Loan {
-  id: number;
-  title: string;
-  author: string;
-  dueDate: string;
-  borrowDate?: string;
-  returnDate?: string;
-  status: "active" | "warning" | "late" | "returned" | "pending";
-  fine: number;
-  finePaid?: boolean;
-  extensionCount?: number;
-  coverImage?: string;
-  category?: string;
-  notes?: string;
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Hitung status visual dari data loan nyata */
+function getLoanStatus(loan: Loan): "active" | "warning" | "late" | "returned" | "pending" | "rejected" {
+  if (loan.status === "pending") return "pending";
+  if (loan.status === "rejected") return "rejected";
+  if (loan.status === "returned") return "returned";
+  if (loan.status === "approved" || loan.status === "extended") {
+    const lateDays = calcLateDays(loan.dueDate);
+    if (lateDays > 0) return "late";
+    // Segera jatuh tempo: ≤ 3 hari
+    const dueDate = new Date(loan.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysLeft = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysLeft <= 3 ? "warning" : "active";
+  }
+  return "active";
 }
 
-// Tipe data untuk user
-interface User {
-  name: string;
-  nim: string;
-  faculty: string;
-  quotaUsed: number;
-  quotaTotal: number;
-  totalFines: number;
+const STATUS_CONFIG = {
+  active: { label: "Pinjaman Aktif", bg: "bg-green-50", text: "text-green-600", dot: "bg-green-500" },
+  warning: { label: "Segera Kembali", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-500" },
+  late: { label: "Terlambat", bg: "bg-red-50", text: "text-red-600", dot: "bg-red-500" },
+  returned: { label: "Dikembalikan", bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-400" },
+  pending: { label: "Menunggu Konfirmasi", bg: "bg-yellow-50", text: "text-yellow-600", dot: "bg-yellow-500" },
+  rejected: { label: "Ditolak", bg: "bg-red-50", text: "text-red-700", dot: "bg-red-600" },
+} as const;
+
+type VisualStatus = keyof typeof STATUS_CONFIG;
+
+const FILTER_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "all", label: "Semua" },
+  { value: "active", label: "Aktif" },
+  { value: "warning", label: "Segera Kembali" },
+  { value: "late", label: "Terlambat" },
+  { value: "pending", label: "Menunggu" },
+  { value: "returned", label: "Dikembalikan" },
+];
+
+// ─── Sub-component: Status Badge ──────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: VisualStatus }) {
+  const cfg = STATUS_CONFIG[status];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
 }
+
+// ─── Sub-component: Loan Card ─────────────────────────────────────────────────
+
+interface LoanCardProps {
+  loan: Loan;
+  status: VisualStatus;
+  isExtending: boolean;
+  onExtend: (loanId: string) => void;
+  onViewDetail: (loan: Loan) => void;
+}
+
+function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCardProps) {
+  const title = loan.item?.collection?.title ?? loan.collectionTitle ?? "Judul tidak tersedia";
+  const author = loan.item?.collection?.author ?? loan.collectionAuthor ?? "Penulis tidak tersedia";
+  const image = loan.item?.collection?.image;
+  const lateDays = calcLateDays(loan.dueDate);
+
+  return (
+    <div
+      className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col"
+      onClick={() => onViewDetail(loan)}
+    >
+      <div className="flex gap-4 mb-5">
+        {/* Cover */}
+        <div className="w-20 h-28 rounded-xl overflow-hidden shrink-0 bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+          {image ? (
+            <img src={image} alt={title} className="w-full h-full object-cover" />
+          ) : (
+            <BookOpen className="w-7 h-7 text-slate-400" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-slate-900 leading-snug mb-1 line-clamp-2 text-sm">
+            {title}
+          </h3>
+          <p className="text-[11px] text-slate-400 font-medium mb-3 truncate">{author}</p>
+          <StatusBadge status={status} />
+        </div>
+      </div>
+
+      {/* Dates */}
+      <div className="flex justify-between items-end border-t border-slate-50 pt-4 mb-5 text-[10px]">
+        <div>
+          <p className="font-bold text-slate-300 uppercase tracking-widest mb-1">Jatuh Tempo</p>
+          <p className={`font-bold text-sm ${status === "late" ? "text-red-600" : "text-slate-900"}`}>
+            {formatDateID(loan.dueDate)}
+          </p>
+          {loan.loanDate && (
+            <p className="text-slate-400 mt-0.5">Dipinjam: {formatDateID(loan.loanDate)}</p>
+          )}
+        </div>
+        {(loan.fine ?? 0) > 0 && (
+          <div className="text-right">
+            <p className="font-bold text-slate-300 uppercase tracking-widest mb-1">Denda</p>
+            <p className="font-bold text-red-600 text-sm">
+              Rp {(loan.fine ?? 0).toLocaleString("id-ID")}
+            </p>
+            {lateDays > 0 && (
+              <p className="text-red-400 mt-0.5">{lateDays} hari terlambat</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-auto">
+        {(status === "active" || status === "warning") && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onExtend(loan.id); }}
+            disabled={isExtending}
+            className="w-full bg-[#A31D1D] hover:bg-[#8B1818] disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+          >
+            <RefreshCw size={13} strokeWidth={3} className={isExtending ? "animate-spin" : ""} />
+            {isExtending ? "MEMPROSES..." : "PERPANJANG"}
+          </button>
+        )}
+
+        {status === "pending" && (
+          <div className="w-full bg-yellow-50 text-yellow-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+            <Clock size={13} />
+            MENUNGGU KONFIRMASI
+          </div>
+        )}
+
+        {status === "returned" && (
+          <div className="w-full bg-gray-50 text-gray-500 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+            <CheckCircle size={13} />
+            SUDAH DIKEMBALIKAN
+          </div>
+        )}
+
+        {status === "rejected" && (
+          <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+            <XCircle size={13} />
+            DITOLAK
+          </div>
+        )}
+
+        {status === "late" && (
+          <div className="w-full bg-red-50 text-red-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+            <AlertCircle size={13} />
+            TERLAMBAT — KEMBALIKAN KE PERPUSTAKAAN
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Detail Modal ─────────────────────────────────────────────────────────────
+
+interface DetailModalProps {
+  loan: Loan;
+  status: VisualStatus;
+  isExtending: boolean;
+  onExtend: (id: string) => void;
+  onClose: () => void;
+}
+
+function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailModalProps) {
+  const title = loan.item?.collection?.title ?? loan.collectionTitle ?? "Judul tidak tersedia";
+  const author = loan.item?.collection?.author ?? loan.collectionAuthor ?? "Penulis tidak tersedia";
+  const lateDays = calcLateDays(loan.dueDate);
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <div className="relative bg-white rounded-3xl w-full max-w-lg shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-slate-100">
+            <h2 className="text-lg font-bold text-slate-900">Detail Peminjaman</h2>
+            <button onClick={onClose} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+              <XCircle size={20} className="text-slate-400" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="flex gap-4">
+              <div className="w-16 h-24 rounded-xl overflow-hidden shrink-0 bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+                {loan.item?.collection?.image ? (
+                  <img src={loan.item.collection.image} alt={title} className="w-full h-full object-cover" />
+                ) : (
+                  <BookOpen className="w-6 h-6 text-slate-400" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 mb-1">{title}</h3>
+                <p className="text-sm text-slate-500 mb-2">{author}</p>
+                <StatusBadge status={status} />
+              </div>
+            </div>
+
+            {/* Dates Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Tanggal Pinjam</p>
+                <p className="font-bold text-slate-900 text-sm">{formatDateID(loan.loanDate)}</p>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Jatuh Tempo</p>
+                <p className={`font-bold text-sm ${status === "late" ? "text-red-600" : "text-slate-900"}`}>
+                  {formatDateID(loan.dueDate)}
+                </p>
+              </div>
+              {loan.returnDate && (
+                <div className="p-3 bg-green-50 rounded-xl col-span-2">
+                  <p className="text-[10px] font-bold text-green-400 uppercase mb-1">Tanggal Dikembalikan</p>
+                  <p className="font-bold text-green-700 text-sm">{formatDateID(loan.returnDate)}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Fine */}
+            {(loan.fine ?? 0) > 0 && (
+              <div className="p-4 bg-red-50 rounded-xl flex items-start gap-3">
+                <AlertCircle className="text-red-600 w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-red-700 text-sm">Denda Keterlambatan</p>
+                  <p className="text-red-600 text-sm mt-0.5">
+                    Rp {(loan.fine ?? 0).toLocaleString("id-ID")}
+                    {lateDays > 0 && ` (${lateDays} hari × Rp 2.000)`}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {loan.notes && (
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Catatan</p>
+                <p className="text-xs text-slate-600">{loan.notes}</p>
+              </div>
+            )}
+
+            {/* Reject Reason */}
+            {loan.rejectReason && (
+              <div className="p-3 bg-red-50 rounded-xl">
+                <p className="text-[10px] font-bold text-red-400 uppercase mb-1">Alasan Penolakan</p>
+                <p className="text-xs text-red-600">{loan.rejectReason}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-slate-100 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+            >
+              Tutup
+            </button>
+            {(status === "active" || status === "warning") && (
+              <button
+                onClick={() => { onExtend(loan.id); onClose(); }}
+                disabled={isExtending}
+                className="flex-1 px-4 py-3 bg-[#A31D1D] hover:bg-[#8B1818] disabled:bg-slate-200 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+              >
+                <RotateCcw size={15} />
+                Perpanjang
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyLoansPage() {
-  
-  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const toast = useToast();
+
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [notification, setNotification] = useState<{show: boolean; message: string; type: 'success' | 'error'}>({
-    show: false,
-    message: '',
-    type: 'success'
-  });
+  const [extendingId, setExtendingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
 
-  // Mock data user
-  const [user] = useState<User>({
-    name: "Rizqi Noor Fauzan",
-    nim: "230511110",
-    faculty: "Teknik Informatika",
-    quotaUsed: 4,
-    quotaTotal: 5,
-    totalFines: 24500
-  });
+  // ─── Auth guard ──────────────────────────────────────────────────────────────
 
-  // Mock data peminjaman
   useEffect(() => {
-    // Simulasi loading
-    setTimeout(() => {
-      setLoans(mockLoans);
-      setLoading(false);
-    }, 800);
-  }, []);
-
-  const mockLoans: Loan[] = [
-    {
-      id: 1,
-      title: "Sistem Informasi Manajemen",
-      author: "Kenneth C. Laudon",
-      dueDate: "17 Feb 2026",
-      borrowDate: "3 Feb 2026",
-      status: "warning",
-      fine: 0,
-      extensionCount: 0,
-      category: "Manajemen",
-      notes: "Buku ini akan jatuh tempo dalam 3 hari"
-    },
-    {
-      id: 2,
-      title: "Pengantar Teknologi Informasi",
-      author: "Bagaskoro",
-      dueDate: "17 Feb 2026",
-      borrowDate: "3 Feb 2026",
-      status: "warning",
-      fine: 0,
-      extensionCount: 0,
-      category: "Teknologi"
-    },
-    {
-      id: 3,
-      title: "Algoritma & Pemrograman",
-      author: "Rinaldi Munir",
-      dueDate: "21 Feb 2026",
-      borrowDate: "7 Feb 2026",
-      status: "active",
-      fine: 0,
-      extensionCount: 0,
-      category: "Pemrograman"
-    },
-    {
-      id: 4,
-      title: "Pengantar Bisnis",
-      author: "Sadono Sukirno",
-      dueDate: "25 Des 2025",
-      borrowDate: "1 Des 2025",
-      status: "late",
-      fine: 24500,
-      finePaid: false,
-      extensionCount: 1,
-      category: "Bisnis",
-      notes: "Sudah diperpanjang 1 kali. Denda Rp 1.000 per hari keterlambatan"
-    },
-    {
-      id: 5,
-      title: "Basis Data Lanjutan",
-      author: "Rahmat Wijaya",
-      dueDate: "10 Jan 2026",
-      borrowDate: "27 Des 2025",
-      returnDate: "5 Jan 2026",
-      status: "returned",
-      fine: 0,
-      category: "Database"
-    },
-    {
-      id: 6,
-      title: "Jaringan Komputer",
-      author: "Tanenbaum",
-      dueDate: "15 Mar 2026",
-      borrowDate: "1 Mar 2026",
-      status: "pending",
-      fine: 0,
-      category: "Jaringan",
-      notes: "Menunggu konfirmasi petugas"
+    if (!sessionLoading && !session?.user) {
+      navigate("/login");
     }
-  ];
+  }, [sessionLoading, session, navigate]);
 
-  // Filter loans berdasarkan search dan status
-  const filteredLoans = loans.filter(loan => {
-    const matchesSearch = loan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         loan.author.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  // ─── Fetch loans ─────────────────────────────────────────────────────────────
+
+  const fetchLoans = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    try {
+      const data = await loanService.getMyLoanHistory();
+      setLoans(data);
+    } catch (err) {
+      toast.error(
+        "Gagal Memuat Data",
+        err instanceof Error ? err.message : "Terjadi kesalahan saat memuat pinjaman"
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!sessionLoading && session?.user) {
+      fetchLoans();
+    }
+  }, [sessionLoading, session, fetchLoans]);
+
+  // ─── Perpanjang ──────────────────────────────────────────────────────────────
+
+  const handleExtend = useCallback(async (loanId: string) => {
+    setExtendingId(loanId);
+    const loadingId = toast.loading("Memproses...", "Sedang mengajukan perpanjangan");
+    try {
+      // Hitung dueDate baru: +7 hari dari sekarang
+      const newDueDate = new Date();
+      newDueDate.setDate(newDueDate.getDate() + 7);
+      const newDueDateStr = newDueDate.toISOString().split("T")[0];
+
+      // Backend endpoint perpanjang (notes sebagai info)
+      await loanService.approveLoan(loanId, `Perpanjangan. Jatuh tempo baru: ${newDueDateStr}`);
+      toast.removeToast(loadingId);
+      toast.success("Perpanjangan Berhasil", `Jatuh tempo baru: ${formatDateID(newDueDateStr)}`);
+      await fetchLoans(true);
+    } catch (err) {
+      toast.removeToast(loadingId);
+      toast.error(
+        "Perpanjangan Gagal",
+        err instanceof Error ? err.message : "Terjadi kesalahan"
+      );
+    } finally {
+      setExtendingId(null);
+    }
+  }, [fetchLoans]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Computed data ────────────────────────────────────────────────────────────
+
+  const loansWithStatus = loans.map((loan) => ({
+    loan,
+    status: getLoanStatus(loan) as VisualStatus,
+  }));
+
+  const filteredLoans = loansWithStatus.filter(({ loan, status }) => {
+    const title = (loan.item?.collection?.title ?? loan.collectionTitle ?? "").toLowerCase();
+    const author = (loan.item?.collection?.author ?? loan.collectionAuthor ?? "").toLowerCase();
+    const q = searchTerm.toLowerCase();
+    const matchesSearch = title.includes(q) || author.includes(q);
     if (filterStatus === "all") return matchesSearch;
-    return matchesSearch && loan.status === filterStatus;
+    return matchesSearch && status === filterStatus;
   });
 
-  // Statistik
   const stats = {
-    active: loans.filter(l => l.status === 'active').length,
-    warning: loans.filter(l => l.status === 'warning').length,
-    late: loans.filter(l => l.status === 'late').length,
-    returned: loans.filter(l => l.status === 'returned').length,
-    pending: loans.filter(l => l.status === 'pending').length,
-    totalFine: loans.reduce((acc, l) => acc + (l.fine || 0), 0)
+    active: loansWithStatus.filter((l) => l.status === "active").length,
+    warning: loansWithStatus.filter((l) => l.status === "warning").length,
+    late: loansWithStatus.filter((l) => l.status === "late").length,
+    pending: loansWithStatus.filter((l) => l.status === "pending").length,
+    returned: loansWithStatus.filter((l) => l.status === "returned").length,
+    totalFine: loans.reduce((acc, l) => acc + (l.fine ?? 0), 0),
   };
 
-  // Handle perpanjangan
-  const handleExtend = (loanId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Simulasi proses perpanjangan
-    setRefreshing(true);
-    setTimeout(() => {
-      setLoans(prev => prev.map(loan => 
-        loan.id === loanId 
-          ? { ...loan, dueDate: "24 Feb 2026", extensionCount: (loan.extensionCount || 0) + 1 }
-          : loan
-      ));
-      showNotification("Perpanjangan berhasil! Jatuh tempo menjadi 24 Feb 2026", "success");
-      setRefreshing(false);
-    }, 1000);
-  };
+  const user = session?.user;
 
-  // Handle bayar denda
-  const handlePayFine = (loanId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Simulasi pembayaran
-    setTimeout(() => {
-      setLoans(prev => prev.map(loan => 
-        loan.id === loanId 
-          ? { ...loan, finePaid: true, fine: 0 }
-          : loan
-      ));
-      showNotification("Pembayaran denda berhasil!", "success");
-    }, 500);
-  };
+  // ─── Loading state ────────────────────────────────────────────────────────────
 
-  // Show notification
-  const showNotification = (message: string, type: 'success' | 'error') => {
-    setNotification({ show: true, message, type });
-    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
-  };
-
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'active':
-        return <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">Pinjaman Aktif</span>;
-      case 'warning':
-        return <span className="inline-flex items-center px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full">
-          <RefreshCw size={10} className="mr-1.5" /> Segera Kembali
-        </span>;
-      case 'late':
-        return <span className="inline-flex items-center px-3 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-full">Terlambat</span>;
-      case 'returned':
-        return <span className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-600 text-[10px] font-bold rounded-full">Dikembalikan</span>;
-      case 'pending':
-        return <span className="inline-flex items-center px-3 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-bold rounded-full">Menunggu</span>;
-      default:
-        return null;
-    }
-  };
-
-  if (loading) {
+  if (sessionLoading || loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700"></div>
-        </div>
+        <main className="flex-1 max-w-7xl mx-auto px-4 md:px-6 py-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <Skeleton className="lg:col-span-2 h-40 rounded-2xl" />
+            <Skeleton className="h-40 rounded-2xl" />
+          </div>
+          <Skeleton className="h-14 rounded-xl mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-64 rounded-[24px]" />
+            ))}
+          </div>
+        </main>
         <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans relative">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
       <Navbar />
 
-      {/* Notification Toast */}
-      {notification.show && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border ${
-          notification.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-        } flex items-center gap-3 animate-slide-down`}>
-          {notification.type === 'success' ? (
-            <CheckCircle size={18} className="text-green-600" />
-          ) : (
-            <AlertCircle size={18} className="text-red-600" />
-          )}
-          <p className={`text-xs font-medium ${
-            notification.type === 'success' ? 'text-green-800' : 'text-red-800'
-          }`}>
-            {notification.message}
-          </p>
-        </div>
-      )}
-
       <main className="flex-1 max-w-7xl mx-auto px-4 md:px-6 py-10 w-full">
-        {/* --- TOP SECTION: SEARCH & QUOTA --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Search Box */}
-          <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center">
-                  <div className="w-3 h-3 border-2 border-red-600 rounded-sm"></div>
-                </div>
-                <h2 className="font-bold text-slate-800">Cari Buku</h2>
-              </div>
-              <button 
+
+        {/* ── TOP SECTION ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Search */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-bold text-slate-800">Cari Pinjaman</h2>
+              <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="lg:hidden text-slate-400 hover:text-red-600 transition-colors"
               >
                 <Filter size={18} />
               </button>
             </div>
-            
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Ketik judul buku untuk dipinjam..."
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/10 focus:border-red-500 text-sm text-slate-900 placeholder:text-slate-400"
+                placeholder="Ketik judul atau penulis..."
+                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/10 focus:border-red-500 text-sm text-slate-900 placeholder:text-slate-400"
               />
             </div>
           </div>
 
-          {/* User Quota Card */}
-          <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xl">
-              {user.name.split(' ').map(n => n[0]).join('')}
+          {/* User Card */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+            <div className="w-14 h-14 bg-linear-to-br from-red-500 to-red-700 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg">
+              {user?.name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
             </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-slate-900 text-lg">{user.name}</h3>
-              <p className="text-xs text-slate-400 mb-4 font-medium tracking-wide">
-                {user.faculty} • {user.nim}
-              </p>
-              <div className="space-y-1.5">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-900 truncate">{user?.name}</h3>
+              <p className="text-xs text-slate-400 mb-3 truncate">{user?.email}</p>
+              <div className="space-y-1">
                 <div className="flex justify-between text-[10px] font-bold">
-                  <span className="text-slate-400 uppercase tracking-widest">Kuota Pinjaman</span>
-                  <span className="text-red-700">{user.quotaUsed}/{user.quotaTotal} BUKU</span>
+                  <span className="text-slate-400 uppercase tracking-widest">Pinjaman Aktif</span>
+                  <span className="text-red-700">{stats.active + stats.warning + stats.late} buku</span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-red-700 rounded-full transition-all duration-500"
-                    style={{ width: `${(user.quotaUsed / user.quotaTotal) * 100}%` }}
-                  ></div>
-                </div>
-                {stats.late > 0 && (
-                  <p className="text-[10px] text-red-600 font-medium mt-2">
-                    ⚠️ Total denda: Rp {stats.totalFine.toLocaleString()}
+                {stats.totalFine > 0 && (
+                  <p className="text-[10px] text-red-600 font-medium pt-1">
+                    ⚠ Denda: Rp {stats.totalFine.toLocaleString("id-ID")}
                   </p>
                 )}
               </div>
@@ -320,340 +484,99 @@ export default function MyLoansPage() {
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className={`mb-6 transition-all duration-300 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+        {/* ── FILTER BAR ── */}
+        <div className={`mb-6 transition-all duration-300 ${showFilters ? "block" : "hidden lg:block"}`}>
           <div className="bg-white rounded-xl border border-slate-100 p-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Filter Status:</span>
-              <button
-                onClick={() => setFilterStatus("all")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterStatus === "all" 
-                    ? "bg-red-600 text-white" 
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                Semua ({loans.length})
-              </button>
-              <button
-                onClick={() => setFilterStatus("active")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterStatus === "active" 
-                    ? "bg-green-600 text-white" 
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                Aktif ({stats.active})
-              </button>
-              <button
-                onClick={() => setFilterStatus("warning")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterStatus === "warning" 
-                    ? "bg-orange-600 text-white" 
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                Segera Kembali ({stats.warning})
-              </button>
-              <button
-                onClick={() => setFilterStatus("late")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterStatus === "late" 
-                    ? "bg-red-600 text-white" 
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                Terlambat ({stats.late})
-              </button>
-              <button
-                onClick={() => setFilterStatus("pending")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterStatus === "pending" 
-                    ? "bg-yellow-600 text-white" 
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                Menunggu ({stats.pending})
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter:</span>
+              {FILTER_OPTIONS.map((opt) => {
+                const count =
+                  opt.value === "all"
+                    ? loans.length
+                    : loansWithStatus.filter((l) => l.status === opt.value).length;
+                const isActive = filterStatus === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFilterStatus(opt.value)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-red-600 text-white"
+                        : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {opt.label} ({count})
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* --- SECTION TITLE --- */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-black text-slate-900">Pinjaman Saya</h2>
-          <p className="text-sm text-slate-400">
-            Menampilkan {filteredLoans.length} dari {loans.length} pinjaman
-          </p>
+        {/* ── HEADER ── */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-black text-slate-900">Pinjaman Saya</h1>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-slate-400 hidden sm:block">
+              {filteredLoans.length} dari {loans.length} pinjaman
+            </p>
+            <button
+              onClick={() => fetchLoans(true)}
+              disabled={refreshing}
+              className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
+              title="Refresh"
+            >
+              <RefreshCw size={15} className={`text-slate-500 ${refreshing ? "animate-spin" : ""}`} />
+            </button>
+          </div>
         </div>
 
-        {/* --- LOANS GRID --- */}
+        {/* ── CONTENT ── */}
         {filteredLoans.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <CalendarDays className="w-14 h-14 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-800 mb-2">Tidak Ada Pinjaman</h3>
             <p className="text-slate-400 text-sm mb-6 max-w-md mx-auto">
-              {searchTerm 
-                ? `Tidak ditemukan pinjaman dengan judul "${searchTerm}"`
-                : "Anda belum memiliki pinjaman buku saat ini. Kunjungi katalog untuk meminjam buku."}
+              {searchTerm
+                ? `Tidak ditemukan pinjaman dengan kata kunci "${searchTerm}"`
+                : filterStatus !== "all"
+                  ? `Tidak ada pinjaman dengan status "${FILTER_OPTIONS.find((o) => o.value === filterStatus)?.label}"`
+                  : "Anda belum memiliki pinjaman buku. Kunjungi katalog untuk meminjam."}
             </p>
-            {searchTerm && (
+            {(searchTerm || filterStatus !== "all") && (
               <button
-                onClick={() => setSearchTerm("")}
+                onClick={() => { setSearchTerm(""); setFilterStatus("all"); }}
                 className="px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all"
               >
-                Reset Pencarian
+                Reset Filter
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredLoans.map((loan) => (
-              <div 
-                key={loan.id} 
-                className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col"
-                onClick={() => {
-                  setSelectedLoan(loan);
-                  setShowDetailModal(true);
-                }}
-              >
-                <div className="flex gap-4 mb-6">
-                  {/* Book Cover Placeholder */}
-                  <div className="w-24 h-32 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg flex-shrink-0 flex items-center justify-center">
-                    <BookOpen className="w-8 h-8 text-slate-500 opacity-50" />
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 leading-snug mb-1 line-clamp-2">
-                      {loan.title}
-                    </h3>
-                    <p className="text-[11px] text-slate-400 font-medium mb-3">
-                      {loan.author}
-                    </p>
-
-                    {/* Status Badge */}
-                    {getStatusBadge(loan.status)}
-                    
-                    {/* Extension Info */}
-                    {(loan.extensionCount || 0) > 0 && (
-                      <p className="text-[9px] text-blue-600 font-medium mt-2">
-                        ✓ Diperpanjang {loan.extensionCount}x
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Due Date Info */}
-                <div className="flex justify-between items-end border-t border-slate-50 pt-4 mb-6">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Jatuh Tempo</p>
-                    <p className={`font-bold text-sm ${
-                      loan.status === 'late' ? 'text-red-600' : 'text-slate-900'
-                    }`}>
-                      {loan.dueDate}
-                    </p>
-                    {loan.borrowDate && (
-                      <p className="text-[8px] text-slate-400 mt-1">
-                        Dipinjam: {loan.borrowDate}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">Denda</p>
-                    {loan.fine > 0 ? (
-                      <div>
-                        <p className="font-bold text-red-600 text-sm">Rp {loan.fine.toLocaleString()}</p>
-                        {loan.finePaid && (
-                          <p className="text-[8px] text-green-600 font-medium">✓ Lunas</p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-slate-400 font-medium">-</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                {loan.status === 'active' && (
-                  <button 
-                    onClick={(e) => handleExtend(loan.id, e)}
-                    disabled={refreshing}
-                    className="w-full bg-[#A31D1D] hover:bg-[#8B1818] text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <RefreshCw size={14} strokeWidth={3} className={refreshing ? 'animate-spin' : ''} />
-                    {refreshing ? 'MEMPROSES...' : 'PERPANJANG'}
-                  </button>
-                )}
-
-                {loan.status === 'warning' && (
-                  <button 
-                    onClick={(e) => handleExtend(loan.id, e)}
-                    disabled={refreshing}
-                    className="w-full bg-[#A31D1D] hover:bg-[#8B1818] text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    <RefreshCw size={14} strokeWidth={3} className={refreshing ? 'animate-spin' : ''} />
-                    {refreshing ? 'MEMPROSES...' : 'PERPANJANG'}
-                  </button>
-                )}
-
-                {loan.status === 'late' && !loan.finePaid && (
-                  <button 
-                    onClick={(e) => handlePayFine(loan.id, e)}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
-                  >
-                    BAYAR DENDA
-                  </button>
-                )}
-
-                {(loan.status === 'returned' || loan.status === 'pending' || (loan.status === 'late' && loan.finePaid)) && (
-                  <button 
-                    disabled
-                    className="w-full bg-slate-100 text-slate-400 py-3.5 rounded-xl font-bold text-xs cursor-not-allowed"
-                  >
-                    {loan.status === 'returned' ? 'SUDAH DIKEMBALIKAN' : 
-                     loan.status === 'pending' ? 'MENUNGGU KONFIRMASI' : 'LUNAS'}
-                  </button>
-                )}
-              </div>
+            {filteredLoans.map(({ loan, status }) => (
+              <LoanCard
+                key={loan.id}
+                loan={loan}
+                status={status}
+                isExtending={extendingId === loan.id}
+                onExtend={handleExtend}
+                onViewDetail={setSelectedLoan}
+              />
             ))}
           </div>
         )}
       </main>
 
-      {/* Detail Modal */}
-      {showDetailModal && selectedLoan && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowDetailModal(false)} />
-          
-          <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div className="relative bg-white rounded-3xl w-full max-w-2xl shadow-2xl">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-900">Detail Peminjaman</h2>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="p-2 hover:bg-slate-50 rounded-xl transition-colors"
-                >
-                  <XCircle size={20} className="text-slate-400" />
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
-                <div className="space-y-6">
-                  {/* Book Info */}
-                  <div className="flex gap-4">
-                    <div className="w-20 h-28 bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 text-slate-500 opacity-50" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-slate-900 text-lg mb-1">{selectedLoan.title}</h3>
-                      <p className="text-sm text-slate-500 mb-2">{selectedLoan.author}</p>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(selectedLoan.status)}
-                        {selectedLoan.category && (
-                          <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-600">
-                            {selectedLoan.category}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Tanggal Pinjam</p>
-                      <p className="font-bold text-slate-900">{selectedLoan.borrowDate || '-'}</p>
-                    </div>
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Jatuh Tempo</p>
-                      <p className={`font-bold ${selectedLoan.status === 'late' ? 'text-red-600' : 'text-slate-900'}`}>
-                        {selectedLoan.dueDate}
-                      </p>
-                    </div>
-                    {selectedLoan.returnDate && (
-                      <div className="p-4 bg-slate-50 rounded-xl">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Tanggal Kembali</p>
-                        <p className="font-bold text-green-600">{selectedLoan.returnDate}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Fine Info */}
-                  {(selectedLoan.fine || 0) > 0 && (
-                    <div className="p-4 bg-red-50 rounded-xl">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="font-bold text-red-600 mb-1">Informasi Denda</p>
-                          <p className="text-sm text-red-600/80 mb-2">
-                            Denda sebesar Rp {selectedLoan.fine?.toLocaleString()}
-                          </p>
-                          {selectedLoan.finePaid ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-600 rounded-full text-[10px] font-bold">
-                              <CheckCircle size={10} />
-                              Sudah Dibayar
-                            </span>
-                          ) : (
-                            <button 
-                              onClick={() => {
-                                handlePayFine(selectedLoan.id, new MouseEvent('click') as any);
-                                setShowDetailModal(false);
-                              }}
-                              className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-all"
-                            >
-                              Bayar Denda
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Extension Info */}
-                  {(selectedLoan.extensionCount || 0) > 0 && (
-                    <div className="p-4 bg-blue-50 rounded-xl">
-                      <p className="text-sm text-blue-800">
-                        <span className="font-bold">{selectedLoan.extensionCount}x</span> perpanjangan
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {selectedLoan.notes && (
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-xs text-slate-600">{selectedLoan.notes}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-slate-100">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
-                  >
-                    Tutup
-                  </button>
-                  {(selectedLoan.status === 'active' || selectedLoan.status === 'warning') && (
-                    <button 
-                      onClick={(e) => {
-                        handleExtend(selectedLoan.id, e as any);
-                        setShowDetailModal(false);
-                      }}
-                      className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-all"
-                    >
-                      Perpanjang
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* ── Detail Modal ── */}
+      {selectedLoan && (
+        <DetailModal
+          loan={selectedLoan}
+          status={getLoanStatus(selectedLoan) as VisualStatus}
+          isExtending={extendingId === selectedLoan.id}
+          onExtend={handleExtend}
+          onClose={() => setSelectedLoan(null)}
+        />
       )}
 
       <Footer />

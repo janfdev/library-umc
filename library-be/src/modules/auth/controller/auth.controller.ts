@@ -6,7 +6,11 @@ import {
   loginCredentialSchema,
 } from "../validation/auth.validation";
 import { UserService } from "../service/user.service";
-import { sendValidationError } from "../../../utils/api-utils";
+import {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} from "../../../utils/api-utils";
 
 const authService = new AuthService();
 
@@ -21,7 +25,7 @@ export class AuthController {
       const { name, email, password } = validation.data;
       const result = await authService.registerWithCredentials(name, email, password);
 
-      res.status(201).json(result);
+      sendSuccess(res, "Registrasi berhasil", result, 201);
     } catch (error) {
       next(error);
     }
@@ -37,7 +41,7 @@ export class AuthController {
       const { email, password } = validation.data;
       const result = await authService.loginWithCredentials(email, password);
 
-      res.status(200).json(result);
+      sendSuccess(res, "Login berhasil", result);
     } catch (error) {
       next(error);
     }
@@ -53,7 +57,11 @@ export class AuthController {
       const { email } = validation.data;
       const result = await authService.verifyWithCampus(email);
 
-      res.status(200).json(result);
+      if (!result.campusData) {
+        return sendError(res, "Email tidak ditemukan di sistem kampus", 404);
+      }
+
+      sendSuccess(res, "Verifikasi kampus berhasil", result);
     } catch (error) {
       next(error);
     }
@@ -62,7 +70,12 @@ export class AuthController {
   async getAllUsers(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await UserService.getAllUsers();
-      res.status(200).json(result);
+
+      if (!result.success) {
+        return sendError(res, result.message ?? "Gagal mengambil data pengguna", 500);
+      }
+
+      sendSuccess(res, "Data pengguna berhasil diambil", result.data);
     } catch (error) {
       next(error);
     }

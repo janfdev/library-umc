@@ -1,5 +1,3 @@
-// src/pages/KatalogDetail.tsx
-
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { API_BASE_URL } from "@/utils/api-config";
@@ -7,7 +5,9 @@ import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
 import ReservationList from "@/components/ReservationList";
 import loanService from "@/services/loanService";
+import reservationService, { type Reservation } from "@/services/reservationService";
 import { authClient } from "@/utils/auth-client";
+import { useToast } from "@/hooks/useToast";
 import {
   Share2,
   Bookmark,
@@ -17,9 +17,7 @@ import {
   ArrowRight,
   Bell,
   CheckCircle,
-  XCircle,
   Clock,
-  AlertCircle,
 } from "lucide-react";
 
 // ✅ Interface Collection (item di schema backend)
@@ -41,6 +39,10 @@ interface Collection {
     name: string;
     description?: string;
   };
+  items?: {
+    id: string;
+    status: string;
+  }[];
   stock?: number;
 }
 
@@ -98,10 +100,13 @@ const KatalogDetail = () => {
       }
     : null;
 
+  const toast = useToast();
+
   const [collection, setCollection] = useState<Collection | null>(null);
   const [activeLoans, setActiveLoans] = useState<LoanRequest[]>([]);
   const [userLoans, setUserLoans] = useState<LoanRequest[]>([]);
   const [pendingRequests, setPendingRequests] = useState<LoanRequest[]>([]);
+  const [userReservation, setUserReservation] = useState<Reservation | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,21 +115,14 @@ const KatalogDetail = () => {
   const [borrowLoading, setBorrowLoading] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
 
-  // ✅ Form field disesuaikan dengan schema: loanDate & dueDate
-  const [loanFormData, setLoanFormData] = useState({
-    loanDate: "",
-    dueDate: "",
-    notes: "",
-  });
+  // Form field disesuaikan dengan schema: loanDate & dueDate
+  const defaultLoanDate = new Date().toISOString().split("T")[0];
+  const defaultDueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  const [notification, setNotification] = useState<{
-    show: boolean;
-    message: string;
-    type: "success" | "error" | "info";
-  }>({
-    show: false,
-    message: "",
-    type: "success",
+  const [loanFormData, setLoanFormData] = useState({
+    loanDate: defaultLoanDate,
+    dueDate: defaultDueDate,
+    notes: "",
   });
 
   const [similarBooks, setSimilarBooks] = useState([
@@ -213,6 +211,15 @@ const KatalogDetail = () => {
                 setUserLoans(userLoansJson.data);
               }
             }
+
+            // Fetch user reservation untuk koleksi ini
+            try {
+              const reservations = await reservationService.getMyReservations();
+              const activeRes = reservations.find(r => r.collectionId === id && r.status === 'waiting');
+              setUserReservation(activeRes || null);
+            } catch (err) {
+              console.error("Error fetching reservation:", err);
+            }
           }
 
           // 4. Fetch similar books
@@ -251,76 +258,119 @@ const KatalogDetail = () => {
   }, [id, sessionLoading, currentUser?.memberId]);
 
   // Helper: Cek status buku
-  const getBookStatus = (): "available" | "borrowed" | "reserved" => {
+  const getBookStatus = (): "available" | "borrowed" | "reserved" | "empty" => {
     if (activeLoans.length > 0) return "borrowed";
     if (pendingRequests.length > 0) return "reserved";
+    
+    // Cek real stock jika backend return daftar fisik buku
+    if (collection?.items) {
+       const availableItems = collection.items.filter(i => i.status === "available");
+       if (availableItems.length === 0) return "empty";
+    }
+
     return "available";
   };
 
   const isUserBorrowing = (): boolean => userLoans.length > 0;
   const isUserPending = (): boolean => pendingRequests.length > 0;
+  const isUserReserved = (): boolean => !!userReservation;
 
   // Handle input change
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    setLoanFormData({ ...loanFormData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    if (name === "loanDate") {
+      const selectedDate = new Date(value);
+      // Hitung 3 hari ke depan secara otomatis
+      const calculatedDueDate = new Date(selectedDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      setLoanFormData({ 
+        ...loanFormData, 
+        loanDate: value, 
+        dueDate: calculatedDueDate 
+      });
+    } else {
+      setLoanFormData({ ...loanFormData, [name]: value });
+    }
   };
 
   // Handle klik tombol pinjam
   const handleBorrow = () => {
     if (!currentUser) {
-      navigate("/login");
+      toast.warning("Auth", "Silakan login terlebih dahulu untuk meminjam");
       return;
     }
     if (isUserBorrowing()) {
-      showNotification("Anda sedang meminjam buku ini", "error");
+      toast.warning("Info Pinjaman", "Anda sedang meminjam buku ini");
       return;
     }
     if (isUserPending()) {
-      showNotification(
-        "Anda sudah mengajukan peminjaman untuk buku ini",
-        "error",
-      );
+      toast.warning("Info Pinjaman", "Anda sudah mengajukan peminjaman untuk buku ini");
       return;
     }
-    if (getBookStatus() === "borrowed") {
-      if (
-        confirm(
-          "Buku sedang dipinjam orang lain. Ingin masuk antrian reservasi?",
-        )
-      ) {
-        navigate(`/reservasi/${id}`);
+    if (getBookStatus() === "empty" || getBookStatus() === "borrowed") {
+      if (confirm("Buku sedang tidak tersedia. Ingin masuk antrian reservasi?")) {
+        handleReserve();
       }
       return;
     }
     setShowLoanForm(true);
   };
 
+  const handleReserve = async () => {
+    if (!currentUser || !collection?.id) return;
+    
+    setBorrowLoading(true);
+    const collectionId = collection.id;
+    const loadingId = toast.loading("Memproses", "Mendaftarkan ke antrian reservasi...");
+    try {
+      await reservationService.createReservation(collectionId);
+      toast.removeToast(loadingId);
+      toast.success("Berhasil", "Anda telah masuk dalam antrian reservasi. Kami akan memberitahu Anda via email jika buku sudah tersedia.");
+      setShowReservationList(true);
+      
+      // Update local status
+      setUserReservation({ 
+        id: 'new', // Temporary ID
+        memberId: currentUser.memberId || '',
+        collectionId: collectionId,
+        status: 'waiting', 
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      toast.removeToast(loadingId);
+      toast.error(
+        "Gagal",
+        error instanceof Error ? error.message : "Terjadi kesalahan saat membuat reservasi"
+      );
+    } finally {
+      setBorrowLoading(false);
+    }
+  };
+
   // Submit form peminjaman
   const handleSubmitLoan = async () => {
     // ✅ Validasi lengkap sebelum kirim request
     if (!currentUser) {
-      showNotification("Anda harus login terlebih dahulu", "error");
+      toast.error("Auth", "Anda harus login terlebih dahulu");
       navigate("/login");
       return;
     }
 
     if (!currentUser.memberId) {
-      showNotification(
-        "ID member tidak ditemukan. Silakan login ulang.",
-        "error",
-      );
+      toast.error("Akses Ditolak", "ID member tidak ditemukan. Silakan login ulang.");
       return;
     }
 
     if (!collection?.id) {
-      showNotification("Data buku tidak ditemukan", "error");
+      toast.error("Error", "Data buku tidak ditemukan");
       return;
     }
 
     if (!loanFormData.loanDate || !loanFormData.dueDate) {
-      showNotification("Pilih tanggal peminjaman dan pengembalian", "error");
+      toast.warning("Form Belum Lengkap", "Pilih tanggal peminjaman dan pengembalian");
       return;
     }
 
@@ -331,18 +381,12 @@ const KatalogDetail = () => {
     today.setHours(0, 0, 0, 0);
 
     if (start < today) {
-      showNotification(
-        "Tanggal peminjaman tidak boleh kurang dari hari ini",
-        "error",
-      );
+      toast.warning("Tanggal Tidak Valid", "Tanggal peminjaman tidak boleh kurang dari hari ini");
       return;
     }
 
     if (end <= start) {
-      showNotification(
-        "Tanggal pengembalian harus setelah tanggal peminjaman",
-        "error",
-      );
+      toast.warning("Tanggal Tidak Valid", "Tanggal pengembalian harus setelah tanggal peminjaman");
       return;
     }
 
@@ -350,34 +394,39 @@ const KatalogDetail = () => {
       (end.getTime() - start.getTime()) / (1000 * 3600 * 24),
     );
     if (diffDays > 14) {
-      showNotification("Maksimal peminjaman 14 hari", "error");
+      toast.warning("Melewati Batas", "Maksimal peminjaman 14 hari");
       return;
     }
 
     setBorrowLoading(true);
+    const loadingId = toast.loading("Memproses", "Mengajukan peminjaman...");
     try {
       // ✅ Kirim dengan field sesuai schema backend
       const loan = await loanService.requestLoan({
         memberId: currentUser.memberId, // ✅ ID dari session nyata
-        itemId: collection.id, // ✅ itemId bukan collectionId
-        loanDate: loanFormData.loanDate, // ✅ loanDate bukan startDate
-        dueDate: loanFormData.dueDate, // ✅ dueDate bukan endDate
+        collectionId: collection.id, // ✅ gunakan collectionId, bukan itemId spesifik
+        loanDate: loanFormData.loanDate,
+        dueDate: loanFormData.dueDate,
         notes: loanFormData.notes,
       });
 
-      showNotification(
-        "Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.",
-        "success",
-      );
+      toast.removeToast(loadingId);
+      toast.success("Berhasil", "Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.");
+
       setPendingRequests([...pendingRequests, loan as unknown as LoanRequest]);
       setShowLoanForm(false);
-      setLoanFormData({ loanDate: "", dueDate: "", notes: "" });
+      
+      // Reset form dates
+      setLoanFormData({ 
+        loanDate: defaultLoanDate, 
+        dueDate: defaultDueDate, 
+        notes: "" 
+      });
     } catch (error) {
-      showNotification(
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat mengajukan peminjaman",
-        "error",
+      toast.removeToast(loadingId);
+      toast.error(
+        "Gagal",
+        error instanceof Error ? error.message : "Terjadi kesalahan saat mengajukan peminjaman"
       );
     } finally {
       setBorrowLoading(false);
@@ -389,18 +438,7 @@ const KatalogDetail = () => {
       navigate("/login");
       return;
     }
-    navigate("/loans/history");
-  };
-
-  const showNotification = (
-    message: string,
-    type: "success" | "error" | "info",
-  ) => {
-    setNotification({ show: true, message, type });
-    setTimeout(
-      () => setNotification((prev) => ({ ...prev, show: false })),
-      5000,
-    );
+    navigate("/my-loans");
   };
 
   const bookStatus = getBookStatus();
@@ -418,38 +456,6 @@ const KatalogDetail = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
-
-      {/* Notification Toast */}
-      {notification.show && (
-        <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-2xl shadow-lg border ${
-            notification.type === "success"
-              ? "bg-green-50 border-green-200"
-              : notification.type === "error"
-                ? "bg-red-50 border-red-200"
-                : "bg-blue-50 border-blue-200"
-          } flex items-center gap-3 animate-slide-down`}
-        >
-          {notification.type === "success" ? (
-            <CheckCircle size={20} className="text-green-600" />
-          ) : notification.type === "error" ? (
-            <XCircle size={20} className="text-red-600" />
-          ) : (
-            <AlertCircle size={20} className="text-blue-600" />
-          )}
-          <p
-            className={`text-sm font-medium ${
-              notification.type === "success"
-                ? "text-green-800"
-                : notification.type === "error"
-                  ? "text-red-800"
-                  : "text-blue-800"
-            }`}
-          >
-            {notification.message}
-          </p>
-        </div>
-      )}
 
       {/* Modal Form Peminjaman */}
       {showLoanForm && (
@@ -479,27 +485,22 @@ const KatalogDetail = () => {
                   value={loanFormData.loanDate}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-red-500/10"
                   required
                 />
               </div>
 
-              {/* ✅ Tanggal Pengembalian — field: dueDate */}
+              {/* ✅ Tanggal Pengembalian — otomatis 3 hari, diblokir dari input */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tanggal Pengembalian
+                  Tanggal Pengembalian (Maks 3 Hari)
                 </label>
                 <input
                   type="date"
                   name="dueDate"
                   value={loanFormData.dueDate}
-                  onChange={handleInputChange}
-                  min={
-                    loanFormData.loanDate ||
-                    new Date().toISOString().split("T")[0]
-                  }
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
-                  required
+                  readOnly
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-100 text-slate-500 cursor-not-allowed"
                 />
               </div>
 
@@ -513,7 +514,7 @@ const KatalogDetail = () => {
                   value={loanFormData.notes}
                   onChange={handleInputChange}
                   placeholder="Contoh: untuk tugas akhir, dll"
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
+                  className="w-full px-4 py-2.5 border border-slate-200 text-slate-900 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
                   rows={3}
                 />
               </div>
@@ -630,6 +631,16 @@ const KatalogDetail = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
                   Menunggu Persetujuan
                 </span>
+              ) : isUserReserved() ? (
+                <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-orange-50 text-orange-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                  Buku Sudah Anda Reservasi
+                </span>
+              ) : bookStatus === "empty" ? (
+                <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-red-50 text-red-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                  Stok Kosong
+                </span>
               ) : bookStatus === "available" ? (
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-green-50 text-green-600">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
@@ -646,11 +657,15 @@ const KatalogDetail = () => {
                 {collection?.type === "physical_book" ? "Buku Fisik" : "E-Book"}
               </span>
 
-              {collection?.stock !== undefined && (
+              {collection?.items ? (
+                <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
+                  Stok: {collection.items.filter(i => i.status === "available").length} Fisik Tersedia
+                </span>
+              ) : collection?.stock !== undefined ? (
                 <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
                   Stok: {collection.stock - activeLoans.length}
                 </span>
-              )}
+              ) : null}
             </div>
 
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-1 tracking-tight">
@@ -690,7 +705,7 @@ const KatalogDetail = () => {
               </div>
             </div>
 
-            <div className="mb-10 flex-grow">
+            <div className="mb-10 grow">
               <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase tracking-tight">
                 Sinopsis
               </h3>
@@ -704,7 +719,7 @@ const KatalogDetail = () => {
               <button
                 onClick={handleBorrow}
                 disabled={borrowLoading || isBorrowing}
-                className="flex-[2] bg-[#9a1b1b] hover:bg-[#7a1515] disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
+                className="flex-2 bg-[#9a1b1b] hover:bg-[#7a1515] disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
               >
                 {borrowLoading ? (
                   <>
@@ -719,7 +734,11 @@ const KatalogDetail = () => {
                   <>
                     <Clock size={18} /> Menunggu Persetujuan
                   </>
-                ) : bookStatus === "borrowed" ? (
+                ) : isUserReserved() ? (
+                  <>
+                    <Calendar size={18} /> Sudah Reservasi
+                  </>
+                ) : bookStatus === "borrowed" || bookStatus === "empty" ? (
                   <>
                     <Calendar size={18} /> Reservasi Buku
                   </>
@@ -793,7 +812,7 @@ const KatalogDetail = () => {
                 className="group bg-white p-4 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300"
               >
                 <div
-                  className={`aspect-[3/4] rounded-2xl ${book.color} mb-4 overflow-hidden shadow-md group-hover:shadow-lg transition-all`}
+                  className={`aspect-3/4 rounded-2xl ${book.color} mb-4 overflow-hidden shadow-md group-hover:shadow-lg transition-all`}
                 >
                   {book.image ? (
                     <img

@@ -59,7 +59,6 @@ const BookList = ({
   const navigate = useNavigate();
   
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
   const [userReservations, setUserReservations] = useState<Reservation[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -70,7 +69,7 @@ const BookList = ({
       try {
         setLoading(true);
         
-        // 1. Fetch semua koleksi buku
+        // 1. Fetch semua koleksi buku (public endpoint)
         const collectionsResponse = await fetch(`${API_BASE_URL}/api/collections`);
         
         if (!collectionsResponse.ok) {
@@ -86,19 +85,9 @@ const BookList = ({
           throw new Error('Invalid API response structure');
         }
 
-        // 2. Fetch semua reservasi aktif (fulfilled) untuk mengetahui status buku
-        const reservationsResponse = await fetch(`${API_BASE_URL}/api/reservations?status=fulfilled`);
-        if (reservationsResponse.ok) {
-          const reservationsJson = await reservationsResponse.json();
-          if (reservationsJson.success && Array.isArray(reservationsJson.data)) {
-            setAllReservations(reservationsJson.data);
-            console.log('Reservasi aktif:', reservationsJson.data);
-          }
-        }
-
-        // 3. Jika user login, fetch reservasi user
-        if (currentUser?.memberId) {
-          await fetchUserReservations(currentUser.memberId);
+        // 2. Jika user login, fetch reservasi milik user sendiri
+        if (currentUser) {
+          await fetchMyReservations();
         }
 
       } catch (err) {
@@ -109,29 +98,26 @@ const BookList = ({
       }
     };
 
-    const fetchUserReservations = async (memberId: string) => {
+    // Fetch reservasi user via /reservations/my (requires login, no role restriction)
+    const fetchMyReservations = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/reservations?memberId=${memberId}`);
+        const response = await fetch(`${API_BASE_URL}/api/reservations/my`, {
+          credentials: 'include', // kirim cookie session better-auth
+        });
         if (response.ok) {
           const data = await response.json();
           if (data.success && Array.isArray(data.data)) {
             setUserReservations(data.data);
+            console.log('Reservasi saya:', data.data);
           }
         }
       } catch (error) {
-        console.error('Error fetching user reservations:', error);
+        console.error('Error fetching my reservations:', error);
       }
     };
 
     fetchData();
   }, [currentUser]);
-
-  // Helper: Cek apakah buku sedang dipinjam (oleh siapapun)
-  const isBookBorrowed = (collectionId: string): boolean => {
-    return allReservations.some(res => 
-      res.collectionId === collectionId && res.status === 'fulfilled'
-    );
-  };
 
   // Helper: Cek apakah user sedang meminjam buku ini
   const isUserBorrowing = (collectionId: string): boolean => {
@@ -141,11 +127,8 @@ const BookList = ({
     );
   };
 
-  // Helper: Dapatkan status buku untuk keperluan filter
-  const getBookStatus = (collectionId: string): string => {
-    if (isBookBorrowed(collectionId)) {
-      return 'borrowed';
-    }
+  // Helper: Dapatkan status buku (hanya berdasarkan reservasi user sendiri)
+  const getBookStatus = (): string => {
     return 'available';
   };
 
@@ -184,8 +167,8 @@ const BookList = ({
 
   // Filter berdasarkan ketersediaan (dari filter sidebar)
   const filteredByAvailability = availabilityFilter.length > 0
-    ? filteredBySearch.filter(collection => {
-        const bookStatus = getBookStatus(collection.id);
+    ? filteredBySearch.filter(() => {
+        const bookStatus = getBookStatus();
         return availabilityFilter.includes(bookStatus);
       })
     : filteredBySearch;
@@ -203,7 +186,6 @@ const BookList = ({
 
   // Helper: Status label
   const getStatusLabel = (collection: Collection) => {
-    // Cek apakah user sedang meminjam buku ini
     if (currentUser && isUserBorrowing(collection.id)) {
       const reservation = userReservations.find(r => r.collectionId === collection.id);
       if (reservation?.status === 'waiting') {
@@ -212,14 +194,11 @@ const BookList = ({
         return 'Sedang Anda Pinjam';
       }
     }
-    
-    // Status buku umum
-    return isBookBorrowed(collection.id) ? 'Dipinjam' : 'Tersedia';
+    return 'Tersedia';
   };
 
   // Helper: Status badge style
   const getStatusBadge = (collection: Collection) => {
-    // Jika user sedang meminjam/menunggu buku ini
     if (currentUser && isUserBorrowing(collection.id)) {
       const reservation = userReservations.find(r => r.collectionId === collection.id);
       if (reservation?.status === 'waiting') {
@@ -228,11 +207,7 @@ const BookList = ({
         return "px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-800 font-medium";
       }
     }
-    
-    // Status buku umum
-    return isBookBorrowed(collection.id)
-      ? "px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium"
-      : "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
+    return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
   };
 
   // Helper: Cover color fallback

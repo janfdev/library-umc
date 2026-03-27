@@ -1,61 +1,31 @@
 import { useEffect, useState } from 'react';
-import { Calendar, AlertCircle } from 'lucide-react'; // ✅ Hapus Clock (tidak digunakan)
-import { API_BASE_URL } from '@/utils/api-config';
-
-interface Loan {
-  id: string;
-  collection_id: string;
-  book_title: string;
-  loan_date: string;
-  due_date: string;
-  return_date?: string;
-  status: 'active' | 'returned' | 'overdue';
-  fine_amount?: number;
-}
+import { AlertCircle, Info } from 'lucide-react';
+import loanService, { type Loan as LoanData } from '@/services/loanService';
 
 interface RiwayatPeminjamanProps {
-  type: 'active' | 'history'; // 'active' untuk peminjaman aktif, 'history' untuk riwayat
+  type: 'active' | 'history';
+  view?: 'grid' | 'table';
 }
 
-const RiwayatPeminjaman = ({ type }: RiwayatPeminjamanProps) => {
-  const [loans, setLoans] = useState<Loan[]>([]);
+const RiwayatPeminjaman = ({ type, view = 'grid' }: RiwayatPeminjamanProps) => {
+  const [loans, setLoans] = useState<LoanData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-          setError('Anda harus login untuk melihat riwayat peminjaman');
-          setLoading(false);
-          return;
-        }
-
-        const endpoint = type === 'active' 
-          ? '/api/borrow/active' 
-          : '/api/borrow/history';
+        setLoading(true);
+        const data = await loanService.getMyLoanHistory();
         
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.success && Array.isArray(data.data)) {
-          setLoans(data.data);
+        if (type === 'active') {
+          setLoans(data.filter(l => ['pending', 'approved', 'extended'].includes(l.status)));
         } else {
-          throw new Error('Invalid API response structure');
+          setLoans(data.filter(l => ['returned', 'rejected'].includes(l.status)));
         }
       } catch (err) {
         console.error('Fetch loans error:', err);
-        setError(err instanceof Error ? err.message : 'Gagal memuat data peminjaman');
+        setError('Gagal memuat riwayat peminjaman');
       } finally {
         setLoading(false);
       }
@@ -66,109 +36,121 @@ const RiwayatPeminjaman = ({ type }: RiwayatPeminjamanProps) => {
 
   if (loading) {
     return (
-      <div className="py-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-        <p className="text-gray-500">Memuat data peminjaman...</p>
+      <div className="py-12 text-center animate-pulse">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-700 mb-4"></div>
+        <p className="text-slate-400 font-medium italic">Memuat data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="py-8 text-center bg-red-50 rounded-lg p-4">
-        <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-        <p className="text-red-700 font-medium">{error}</p>
+      <div className="py-8 text-center bg-red-50 rounded-2xl border border-red-100 p-6">
+        <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+        <h3 className="text-red-800 font-bold mb-1">Terjadi Kesalahan</h3>
+        <p className="text-red-700/80 text-xs">{error}</p>
       </div>
     );
   }
 
   if (loans.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <div className="text-5xl mb-4 text-gray-300">📚</div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">
-          {type === 'active' 
-            ? 'Tidak ada peminjaman aktif' 
-            : 'Belum ada riwayat peminjaman'}
-        </h3>
-        <p className="text-gray-500 max-w-md mx-auto">
-          {type === 'active'
-            ? 'Anda belum meminjam buku apapun saat ini.'
-            : 'Riwayat peminjaman Anda akan muncul di sini setelah Anda meminjam buku.'}
-        </p>
+      <div className="py-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-300 mx-auto mb-4 shadow-sm">
+          <Info size={24} />
+        </div>
+        <h3 className="text-slate-600 font-bold mb-1">Kosong</h3>
+        <p className="text-slate-400 text-xs">Belum ada data {type === 'active' ? 'peminjaman' : 'riwayat'} yang ditemukan.</p>
+      </div>
+    );
+  }
+
+  if (view === 'grid') {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 animate-fade-in">
+        {loans.map((loan) => (
+          <ActiveLoanCard key={loan.id} loan={loan} />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="bg-red-800 text-white uppercase text-xs font-bold tracking-wider">
-            <th className="px-6 py-4 text-left border-r border-red-700/30">Buku</th>
-            <th className="px-6 py-4 text-left border-r border-red-700/30">Tanggal Pinjam</th>
-            <th className="px-6 py-4 text-left border-r border-red-700/30">Batas Kembali</th>
-            <th className="px-6 py-4 text-left">Status</th>
+    <div className="overflow-hidden bg-white border border-slate-100 rounded-[20px] shadow-sm animate-fade-in">
+      <table className="w-full text-left border-collapse">
+        <thead className="bg-[#9c1b1b] text-white">
+          <tr className="text-[10px] font-black uppercase tracking-widest">
+            <th className="px-6 py-4">Buku</th>
+            <th className="px-6 py-4">Tanggal Pinjam</th>
+            <th className="px-6 py-4">Tanggal Kembali</th>
+            <th className="px-6 py-4">Status</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+        <tbody className="divide-y divide-slate-50">
           {loans.map((loan) => (
-            <tr 
-              key={loan.id} 
-              className={`hover:bg-gray-50/50 transition-colors ${
-                loan.status === 'overdue' ? 'bg-red-50/50' : ''
-              }`}
-            >
-              <td className="px-6 py-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600 font-bold mr-3">
-                    {loan.book_title.charAt(0)}
-                  </div>
-                  <span>{loan.book_title}</span>
-                </div>
-              </td>
-              <td className="px-6 py-5 text-gray-600">
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                  {new Date(loan.loan_date).toLocaleDateString('id-ID')}
-                </div>
-              </td>
-              <td className="px-6 py-5 text-gray-600">
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                  {new Date(loan.due_date).toLocaleDateString('id-ID')}
-                  {loan.status === 'overdue' && (
-                    <span className="ml-2 text-red-600 text-xs font-bold">(Terlambat)</span>
-                  )}
-                </div>
-              </td>
-              <td className="px-6 py-5">
-                <div className="flex flex-col">
-                  <span className={`px-3 py-1.5 rounded-md text-[11px] font-bold uppercase ${
-                    loan.status === 'active' 
-                      ? 'bg-green-100 text-green-600' 
-                      : loan.status === 'overdue'
-                      ? 'bg-red-100 text-red-600'
-                      : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {loan.status === 'active' 
-                      ? 'Aktif' 
-                      : loan.status === 'overdue'
-                      ? 'Terlambat'
-                      : 'Dikembalikan'}
-                  </span>
-                  {loan.fine_amount && loan.fine_amount > 0 && (
-                    <span className="text-red-600 text-[10px] font-bold mt-1">
-                      Denda: Rp {loan.fine_amount.toLocaleString('id-ID')}
-                    </span>
-                  )}
-                </div>
-              </td>
-            </tr>
+            <HistoryTableRow key={loan.id} loan={loan} />
           ))}
         </tbody>
       </table>
     </div>
+  );
+};
+
+const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
+  const collection = loan.item?.collection;
+  const dueDate = loan.dueDate ? new Date(loan.dueDate) : null;
+  const formattedDate = dueDate?.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  return (
+    <div className="bg-white rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-100 flex gap-5 group hover:shadow-lg transition-all">
+      <div className="shrink-0 w-24 h-32 bg-slate-200 rounded-2xl overflow-hidden flex items-center justify-center text-slate-400">
+         {collection?.image ? (
+           <img src={collection.image} alt={collection.title} className="w-full h-full object-cover" />
+         ) : (
+           <Info size={24} orientation="vertical" />
+         )}
+      </div>
+      <div className="flex-1 flex flex-col justify-between py-1">
+         <div>
+            <h4 className="font-bold text-slate-900 text-sm mb-1 line-clamp-2 leading-tight">{collection?.title || 'Unknown Title'}</h4>
+            <p className="text-[10px] font-medium text-slate-400 mb-4">{collection?.author || 'Unknown Author'}</p>
+            {formattedDate && (
+               <p className="text-[10px] font-bold text-slate-400">Jatuh Tempo : <span className="text-slate-500">{formattedDate}</span></p>
+            )}
+         </div>
+         <div className="flex justify-end mt-2">
+            <button className="px-4 py-1.5 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors">
+               Perpanjang
+            </button>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+const HistoryTableRow = ({ loan }: { loan: LoanData }) => {
+  const collection = loan.item?.collection;
+  const borrowDate = loan.loanDate ? new Date(loan.loanDate) : null;
+  const returnDate = loan.returnDate ? new Date(loan.returnDate) : null;
+
+  const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
+    'returned': { label: 'Tepat Waktu', bg: 'bg-green-50', text: 'text-green-600' },
+    'rejected': { label: 'Dibatalkan', bg: 'bg-red-50', text: 'text-red-600' },
+  };
+
+  const status = STATUS_CONFIG[loan.status] || { label: loan.status, bg: 'bg-slate-50', text: 'text-slate-600' };
+
+  return (
+    <tr className="text-[11px] font-bold text-slate-600 hover:bg-slate-50/50 transition-colors">
+      <td className="px-6 py-4">{collection?.title || 'Unknown Title'}</td>
+      <td className="px-6 py-4">{borrowDate?.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+      <td className="px-6 py-4">{returnDate?.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) || '-'}</td>
+      <td className="px-6 py-4">
+         <span className={`px-3 py-1 rounded-lg ${status.bg} ${status.text} text-[9px] uppercase tracking-widest`}>
+            {status.label}
+         </span>
+      </td>
+    </tr>
   );
 };
 

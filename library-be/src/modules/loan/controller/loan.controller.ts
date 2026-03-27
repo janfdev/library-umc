@@ -38,7 +38,9 @@ export class LoanController {
 
       const result = await loanService.requestLoan(
         memberId,
-        validation.data.itemId,
+        validation.data.collectionId,
+        validation.data.loanDate,
+        validation.data.dueDate
       );
       sendSuccess(res, "Permintaan peminjaman berhasil diajukan", result);
     } catch (error) {

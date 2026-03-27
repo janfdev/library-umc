@@ -1,0 +1,16 @@
+meta {
+  name: Health
+  type: http
+  seq: 14
+}
+
+get {
+  url: localhost:4000/health
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
