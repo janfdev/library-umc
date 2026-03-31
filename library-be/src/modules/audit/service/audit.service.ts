@@ -1,10 +1,17 @@
 import { db } from "../../../db";
-import { logs } from "../../../db/schema";
-import { eq, desc, type SQL } from "drizzle-orm";
+import { logs, Users } from "../../../db/schema";
+import { eq, desc, type SQL, and } from "drizzle-orm";
 
 interface CreateLogPayload {
-  userId: string;
-  action: "create" | "update" | "delete" | "approve" | "blacklist";
+  userId?: string;
+  action:
+    | "create"
+    | "update"
+    | "delete"
+    | "approve"
+    | "blacklist"
+    | "failed_login"
+    | "rate_limited";
   entity:
     | "loan"
     | "item"
@@ -12,9 +19,12 @@ interface CreateLogPayload {
     | "Users"
     | "category"
     | "collection"
-    | "reservation";
+    | "reservation"
+    | "auth";
   entityId?: string;
   ipAddress?: string;
+  userAgent?: string;
+  detail?: string;
 }
 
 class AuditService {
@@ -24,17 +34,14 @@ class AuditService {
    */
   async createLog(payload: CreateLogPayload): Promise<void> {
     try {
-      if (!payload.userId) {
-        console.error("AuditService: Missing userId, cannot write log");
-        return;
-      }
-
       await db.insert(logs).values({
-        userId: payload.userId,
+        userId: payload.userId || null,
         action: payload.action,
         entity: payload.entity,
         entityId: payload.entityId || null,
         ipAddress: payload.ipAddress || null,
+        userAgent: payload.userAgent || null,
+        detail: payload.detail || null,
       });
     } catch (error) {
       console.error("AuditService Error [Ignored]:", error);
@@ -58,7 +65,14 @@ class AuditService {
         conditions.push(
           eq(
             logs.action,
-            filters.action as "create" | "update" | "delete" | "approve" | "blacklist",
+            filters.action as
+              | "create"
+              | "update"
+              | "delete"
+              | "approve"
+              | "blacklist"
+              | "failed_login"
+              | "rate_limited",
           ),
         );
       }
@@ -66,20 +80,46 @@ class AuditService {
         conditions.push(
           eq(
             logs.entity,
-            filters.entity as "loan" | "item" | "fine" | "Users" | "category" | "collection" | "reservation",
+            filters.entity as
+              | "loan"
+              | "item"
+              | "fine"
+              | "Users"
+              | "category"
+              | "collection"
+              | "reservation"
+              | "auth",
           ),
         );
       }
 
-      const result = await db.query.logs.findMany({
-        where:
-          conditions.length > 0
-            ? (t, { and }) => and(...conditions)
-            : undefined,
-        limit: filters.limit || 100,
-        offset: filters.offset || 0,
-        orderBy: [desc(logs.createdAt)],
-      });
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
+
+      const result = await db
+        .select({
+          id: logs.id,
+          userId: logs.userId,
+          action: logs.action,
+          entity: logs.entity,
+          entityId: logs.entityId,
+          ipAddress: logs.ipAddress,
+          userAgent: logs.userAgent,
+          detail: logs.detail,
+          createdAt: logs.createdAt,
+          user: {
+            id: Users.id,
+            name: Users.name,
+            email: Users.email,
+            role: Users.role,
+          },
+        })
+        .from(logs)
+        .leftJoin(Users, eq(Users.id, logs.userId))
+        .where(whereClause)
+        .orderBy(desc(logs.createdAt))
+        .limit(filters.limit || 100)
+        .offset(filters.offset || 0);
 
       return {
         success: true,

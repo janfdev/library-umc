@@ -277,6 +277,16 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
                 <p className="text-xs text-red-600">{loan.rejectReason}</p>
               </div>
             )}
+
+            {/* QR Code */}
+            {status === "pending" && loan.qrCodeUrl && (
+              <div className="p-4 bg-white border border-slate-100 shadow-sm rounded-xl flex flex-col items-center">
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 text-center">Tunjukkan QR Code ini ke Petugas Perpustakaan</p>
+                <div className="bg-slate-50 p-2 rounded-xl">
+                   <img src={loan.qrCodeUrl} alt="QR Code Peminjaman" className="w-48 h-48 object-contain" />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}

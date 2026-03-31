@@ -5,14 +5,28 @@ import {
   loans,
   members,
   fines,
+  transactions,
   guestLogs,
   reservations,
+  Users,
 } from "../../../db/schema";
 import { eq, sql, and, desc, isNull } from "drizzle-orm";
 import PDFDocument from "pdfkit";
 import { type Response } from "express";
 
 export class ReportService {
+  private getDatePrefix(): string {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = String(now.getFullYear());
+    return `${dd}-${mm}-${yyyy}`;
+  }
+
+  private buildExportFilename(reportName: string, extension: "csv" | "pdf") {
+    return `${this.getDatePrefix()}_${reportName}.${extension}`;
+  }
+
   /**
    * Get main dashboard statistics summary
    */
@@ -171,27 +185,171 @@ export class ReportService {
    */
   async getFinesReport(filters: { status?: string } = {}) {
     try {
-      const conditions = [];
+      const conditions = [isNull(fines.deletedAt)];
       if (filters.status) {
         conditions.push(sql`${fines.status} = ${filters.status}`);
       }
 
-      const result = await db.query.fines.findMany({
-        where: conditions.length > 0 ? and(...conditions) : undefined,
-        with: {
-          loan: {
-            with: {
-              member: { with: { user: true } },
-              item: { with: { collection: true } },
-            },
-          },
-        },
-        orderBy: [desc(fines.createdAt)],
-      });
+      const result = await db
+        .select({
+          id: fines.id,
+          amount: fines.amount,
+          status: fines.status,
+          fineCreatedAt: fines.createdAt,
+          paidAt: transactions.paidAt,
+          memberName: Users.name,
+          memberEmail: Users.email,
+          bookTitle: collections.title,
+        })
+        .from(fines)
+        .leftJoin(loans, eq(fines.loanId, loans.id))
+        .leftJoin(members, eq(loans.memberId, members.id))
+        .leftJoin(Users, eq(members.userId, Users.id))
+        .leftJoin(items, eq(loans.itemId, items.id))
+        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(transactions, eq(transactions.fineId, fines.id))
+        .where(and(...conditions))
+        .orderBy(desc(fines.createdAt));
 
       return { success: true, data: result };
     } catch (error) {
       console.error("[ReportService] getFinesReport error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get fines report (for export), with optional month/year filter for revenue audits.
+   */
+  async getFinesReportForAudit(
+    filters: { status?: string; month?: number; year?: number } = {},
+  ) {
+    try {
+      const conditions = [isNull(fines.deletedAt)];
+
+      if (filters.status) {
+        conditions.push(sql`${fines.status} = ${filters.status}`);
+      }
+
+      if ((filters.month || filters.year) && !filters.status) {
+        conditions.push(eq(fines.status, "paid"));
+      }
+
+      if (filters.year) {
+        conditions.push(
+          sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${filters.year}`,
+        );
+      }
+
+      if (filters.month) {
+        conditions.push(
+          sql`EXTRACT(MONTH FROM ${transactions.paidAt})::int = ${filters.month}`,
+        );
+      }
+
+      const result = await db
+        .select({
+          id: fines.id,
+          amount: fines.amount,
+          status: fines.status,
+          fineCreatedAt: fines.createdAt,
+          paidAt: transactions.paidAt,
+          memberName: Users.name,
+          memberEmail: Users.email,
+          bookTitle: collections.title,
+        })
+        .from(fines)
+        .leftJoin(loans, eq(fines.loanId, loans.id))
+        .leftJoin(members, eq(loans.memberId, members.id))
+        .leftJoin(Users, eq(members.userId, Users.id))
+        .leftJoin(items, eq(loans.itemId, items.id))
+        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(transactions, eq(transactions.fineId, fines.id))
+        .where(and(...conditions))
+        .orderBy(
+          desc(
+            sql`COALESCE(${transactions.paidAt}::timestamp, ${fines.createdAt})`,
+          ),
+        );
+
+      return { success: true, data: result };
+    } catch (error) {
+      console.error("[ReportService] getFinesReportForAudit error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get fine revenue summary for selected month and year.
+   */
+  async getFinesRevenueSummary(
+    filters: { month?: number; year?: number } = {},
+  ) {
+    try {
+      const now = new Date();
+      const selectedYear = filters.year ?? now.getFullYear();
+      const selectedMonth = filters.month ?? now.getMonth() + 1;
+
+      const [monthlyRevenue] = await db
+        .select({
+          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`,
+        })
+        .from(transactions)
+        .innerJoin(fines, eq(transactions.fineId, fines.id))
+        .where(
+          and(
+            isNull(fines.deletedAt),
+            eq(fines.status, "paid"),
+            sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${selectedYear}`,
+            sql`EXTRACT(MONTH FROM ${transactions.paidAt})::int = ${selectedMonth}`,
+          ),
+        );
+
+      const [outstandingFines] = await db
+        .select({
+          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`,
+        })
+        .from(fines)
+        .where(and(isNull(fines.deletedAt), eq(fines.status, "unpaid")));
+
+      const yearlyRows = await db
+        .select({
+          month: sql<number>`EXTRACT(MONTH FROM ${transactions.paidAt})::int`,
+          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`,
+        })
+        .from(transactions)
+        .innerJoin(fines, eq(transactions.fineId, fines.id))
+        .where(
+          and(
+            isNull(fines.deletedAt),
+            eq(fines.status, "paid"),
+            sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${selectedYear}`,
+          ),
+        )
+        .groupBy(sql`EXTRACT(MONTH FROM ${transactions.paidAt})`)
+        .orderBy(sql`EXTRACT(MONTH FROM ${transactions.paidAt})`);
+
+      const monthlyBreakdown = Array.from({ length: 12 }, (_, index) => {
+        const month = index + 1;
+        const found = yearlyRows.find((row) => Number(row.month) === month);
+        return {
+          month,
+          total: Number(found?.total ?? 0),
+        };
+      });
+
+      return {
+        success: true,
+        data: {
+          month: selectedMonth,
+          year: selectedYear,
+          totalFineRevenue: Number(monthlyRevenue?.total ?? 0),
+          outstandingFines: Number(outstandingFines?.total ?? 0),
+          monthlyBreakdown,
+        },
+      };
+    } catch (error) {
+      console.error("[ReportService] getFinesRevenueSummary error:", error);
       throw error;
     }
   }
@@ -212,7 +370,7 @@ export class ReportService {
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${filename}.csv"`,
+      `attachment; filename="${this.buildExportFilename(filename, "csv")}"`,
     );
 
     // BOM for Excel UTF-8 compatibility
@@ -253,7 +411,7 @@ export class ReportService {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="laporan-peminjaman.pdf"`,
+      `attachment; filename="${this.buildExportFilename("Laporan Peminjaman", "pdf")}"`,
     );
 
     const doc = new PDFDocument({ margin: 40, size: "A4" });
@@ -314,6 +472,95 @@ export class ReportService {
       ];
       cols.forEach((val, i) => {
         doc.text(String(val).substring(0, 25), x, y + 3, {
+          width: colWidths[i] - 4,
+          lineBreak: false,
+        });
+        x += colWidths[i];
+      });
+      y += 14;
+    });
+
+    doc.moveDown(1);
+    doc
+      .fontSize(8)
+      .fill("#64748B")
+      .text(`Total: ${data.length} records`, startX);
+
+    doc.end();
+  }
+
+  /**
+   * Export fines report to PDF and stream to response
+   */
+  exportFinesToPDF(
+    res: Response,
+    data: Array<{
+      memberName?: string;
+      bookTitle?: string;
+      status?: string;
+      paidAt?: string;
+      amount?: string;
+    }>,
+    title = "Laporan Denda Peminjaman",
+    filenameBase = "Laporan Denda",
+  ): void {
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${this.buildExportFilename(filenameBase, "pdf")}"`,
+    );
+
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    doc.pipe(res);
+
+    doc
+      .fontSize(18)
+      .font("Helvetica-Bold")
+      .text("MUCILIB - Perpustakaan UMC", { align: "center" });
+    doc.fontSize(13).font("Helvetica").text(title, { align: "center" });
+    doc.fontSize(9).text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, {
+      align: "center",
+    });
+    doc.moveDown(1);
+
+    const colWidths = [145, 140, 70, 70, 90];
+    const headers = ["Member", "Judul Buku", "Status", "Tgl Bayar", "Jumlah"];
+    const startX = 40;
+    let y = doc.y;
+
+    doc.font("Helvetica-Bold").fontSize(9);
+    doc.rect(startX, y, 515, 16).fill("#B91C1C");
+    doc.fill("white");
+    let x = startX + 4;
+    headers.forEach((h, i) => {
+      doc.text(h, x, y + 3, { width: colWidths[i] - 4, lineBreak: false });
+      x += colWidths[i];
+    });
+    doc.fill("black");
+    y += 16;
+
+    doc.font("Helvetica").fontSize(8);
+    data.forEach((row, idx) => {
+      if (y > 740) {
+        doc.addPage();
+        y = 40;
+      }
+
+      const bg = idx % 2 === 0 ? "#F8FAFC" : "white";
+      doc.rect(startX, y, 515, 14).fill(bg);
+      doc.fill("black");
+
+      x = startX + 4;
+      const cols = [
+        row.memberName ?? "-",
+        row.bookTitle ?? "-",
+        row.status ?? "-",
+        row.paidAt ?? "-",
+        row.amount ?? "-",
+      ];
+
+      cols.forEach((val, i) => {
+        doc.text(String(val).substring(0, 28), x, y + 3, {
           width: colWidths[i] - 4,
           lineBreak: false,
         });

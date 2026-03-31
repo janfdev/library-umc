@@ -49,6 +49,8 @@ export const logsStatusEnum = pgEnum("logs_status", [
   "delete",
   "approve",
   "blacklist",
+  "failed_login",
+  "rate_limited",
 ]);
 export const logsEntityEnum = pgEnum("logs_entity", [
   "loan",
@@ -58,6 +60,7 @@ export const logsEntityEnum = pgEnum("logs_entity", [
   "category",
   "collection",
   "reservation",
+  "auth",
 ]);
 
 export const recommendationStatusEnum = pgEnum("recommendation_status", [
@@ -217,6 +220,7 @@ export const collections = pgTable("collections", {
   categoryId: integer("category_id").references(() => categories.id), // Category stays Integer
   description: text("description"),
   image: text("image"), // Stores Cloudinary URL
+  stock: integer("stock").notNull().default(0), // Total stock/quantity of the collection
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -394,13 +398,13 @@ export const recommendations = pgTable("recommendations", {
 
 export const logs = pgTable("logs", {
   id: uuid("id").primaryKey().defaultRandom(), // Converted to UUID
-  userId: text("user_id")
-    .notNull()
-    .references(() => Users.id),
+  userId: text("user_id").references(() => Users.id),
   action: logsStatusEnum("action").notNull(),
   entity: logsEntityEnum("entity").notNull(),
   entityId: varchar("entity_id", { length: 255 }), // Changed to varchar to support both UUID and Text IDs
   ipAddress: varchar("ip_address", { length: 255 }),
+  userAgent: text("user_agent"),
+  detail: text("detail"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

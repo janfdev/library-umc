@@ -25,10 +25,8 @@ export const createCollectionSchema = z.object({
 
   description: z.string().optional(),
 
-  // Khusus buku fisik
-  quantity: z
-    .preprocess(strToNum, z.number().int().min(0).default(1))
-    .optional(),
+  // Stock/Quantity of the collection
+  stock: z.preprocess(strToNum, z.number().int().min(0).default(0)).optional(),
 });
 
 // Schema update (semua field optional)

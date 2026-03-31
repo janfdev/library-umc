@@ -150,6 +150,18 @@ router.get(
  *           type: string
  *           enum: [paid, unpaid]
  *         description: Filter by fine status
+ *       - in: query
+ *         name: month
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *         description: Filter month of payment (recommended with status=paid)
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *         description: Filter year of payment (recommended with status=paid)
  *     responses:
  *       200:
  *         description: File download (CSV or PDF)
@@ -160,6 +172,39 @@ router.get(
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   reportController.exportFines.bind(reportController),
+);
+
+/**
+ * @swagger
+ * /reports/fines/revenue:
+ *   get:
+ *     summary: Get fine revenue summary for monthly audit
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: month
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *         description: Target month (default current month)
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *         description: Target year (default current year)
+ *     responses:
+ *       200:
+ *         description: Revenue totals and monthly breakdown
+ */
+router.get(
+  "/reports/fines/revenue",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  reportController.getFinesRevenueSummary.bind(reportController),
 );
 
 export const reportRoutes = router;

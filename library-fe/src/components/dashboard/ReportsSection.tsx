@@ -1,13 +1,14 @@
 // src/components/dashboard/ReportsSection.tsx
 import { useState, useEffect } from "react";
-import { Users, BookCheck, DollarSign, ChevronDown, TrendingUp, DownloadCloud } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  Users,
+  BookCheck,
+  DollarSign,
+  ChevronDown,
+  TrendingUp,
+  DownloadCloud,
+} from "lucide-react";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -21,114 +22,165 @@ interface ReportsSectionProps {
   className?: string;
 }
 
-// Data statis untuk grafik kunjungan
-const visitorsData = [
-  { day: "Senin", visits: 45 },
-  { day: "Selasa", visits: 60 },
-  { day: "Rabu", visits: 35 },
-  { day: "Kamis", visits: 50 },
-  { day: "Jum'at", visits: 85 },
-  { day: "Sabtu", visits: 40 },
-  { day: "Minggu", visits: 15 },
+interface PopularBookItem {
+  id: string;
+  title: string;
+  loanCount: number;
+}
+
+interface GuestStatItem {
+  date: string;
+  count: number;
+}
+
+const dayLabels = [
+  "Minggu",
+  "Senin",
+  "Selasa",
+  "Rabu",
+  "Kamis",
+  "Jum'at",
+  "Sabtu",
 ];
 
-const popularBooks = [
-  { id: 1, title: "Bumi", borrows: 45 },
-  { id: 2, title: "Sistem Informasi..", borrows: 39 },
-  { id: 3, title: "Laskar Pelangi", borrows: 24 },
-  { id: 4, title: "Pemrograman W..", borrows: 18 },
-  { id: 5, title: "Kamus Inggris", borrows: 15 },
-];
+export default function ReportsSection({
+  className = "",
+}: ReportsSectionProps) {
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
-export default function ReportsSection({ className = "" }: ReportsSectionProps) {
   const [stats, setStats] = useState({
     totalVisitors: 0,
     successfulLoans: 0,
     totalPaidFines: 0,
+    outstandingFines: 0,
     visitsPastWeek: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState(visitorsData);
+  const [chartData, setChartData] = useState<{ day: string; visits: number }[]>(
+    [],
+  );
+  const [popularBooks, setPopularBooks] = useState<PopularBookItem[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const [guestsRes, loansRes, finesResUnpaid] = await Promise.all([
+        const [
+          guestsRes,
+          loansRes,
+          revenueSummaryRes,
+          guestStatsRes,
+          popularBooksRes,
+        ] = await Promise.all([
           fetch(`${API_BASE_URL}/api/guests`, { credentials: "include" }),
-          fetch(`${API_BASE_URL}/api/loans?status=returned&limit=500`, { credentials: "include" }),
-          fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=500`, { credentials: "include" }),
+          fetch(`${API_BASE_URL}/api/loans?status=returned&limit=500`, {
+            credentials: "include",
+          }),
+          fetch(
+            `${API_BASE_URL}/api/reports/fines/revenue?month=${selectedMonth}&year=${selectedYear}`,
+            { credentials: "include" },
+          ),
+          fetch(`${API_BASE_URL}/api/reports/guest-stats`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE_URL}/api/reports/popular-books?limit=5`, {
+            credentials: "include",
+          }),
         ]);
 
-        const [guestsData, loansData, finesUnpaidData] = await Promise.all([
+        const [
+          guestsData,
+          loansData,
+          revenueSummaryData,
+          guestStatsData,
+          popularBooksData,
+        ] = await Promise.all([
           guestsRes.json(),
           loansRes.json(),
-          finesResUnpaid.json(),
+          revenueSummaryRes.json(),
+          guestStatsRes.json(),
+          popularBooksRes.json(),
         ]);
 
         let guestsCount = 0;
         let visitsPastWeek = 0;
         let loansCount = 0;
-        let finesSum = 0;
-        
-        const newChartData = [
-          { day: "Minggu", visits: 0 },
-          { day: "Senin", visits: 0 },
-          { day: "Selasa", visits: 0 },
-          { day: "Rabu", visits: 0 },
-          { day: "Kamis", visits: 0 },
-          { day: "Jum'at", visits: 0 },
-          { day: "Sabtu", visits: 0 },
-        ];
+        let finesRevenue = 0;
+        let outstandingFines = 0;
 
         if (guestsData.success && Array.isArray(guestsData.data)) {
           guestsCount = guestsData.data.length;
-          
-          const now = new Date();
-          now.setHours(23, 59, 59, 999);
-          
-          const sevenDaysAgo = new Date(now);
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-          sevenDaysAgo.setHours(0, 0, 0, 0);
-
-          guestsData.data.forEach((guest: { createdAt?: string }) => {
-             const guestDate = new Date(guest.createdAt || new Date());
-             if (guestDate >= sevenDaysAgo && guestDate <= now) {
-               visitsPastWeek++;
-               const dayIndex = guestDate.getDay(); // 0 = Minggu
-               newChartData[dayIndex].visits++;
-             }
-          });
-          
-          // Susun agar hari ini berada di posisi paling kanan grafik
-          const sortedChartData = [];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(d.getDate() - i);
-            const dayIdx = d.getDay();
-            sortedChartData.push(newChartData[dayIdx]);
-          }
-          setChartData(sortedChartData);
         }
 
         if (loansData.success && Array.isArray(loansData.data)) {
           loansCount = loansData.data.length;
         }
 
-        if (finesUnpaidData.success && Array.isArray(finesUnpaidData.data)) {
-          finesSum += finesUnpaidData.data.reduce(
-            (acc: number, item: { amount: number | string }) => acc + (Number(item.amount) || 0),
-            0
+        if (guestStatsData.success && Array.isArray(guestStatsData.data)) {
+          const source = guestStatsData.data as GuestStatItem[];
+          const mapByDate = new Map<string, number>();
+          source.forEach((row) => {
+            mapByDate.set(row.date, Number(row.count) || 0);
+          });
+
+          const last7Days = Array.from({ length: 7 }, (_, index) => {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() - (6 - index));
+            const key = d.toISOString().slice(0, 10);
+            const count = mapByDate.get(key) ?? 0;
+            visitsPastWeek += count;
+            return {
+              day: dayLabels[d.getDay()],
+              visits: count,
+            };
+          });
+
+          setChartData(last7Days);
+        } else {
+          setChartData(
+            Array.from({ length: 7 }, (_, index) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (6 - index));
+              return { day: dayLabels[d.getDay()], visits: 0 };
+            }),
+          );
+        }
+
+        if (popularBooksData.success && Array.isArray(popularBooksData.data)) {
+          setPopularBooks(
+            popularBooksData.data.map(
+              (book: {
+                id: string;
+                title: string;
+                loanCount: number | string;
+              }) => ({
+                id: book.id,
+                title: book.title,
+                loanCount: Number(book.loanCount) || 0,
+              }),
+            ),
+          );
+        } else {
+          setPopularBooks([]);
+        }
+
+        if (revenueSummaryData.success && revenueSummaryData.data) {
+          finesRevenue = Number(revenueSummaryData.data.totalFineRevenue || 0);
+          outstandingFines = Number(
+            revenueSummaryData.data.outstandingFines || 0,
           );
         }
 
         setStats({
           totalVisitors: guestsCount,
           successfulLoans: loansCount,
-          totalPaidFines: finesSum,
+          totalPaidFines: finesRevenue,
+          outstandingFines,
           visitsPastWeek,
         });
-
       } catch (error) {
         console.error("Gagal mengambil data reports:", error);
       } finally {
@@ -137,18 +189,44 @@ export default function ReportsSection({ className = "" }: ReportsSectionProps) 
     };
 
     fetchStats();
-  }, []);
+  }, [selectedMonth, selectedYear]);
+
+  const monthOptions = [
+    { value: 1, label: "Januari" },
+    { value: 2, label: "Februari" },
+    { value: 3, label: "Maret" },
+    { value: 4, label: "April" },
+    { value: 5, label: "Mei" },
+    { value: 6, label: "Juni" },
+    { value: 7, label: "Juli" },
+    { value: 8, label: "Agustus" },
+    { value: 9, label: "September" },
+    { value: 10, label: "Oktober" },
+    { value: 11, label: "November" },
+    { value: 12, label: "Desember" },
+  ];
+
+  const yearOptions = Array.from(
+    { length: 5 },
+    (_, index) => now.getFullYear() - index,
+  );
+
+  const selectedMonthLabel =
+    monthOptions.find((month) => month.value === selectedMonth)?.label ?? "-";
 
   return (
     <div className={`space-y-6 ${className}`}>
-      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">Laporan & Statistik</h2>
-          <p className="text-sm text-slate-400 font-medium mt-1">Metrik dan performa perpustakaan (Data Realtime API).</p>
+          <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+            Laporan & Statistik
+          </h2>
+          <p className="text-sm text-slate-400 font-medium mt-1">
+            Metrik dan performa perpustakaan (Data Realtime API).
+          </p>
         </div>
-        
+
         {/* Export Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -157,47 +235,119 @@ export default function ReportsSection({ className = "" }: ReportsSectionProps) 
               Export Laporan
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white">
+          <DropdownMenuContent
+            align="end"
+            className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+          >
             <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               Format Laporan (PDF)
             </div>
-            <DropdownMenuItem 
-              onClick={() => window.open(`${API_BASE_URL}/api/reports/loans/export?format=pdf`, '_blank')}
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/api/reports/loans/export?format=pdf`,
+                  "_blank",
+                )
+              }
               className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
             >
               Laporan Peminjaman
             </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => window.open(`${API_BASE_URL}/api/reports/fines/export?format=pdf`, '_blank')}
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/api/reports/fines/export?format=pdf`,
+                  "_blank",
+                )
+              }
               className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
             >
               Laporan Denda
             </DropdownMenuItem>
-            
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/api/reports/fines/export?format=pdf&status=paid&month=${selectedMonth}&year=${selectedYear}`,
+                  "_blank",
+                )
+              }
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+            >
+              Pendapatan Denda Bulanan
+            </DropdownMenuItem>
+
             <div className="h-px bg-slate-100 my-1 mx-2" />
-            
+
             <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               Format Excel (CSV)
             </div>
-            <DropdownMenuItem 
-              onClick={() => window.open(`${API_BASE_URL}/api/reports/loans/export?format=csv`, '_blank')}
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/api/reports/loans/export?format=csv`,
+                  "_blank",
+                )
+              }
               className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
             >
               Laporan Peminjaman
             </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => window.open(`${API_BASE_URL}/api/reports/fines/export?format=csv`, '_blank')}
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/api/reports/fines/export?format=csv`,
+                  "_blank",
+                )
+              }
               className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
             >
               Laporan Denda
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/api/reports/fines/export?format=csv&status=paid&month=${selectedMonth}&year=${selectedYear}`,
+                  "_blank",
+                )
+              }
+              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+            >
+              Pendapatan Denda Bulanan
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          Periode Audit Pendapatan
+        </p>
+        <select
+          value={selectedMonth}
+          onChange={(event) => setSelectedMonth(Number(event.target.value))}
+          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700"
+        >
+          {monthOptions.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedYear}
+          onChange={(event) => setSelectedYear(Number(event.target.value))}
+          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700"
+        >
+          {yearOptions.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
         {/* Total Pengunjung */}
         <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-5">
           <div className="w-[60px] h-[60px] rounded-full bg-[#EBF5FF] flex items-center justify-center shrink-0">
@@ -208,7 +358,11 @@ export default function ReportsSection({ className = "" }: ReportsSectionProps) 
               TOTAL PENGUNJUNG
             </p>
             <p className="text-3xl font-black text-slate-900 mt-2">
-              {loading ? <Skeleton className="h-8 w-16" /> : stats.totalVisitors}
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                stats.totalVisitors
+              )}
             </p>
           </div>
         </div>
@@ -223,7 +377,11 @@ export default function ReportsSection({ className = "" }: ReportsSectionProps) 
               PEMINJAMAN SUKSES
             </p>
             <p className="text-3xl font-black text-slate-900 mt-2">
-              {loading ? <Skeleton className="h-8 w-16" /> : stats.successfulLoans}
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                stats.successfulLoans
+              )}
             </p>
           </div>
         </div>
@@ -235,57 +393,74 @@ export default function ReportsSection({ className = "" }: ReportsSectionProps) 
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-              TOTAL ESTIMASI DENDA
+              PENDAPATAN DENDA ({selectedMonthLabel.toUpperCase()}{" "}
+              {selectedYear})
             </p>
             <p className="text-3xl font-black text-slate-900 mt-2">
               {loading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
-                `Rp ${(stats.totalPaidFines).toLocaleString('id-ID')}`
+                `Rp ${stats.totalPaidFines.toLocaleString("id-ID")}`
               )}
+            </p>
+            <p className="text-[11px] font-semibold text-slate-500 mt-2">
+              Tagihan aktif: Rp {stats.outstandingFines.toLocaleString("id-ID")}
             </p>
           </div>
         </div>
-
       </div>
 
       {/* Charts & Lists Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Bar Chart Section */}
         <div className="lg:col-span-2 bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm flex flex-col">
           <div className="flex items-center gap-2 mb-8">
-            <h3 className="text-[15px] font-extrabold text-[#0F172A]">Grafik kunjungan terakhir</h3>
+            <h3 className="text-[15px] font-extrabold text-[#0F172A]">
+              Grafik kunjungan terakhir
+            </h3>
             <div className="flex items-center gap-1 cursor-pointer">
-              <span className="text-[15px] font-extrabold text-[#0F172A]">(7 Hari Terakhir)</span>
+              <span className="text-[15px] font-extrabold text-[#0F172A]">
+                (7 Hari Terakhir)
+              </span>
               <ChevronDown className="w-5 h-5 text-slate-900" strokeWidth={3} />
             </div>
           </div>
 
           <div className="flex-1 w-full h-[300px] mb-6">
-            <ResponsiveContainer width="100%" height={300} minWidth={1} minHeight={1}>
-              <BarChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 10 }} barSize={50}>
-                {/* Dummy Tooltip to hide default but support interaction if needed */}
-                <Tooltip 
-                  cursor={{fill: 'transparent'}}
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)'}}
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              minWidth={1}
+              minHeight={1}
+            >
+              <BarChart
+                data={chartData}
+                margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
+                barSize={50}
+              >
+                <Tooltip
+                  cursor={{ fill: "transparent" }}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                  }}
                 />
-                
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#0F172A', fontSize: 12, fontWeight: 700 }}
+
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#0F172A", fontSize: 12, fontWeight: 700 }}
                   tickMargin={15}
                   height={40}
                 />
-                
-                {/* Background bar to simulate the light grey background shown in screenshot */}
-                <Bar 
-                  dataKey="visits" 
-                  fill="#9a1b1b" 
-                  radius={[8, 8, 8, 8]} 
-                  background={{ fill: '#F1F5F9', radius: 8 }} 
+
+                <Bar
+                  dataKey="visits"
+                  fill="#9a1b1b"
+                  radius={[8, 8, 8, 8]}
+                  background={{ fill: "#F1F5F9", radius: 8 }}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -301,29 +476,35 @@ export default function ReportsSection({ className = "" }: ReportsSectionProps) 
         {/* Popular Books Section */}
         <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-[15px] font-extrabold text-[#0F172A]">Buku Terpopuler (Dummy*)</h3>
+            <h3 className="text-[15px] font-extrabold text-[#0F172A]">
+              Buku Terpopuler
+            </h3>
             <TrendingUp className="w-5 h-5 text-slate-900" strokeWidth={3} />
           </div>
 
           <div className="space-y-6 flex-1">
-            {popularBooks.map((book) => (
+            {popularBooks.length === 0 && !loading ? (
+              <p className="text-sm font-semibold text-slate-400">
+                Belum ada data peminjaman buku.
+              </p>
+            ) : null}
+            {popularBooks.map((book, index) => (
               <div key={book.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
-                    {book.id}
+                    {index + 1}
                   </div>
                   <p className="text-sm font-bold text-[#0F172A] truncate max-w-[120px]">
                     {book.title}
                   </p>
                 </div>
                 <div className="px-3 py-1.5 rounded-full bg-[#EBF5FF] text-[#2563EB] text-[10px] font-black tracking-wide shrink-0">
-                  {book.borrows} Dipinjam
+                  {book.loanCount} Dipinjam
                 </div>
               </div>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

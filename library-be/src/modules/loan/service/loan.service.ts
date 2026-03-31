@@ -1,17 +1,48 @@
 import { db } from "../../../db";
 import { eq, and, sql, isNull } from "drizzle-orm";
-import { items, loans, members, fines, reservations } from "../../../db/schema";
+import {
+  items,
+  loans,
+  members,
+  fines,
+  reservations,
+  collections,
+} from "../../../db/schema";
 import crypto from "crypto";
+import qrcode from "qrcode";
 import { NotificationService } from "../../notification/service/notification.service";
 import reservationService from "../../reservation/service/reservation.service";
 
 const notificationService = new NotificationService();
 
 export class LoanService {
+  private async syncCollectionAvailableStock(tx: any, collectionId: string) {
+    const [availableCount] = await tx
+      .select({ count: sql<number>`count(*)` })
+      .from(items)
+      .where(
+        and(
+          eq(items.collectionId, collectionId),
+          eq(items.status, "available"),
+          isNull(items.deletedAt),
+        ),
+      );
+
+    await tx
+      .update(collections)
+      .set({ stock: Number(availableCount?.count ?? 0), updatedAt: new Date() })
+      .where(eq(collections.id, collectionId));
+  }
+
   /**
    * 1. Mahasiswa Request Pinjam Buku
    */
-  async requestLoan(memberId: string, collectionId: string, reqLoanDate?: string, reqDueDate?: string) {
+  async requestLoan(
+    memberId: string,
+    collectionId: string,
+    reqLoanDate?: string,
+    reqDueDate?: string,
+  ) {
     // Best Practice: Cek apakah member sudah meminjam terlalu banyak (Limit: 3 buku aktif)
     const activeLoansCount = await db
       .select({ count: sql<number>`count(*)` })
@@ -39,8 +70,8 @@ export class LoanService {
         and(
           eq(reservations.collectionId, collectionId),
           eq(reservations.status, "waiting"),
-          isNull(reservations.deletedAt)
-        )
+          isNull(reservations.deletedAt),
+        ),
       );
 
     // Hitung item yang tersedia
@@ -51,22 +82,24 @@ export class LoanService {
         and(
           eq(items.collectionId, collectionId),
           eq(items.status, "available"),
-          isNull(items.deletedAt)
-        )
+          isNull(items.deletedAt),
+        ),
       );
 
     if (Number(availableItemsCount.count) <= Number(waitingResCount.count)) {
-       // Cek apakah member ini ada di urutan pertama reservasi? 
-       // (Logika ini bisa dikembangkan, tapi untuk sekarang kita proteksi secara umum)
-       throw new Error("Buku ini sedang dipesan (reserved) oleh orang lain di antrian. Silakan masuk antrian reservasi.");
+      // Cek apakah member ini ada di urutan pertama reservasi?
+      // (Logika ini bisa dikembangkan, tapi untuk sekarang kita proteksi secara umum)
+      throw new Error(
+        "Buku ini sedang dipesan (reserved) oleh orang lain di antrian. Silakan masuk antrian reservasi.",
+      );
     }
 
     // Validasi item: Cari salinan pertama yang tersedia untuk collectionId ini
     const item = await db.query.items.findFirst({
       where: and(
-        eq(items.collectionId, collectionId), 
-        eq(items.status, "available"), 
-        isNull(items.deletedAt)
+        eq(items.collectionId, collectionId),
+        eq(items.status, "available"),
+        isNull(items.deletedAt),
       ),
     });
 
@@ -79,7 +112,11 @@ export class LoanService {
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 jam
 
     const finalLoanDate = reqLoanDate || new Date().toISOString().split("T")[0];
-    const finalDueDate = reqDueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const finalDueDate =
+      reqDueDate ||
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
 
     const [loan] = await db
       .insert(loans)
@@ -94,7 +131,12 @@ export class LoanService {
       })
       .returning();
 
-    return loan;
+    const qrCodeUrl = await qrcode.toDataURL(token, {
+      width: 300,
+      errorCorrectionLevel: "H",
+    });
+
+    return { ...loan, qrCodeUrl };
   }
 
   /**
@@ -159,6 +201,8 @@ export class LoanService {
         .set({ status: "loaned", updatedAt: new Date() })
         .where(eq(items.id, updatedLoan.itemId));
 
+      await this.syncCollectionAvailableStock(tx, loanData.item.collectionId);
+
       return loanData;
     });
 
@@ -182,6 +226,17 @@ export class LoanService {
    */
   async rejectLoan(loanId: string, adminId: string) {
     await db.transaction(async (tx) => {
+      const loanData = await tx.query.loans.findFirst({
+        where: and(eq(loans.id, loanId), isNull(loans.deletedAt)),
+        with: {
+          item: true,
+        },
+      });
+
+      if (!loanData) {
+        throw new Error("Peminjaman tidak ditemukan");
+      }
+
       const [updatedLoan] = await tx
         .update(loans)
         .set({
@@ -200,6 +255,8 @@ export class LoanService {
         .update(items)
         .set({ status: "available", updatedAt: new Date() })
         .where(eq(items.id, updatedLoan.itemId));
+
+      await this.syncCollectionAvailableStock(tx, loanData.item.collectionId);
     });
 
     return {
@@ -243,10 +300,16 @@ export class LoanService {
         })
         .where(eq(items.id, loan.itemId));
 
-      // Ambil collectionId dari item untuk auto-fulfill reservasi
-      const returnedItem = await tx.query.items.findFirst({
+      const loanItem = await tx.query.items.findFirst({
         where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)),
       });
+
+      if (loanItem?.collectionId) {
+        await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
+      }
+
+      // Ambil collectionId dari item untuk auto-fulfill reservasi
+      const returnedItem = loanItem;
       if (returnedItem?.collectionId) {
         // Fire-and-forget: auto-fulfill reservasi tertua (FIFO)
         void reservationService.fulfillNextReservation(
@@ -340,10 +403,27 @@ export class LoanService {
       orderBy: (loans, { desc }) => [desc(loans.createdAt)],
     });
 
+    const loansWithQr = await Promise.all(
+      result.map(async (loan) => {
+        if (loan.status === "pending" && loan.verificationToken) {
+          try {
+            const qrCodeUrl = await qrcode.toDataURL(loan.verificationToken, {
+              width: 300,
+              errorCorrectionLevel: "H",
+            });
+            return { ...loan, qrCodeUrl };
+          } catch (_e) {
+            return loan;
+          }
+        }
+        return loan;
+      }),
+    );
+
     return {
       success: true,
       message: "Loans retrieved successfully",
-      data: result,
+      data: loansWithQr,
     };
   }
 }

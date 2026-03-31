@@ -11,6 +11,7 @@ import {
   sendError,
   sendValidationError,
 } from "../../../utils/api-utils";
+import auditService from "../../audit/service/audit.service";
 
 const authService = new AuthService();
 
@@ -23,7 +24,11 @@ export class AuthController {
       }
 
       const { name, email, password } = validation.data;
-      const result = await authService.registerWithCredentials(name, email, password);
+      const result = await authService.registerWithCredentials(
+        name,
+        email,
+        password,
+      );
 
       sendSuccess(res, "Registrasi berhasil", result, 201);
     } catch (error) {
@@ -35,6 +40,17 @@ export class AuthController {
     try {
       const validation = loginCredentialSchema.safeParse(req.body);
       if (!validation.success) {
+        const attemptedEmail =
+          typeof req.body?.email === "string" ? req.body.email : undefined;
+        await auditService.createLog({
+          action: "failed_login",
+          entity: "auth",
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent") || undefined,
+          detail: `validation_failed${
+            attemptedEmail ? `; email=${attemptedEmail}` : ""
+          }`,
+        });
         return sendValidationError(res, validation.error.flatten());
       }
 
@@ -43,6 +59,24 @@ export class AuthController {
 
       sendSuccess(res, "Login berhasil", result);
     } catch (error) {
+      const attemptedEmail =
+        typeof req.body?.email === "string" ? req.body.email : undefined;
+      const statusCode =
+        typeof (error as { statusCode?: unknown })?.statusCode === "number"
+          ? (error as { statusCode: number }).statusCode
+          : 500;
+
+      if (statusCode === 401 || statusCode === 400) {
+        await auditService.createLog({
+          action: "failed_login",
+          entity: "auth",
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent") || undefined,
+          detail: `invalid_credentials${
+            attemptedEmail ? `; email=${attemptedEmail}` : ""
+          }`,
+        });
+      }
       next(error);
     }
   }
@@ -72,10 +106,98 @@ export class AuthController {
       const result = await UserService.getAllUsers();
 
       if (!result.success) {
-        return sendError(res, result.message ?? "Gagal mengambil data pengguna", 500);
+        return sendError(
+          res,
+          result.message ?? "Gagal mengambil data pengguna",
+          500,
+        );
       }
 
       sendSuccess(res, "Data pengguna berhasil diambil", result.data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateUserRole(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = String(req.params.id || "");
+      const role = String(req.body?.role || "");
+      const actorUserId = String(req.user?.id || "");
+
+      if (!userId || !role || !actorUserId) {
+        return sendError(res, "Data update role tidak lengkap", 400);
+      }
+
+      const result = await UserService.updateUserRole(
+        userId,
+        role,
+        actorUserId,
+      );
+
+      if (!result.success) {
+        return sendError(
+          res,
+          result.message ?? "Gagal memperbarui role user",
+          400,
+        );
+      }
+
+      await auditService.createLog({
+        userId: actorUserId,
+        action: "update",
+        entity: "Users",
+        entityId: userId,
+        ipAddress: req.ip,
+      });
+
+      sendSuccess(res, "Role user berhasil diperbarui", result.data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateUserBanStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = String(req.params.id || "");
+      const banned = Boolean(req.body?.banned);
+      const banReason = req.body?.banReason
+        ? String(req.body.banReason)
+        : undefined;
+      const actorUserId = String(req.user?.id || "");
+
+      if (!userId || !actorUserId || typeof req.body?.banned !== "boolean") {
+        return sendError(res, "Data update ban tidak lengkap", 400);
+      }
+
+      const result = await UserService.updateUserBanStatus(
+        userId,
+        banned,
+        actorUserId,
+        banReason,
+      );
+
+      if (!result.success) {
+        return sendError(
+          res,
+          result.message ?? "Gagal memperbarui status ban user",
+          400,
+        );
+      }
+
+      await auditService.createLog({
+        userId: actorUserId,
+        action: banned ? "blacklist" : "update",
+        entity: "Users",
+        entityId: userId,
+        ipAddress: req.ip,
+      });
+
+      sendSuccess(
+        res,
+        banned ? "User berhasil diblokir" : "User berhasil diaktifkan kembali",
+        result.data,
+      );
     } catch (error) {
       next(error);
     }

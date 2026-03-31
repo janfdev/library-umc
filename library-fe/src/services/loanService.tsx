@@ -21,6 +21,7 @@ export interface Loan {
   rejectReason?: string;
   fine?: number;
   verificationToken?: string;
+  qrCodeUrl?: string;
   member?: Record<string, unknown>;
   item?: {
     id: string;

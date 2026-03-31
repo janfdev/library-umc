@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { authClient } from "@/utils/auth-client";
 import { useNavigate } from "react-router";
 import Logo from "@/assets/logo_umc.png";
@@ -12,8 +12,9 @@ import ReportsSection from "@/components/dashboard/ReportsSection";
 import LoansSection from "@/components/dashboard/LoansSection";
 import CirculationSection from "@/components/dashboard/CirculationSection";
 import FinesSection from "@/components/dashboard/FinesSection";
+import UsersSection from "@/components/dashboard/UsersSection";
+import AuditLogsSection from "@/components/dashboard/AuditLogsSection";
 
-// Import icons untuk sidebar
 import {
   Book,
   BookOpen,
@@ -26,178 +27,85 @@ import {
   BarChart3,
   Bell,
   Wallet,
+  Shield,
 } from "lucide-react";
 
-import { API_BASE_URL } from "@/utils/api-config";
+import { dashboardDataService } from "@/services/dashboard/dashboardDataService";
+import { useCollectionsData } from "@/hooks/dashboard/useCollectionsData";
+import { useCategoriesData } from "@/hooks/dashboard/useCategoriesData";
+import { useGuestsData } from "@/hooks/dashboard/useGuestsData";
+import { useDashboardStatsLazy } from "@/hooks/dashboard/useDashboardStatsLazy";
 
-// Types
-interface Collection {
-  id: string;
-  title: string;
-  author: string;
-  publisher: string;
-  publicationYear: string;
-  type: string;
-  category?: {
-    id: string;
-    name: string;
-  };
-  categoryId?: string;
-  isbn?: string;
-  stock: number;
-  image: string | null;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  description?: string;
-  createdAt: string;
-}
-
-interface GuestLog {
-  id: string;
-  name: string;
-  email: string;
-  identifier: string;
-  faculty: string;
-  major: string;
-  visitDate: string;
-}
-
-interface Stats {
-  totalCollections: number;
-  totalCategories: number;
-  totalGuests: number;
-  activeBorrowings?: number;
-  totalFines?: number;
-}
+type ActiveMenu =
+  | "dashboard"
+  | "collections"
+  | "categories"
+  | "guests"
+  | "reports"
+  | "loans"
+  | "circulation"
+  | "fines"
+  | "users"
+  | "audit";
 
 export default function SuperAdminDashboard() {
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
 
-  // State untuk data
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [guests, setGuests] = useState<GuestLog[]>([]);
-  const [stats, setStats] = useState<Stats>({
-    totalCollections: 0,
-    totalCategories: 0,
-    totalGuests: 0,
-    activeBorrowings: 0,
-    totalFines: 0,
-  });
-
-  // State untuk UI
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeMenu, setActiveMenu] = useState<
-    | "dashboard"
-    | "collections"
-    | "categories"
-    | "guests"
-    | "reports"
-    | "loans"
-    | "circulation"
-    | "fines"
-  >("dashboard");
-  const [loading, setLoading] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<ActiveMenu>("dashboard");
 
-  // Fetch data
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const collectionsRes = await fetch(`${API_BASE_URL}/api/collections`);
-      const collectionsData = await collectionsRes.json();
-      const collectionsList = collectionsData.success
-        ? collectionsData.data
-        : [];
-      setCollections(collectionsList);
+  const isSuperAdmin =
+    (session?.user as { role?: string } | undefined)?.role === "super_admin";
 
-      const categoriesRes = await fetch(`${API_BASE_URL}/api/categories`);
-      const categoriesData = await categoriesRes.json();
-      const categoriesList = categoriesData.success ? categoriesData.data : [];
-      setCategories(categoriesList);
+  const {
+    stats,
+    loading: statsLoading,
+    refetch: refetchStats,
+  } = useDashboardStatsLazy(activeMenu === "dashboard");
 
-      let guestsList: GuestLog[] = [];
-      try {
-        const guestsRes = await fetch(`${API_BASE_URL}/api/guests`, {
-          credentials: "include",
-        });
-        const guestsData = await guestsRes.json();
-        if (guestsData.success && Array.isArray(guestsData.data)) {
-          guestsList = guestsData.data;
-          setGuests(guestsList);
-        }
-      } catch (guestError) {
-        console.error("Failed to fetch guest logs:", guestError);
-      }
+  const {
+    collections,
+    loading: collectionsLoading,
+    refetch: refetchCollections,
+  } = useCollectionsData(activeMenu === "collections");
 
-      // Fetch jumlah pinjaman aktif (approved) & denda
-      let activeBorrowings = 0;
-      let totalFines = 0;
-      try {
-        const [loansRes, finesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/loans?status=approved&limit=200`, {
-            credentials: "include",
-          }),
-          fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=200`, {
-            credentials: "include",
-          }),
-        ]);
-        const [loansData, finesData] = await Promise.all([
-          loansRes.json(),
-          finesRes.json(),
-        ]);
+  const {
+    categories,
+    loading: categoriesLoading,
+    refetch: refetchCategories,
+  } = useCategoriesData(activeMenu === "categories");
 
-        if (loansData.success && Array.isArray(loansData.data)) {
-          activeBorrowings = loansData.data.length;
-        }
+  const {
+    guests,
+    loading: guestsLoading,
+    refetch: refetchGuests,
+  } = useGuestsData(activeMenu === "guests");
 
-        // Hitung denda unpaid fix
-        if (finesData.success && Array.isArray(finesData.data)) {
-          totalFines = finesData.data.reduce(
-            (sum: number, fine: { amount: number }) =>
-              sum + (Number(fine.amount) || 0),
-            0,
-          );
-        }
-      } catch (statsError) {
-        console.error("Failed to fetch stats:", statsError);
-      }
-
-      setStats({
-        totalCollections: collectionsList.length,
-        totalCategories: categoriesList.length,
-        totalGuests: guestsList.length,
-        activeBorrowings,
-        totalFines,
-      });
-    } catch (error) {
-      console.error("Failed to fetch dashboard data", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const activeLoading = useMemo(() => {
+    if (activeMenu === "dashboard") return statsLoading;
+    if (activeMenu === "collections") return collectionsLoading;
+    if (activeMenu === "categories") return categoriesLoading;
+    if (activeMenu === "guests") return guestsLoading;
+    return false;
+  }, [
+    activeMenu,
+    statsLoading,
+    collectionsLoading,
+    categoriesLoading,
+    guestsLoading,
+  ]);
 
   const handleSignOut = async () => {
     await authClient.signOut();
     navigate("/login");
   };
 
-  // Handler untuk delete
   const handleDeleteCategory = async (id: number, name: string) => {
     if (!confirm(`Hapus kategori "${name}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if ((await res.json()).success) fetchData();
+      await dashboardDataService.deleteCategory(id);
+      await Promise.all([refetchCategories(), refetchStats()]);
     } catch (error) {
       console.error(error);
     }
@@ -206,11 +114,8 @@ export default function SuperAdminDashboard() {
   const handleDeleteCollection = async (id: string, title: string) => {
     if (!confirm(`Hapus koleksi "${title}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/collections/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if ((await res.json()).success) fetchData();
+      await dashboardDataService.deleteCollection(id);
+      await Promise.all([refetchCollections(), refetchStats()]);
     } catch (error) {
       console.error(error);
     }
@@ -219,17 +124,13 @@ export default function SuperAdminDashboard() {
   const handleDeleteGuest = async (id: string, name: string) => {
     if (!confirm(`Hapus log pengunjung "${name}"?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/guests/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if ((await res.json()).success) fetchData();
+      await dashboardDataService.deleteGuest(id);
+      await Promise.all([refetchGuests(), refetchStats()]);
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Render section berdasarkan activeMenu
   const renderSection = () => {
     switch (activeMenu) {
       case "dashboard":
@@ -242,7 +143,9 @@ export default function SuperAdminDashboard() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onDelete={handleDeleteCollection}
-            onRefresh={fetchData}
+            onRefresh={() =>
+              void Promise.all([refetchCollections(), refetchStats()])
+            }
           />
         );
 
@@ -253,7 +156,9 @@ export default function SuperAdminDashboard() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onDelete={handleDeleteCategory}
-            onRefresh={fetchData}
+            onRefresh={() =>
+              void Promise.all([refetchCategories(), refetchStats()])
+            }
           />
         );
 
@@ -264,7 +169,9 @@ export default function SuperAdminDashboard() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onDelete={handleDeleteGuest}
-            onRefresh={fetchData}
+            onRefresh={() =>
+              void Promise.all([refetchGuests(), refetchStats()])
+            }
           />
         );
 
@@ -282,6 +189,31 @@ export default function SuperAdminDashboard() {
       case "fines":
         return <FinesSection />;
 
+      case "users":
+        if (!isSuperAdmin) {
+          return (
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+              <p className="text-sm font-bold text-red-600">
+                Akses ditolak. Hanya super admin yang dapat membuka Manajemen
+                User.
+              </p>
+            </div>
+          );
+        }
+        return <UsersSection />;
+
+      case "audit":
+        if (!isSuperAdmin) {
+          return (
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+              <p className="text-sm font-bold text-red-600">
+                Akses ditolak. Hanya super admin yang dapat membuka Audit Log.
+              </p>
+            </div>
+          );
+        }
+        return <AuditLogsSection />;
+
       case "reports":
         return <ReportsSection />;
 
@@ -292,7 +224,6 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
-      {/* SIDEBAR */}
       <aside className="w-[280px] bg-[#0F172A] hidden lg:flex flex-col sticky top-0 h-screen z-20">
         <div className="p-6 mb-4 flex items-center gap-3 border-b border-slate-800/30">
           <div className="w-12 h-12 bg-[#B91C1C] rounded-full flex items-center justify-center">
@@ -311,7 +242,6 @@ export default function SuperAdminDashboard() {
         </div>
 
         <nav className="flex-1 px-3 space-y-1">
-          {/* Menu Dashboard */}
           <button
             onClick={() => setActiveMenu("dashboard")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -327,7 +257,6 @@ export default function SuperAdminDashboard() {
             <div className="h-px bg-slate-800/50 w-full" />
           </div>
 
-          {/* Menu Sirkulasi & Scan */}
           <button
             onClick={() => setActiveMenu("circulation")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -339,7 +268,6 @@ export default function SuperAdminDashboard() {
             <ScanLine size={18} /> Sirkulasi & Scan
           </button>
 
-          {/* Menu Data Koleksi */}
           <button
             onClick={() => setActiveMenu("collections")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -351,7 +279,6 @@ export default function SuperAdminDashboard() {
             <Book size={18} /> Data Koleksi
           </button>
 
-          {/* Menu Data Pengunjung */}
           <button
             onClick={() => setActiveMenu("guests")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -363,7 +290,6 @@ export default function SuperAdminDashboard() {
             <Users size={18} /> Data Pengunjung
           </button>
 
-          {/* Menu Peminjaman & Persetujuan */}
           <button
             onClick={() => setActiveMenu("loans")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -375,7 +301,6 @@ export default function SuperAdminDashboard() {
             <BookOpen size={18} /> Peminjaman & Persetujuan
           </button>
 
-          {/* Menu Manajemen Kategori */}
           <button
             onClick={() => setActiveMenu("categories")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -387,7 +312,6 @@ export default function SuperAdminDashboard() {
             <Tag size={18} /> Manajemen Kategori
           </button>
 
-          {/* Menu Manajemen Denda */}
           <button
             onClick={() => setActiveMenu("fines")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -399,7 +323,32 @@ export default function SuperAdminDashboard() {
             <Wallet size={18} /> Manajemen Denda
           </button>
 
-          {/* Menu Laporan & Statistik */}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveMenu("users")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+                activeMenu === "users"
+                  ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <Users size={18} /> Manajemen User
+            </button>
+          )}
+
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveMenu("audit")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+                activeMenu === "audit"
+                  ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <Shield size={18} /> Audit Log
+            </button>
+          )}
+
           <button
             onClick={() => setActiveMenu("reports")}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -422,7 +371,6 @@ export default function SuperAdminDashboard() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4 flex-1 max-w-xl">
@@ -461,7 +409,7 @@ export default function SuperAdminDashboard() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
-          {loading ? (
+          {activeLoading ? (
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
               <div className="space-y-2 mb-8 text-left">
                 <Skeleton className="h-8 w-[250px] rounded-lg" />
@@ -479,7 +427,6 @@ export default function SuperAdminDashboard() {
             </div>
           ) : (
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 delay-150">
-              {/* Render section berdasarkan menu yang dipilih */}
               {renderSection()}
             </div>
           )}

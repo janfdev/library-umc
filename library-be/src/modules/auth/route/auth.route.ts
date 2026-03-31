@@ -106,4 +106,18 @@ router.get(
   authController.getAllUsers,
 );
 
+router.patch(
+  "/users/:id/role",
+  isAuthenticated,
+  requireRole(["super_admin"]),
+  authController.updateUserRole,
+);
+
+router.patch(
+  "/users/:id/ban",
+  isAuthenticated,
+  requireRole(["super_admin"]),
+  authController.updateUserBanStatus,
+);
+
 export const authRoutes = router;

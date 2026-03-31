@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback, Fragment } from "react";
-import { Search, ChevronLeft, ChevronRight, Wallet, Loader, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Wallet,
+  Loader,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -11,6 +19,8 @@ interface UnpaidFine {
   loanId: string;
   loan: {
     dueDate: string;
+    status?: "pending" | "approved" | "returned" | "extended" | "rejected";
+    returnDate?: string | null;
     member: { user: { name: string; email: string } };
     item: { collection: { title: string } };
   };
@@ -23,21 +33,30 @@ interface PaidFine {
   loanId: string;
   loan: {
     dueDate: string;
+    status?: "pending" | "approved" | "returned" | "extended" | "rejected";
+    returnDate?: string | null;
     member: { user: { name: string; email: string } };
     item: { collection: { title: string } };
   };
 }
 
- 
-
 // ─── Toast Component ──────────────────────────────────────────────────────
-function InlineToast({ message, type }: { message: string; type: "success" | "error" }) {
-  const styles = type === "success"
-    ? "bg-green-50 border-green-200 text-green-800"
-    : "bg-red-50 border-red-200 text-red-800";
+function InlineToast({
+  message,
+  type,
+}: {
+  message: string;
+  type: "success" | "error";
+}) {
+  const styles =
+    type === "success"
+      ? "bg-green-50 border-green-200 text-green-800"
+      : "bg-red-50 border-red-200 text-red-800";
   const Icon = type === "success" ? CheckCircle : AlertTriangle;
   return (
-    <div className={`flex items-center gap-2 p-3 rounded-xl border ${styles} text-sm font-semibold mb-4 animate-slide-up`}>
+    <div
+      className={`flex items-center gap-2 p-3 rounded-xl border ${styles} text-sm font-semibold mb-4 animate-slide-up`}
+    >
       <Icon size={16} />
       {message}
     </div>
@@ -52,7 +71,10 @@ export default function FinesSection() {
   const [paidFines, setPaidFines] = useState<PaidFine[]>([]);
   const [loading, setLoading] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -66,8 +88,12 @@ export default function FinesSection() {
     setLoading(true);
     try {
       const [unpaidRes, paidRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=100`, { credentials: "include" }),
-        fetch(`${API_BASE_URL}/api/fines?status=paid&limit=100`, { credentials: "include" }),
+        fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=100`, {
+          credentials: "include",
+        }),
+        fetch(`${API_BASE_URL}/api/fines?status=paid&limit=100`, {
+          credentials: "include",
+        }),
       ]);
 
       const [unpaidData, paidData] = await Promise.all([
@@ -119,18 +145,24 @@ export default function FinesSection() {
   };
 
   // ─── Filter & Pagination ─────────────────────────────────────────────────
-  const filterFines = <T extends { loan: { member: { user: { name: string } } } }>(list: T[]) =>
+  const filterFines = <
+    T extends { loan: { member: { user: { name: string } } } },
+  >(
+    list: T[],
+  ) =>
     list.filter((item) =>
-      item.loan.member.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+      item.loan.member.user.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()),
     );
 
   const filteredUnpaid = filterFines(unpaidFines);
-  const filteredPaid   = filterFines(paidFines);
-  const activeList     = activeTab === "unpaid" ? filteredUnpaid : filteredPaid;
-  const totalPages     = Math.max(1, Math.ceil(activeList.length / itemsPerPage));
-  const paginatedList  = activeList.slice(
+  const filteredPaid = filterFines(paidFines);
+  const activeList = activeTab === "unpaid" ? filteredUnpaid : filteredPaid;
+  const totalPages = Math.max(1, Math.ceil(activeList.length / itemsPerPage));
+  const paginatedList = activeList.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // Reset page when tab or search changes
@@ -143,7 +175,9 @@ export default function FinesSection() {
     <div className="flex flex-col gap-8">
       {/* Header Area */}
       <div>
-        <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">Manajemen Denda</h2>
+        <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+          Manajemen Denda
+        </h2>
         <p className="text-slate-500 font-medium text-[15px] mt-1">
           Kelola tagihan keterlambatan dan riwayat denda mahasiswa.
         </p>
@@ -195,7 +229,10 @@ export default function FinesSection() {
               placeholder="Cari nama mahasiswa..."
               className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-slate-400"
               value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <button
@@ -220,17 +257,33 @@ export default function FinesSection() {
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   {activeTab === "unpaid" ? (
                     <>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">NAMA MAHASISWA</th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">BUKU &amp; KETERLAMBATAN</th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">TOTAL DENDA</th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">AKSI</th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        NAMA MAHASISWA
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        BUKU &amp; KETERLAMBATAN
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        TOTAL DENDA
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">
+                        AKSI
+                      </th>
                     </>
                   ) : (
                     <>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">NAMA MAHASISWA</th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">BUKU</th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">JATUH TEMPO</th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">NOMINAL LUNAS</th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        NAMA MAHASISWA
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        BUKU
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        JATUH TEMPO
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">
+                        NOMINAL LUNAS
+                      </th>
                     </>
                   )}
                 </tr>
@@ -238,19 +291,35 @@ export default function FinesSection() {
               <tbody className="divide-y divide-slate-50">
                 {paginatedList.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-8 py-12 text-center text-slate-400">
+                    <td
+                      colSpan={4}
+                      className="px-8 py-12 text-center text-slate-400"
+                    >
                       <Wallet size={48} className="mx-auto mb-4 opacity-20" />
                       <p className="font-semibold">
-                        {activeTab === "unpaid" ? "Tidak ada tagihan denda belum lunas" : "Tidak ada riwayat pembayaran"}
+                        {activeTab === "unpaid"
+                          ? "Tidak ada tagihan denda belum lunas"
+                          : "Tidak ada riwayat pembayaran"}
                       </p>
                     </td>
                   </tr>
                 ) : activeTab === "unpaid" ? (
                   // ── Unpaid Table ──────────────────────────────────────────
                   (paginatedList as UnpaidFine[]).map((fine) => {
-                    const lateDays = calcLateDays(fine.loan.dueDate);
+                    const computedLateDays = calcLateDays(fine.loan.dueDate);
+                    const amountBasedDays = Math.max(
+                      0,
+                      Math.round((Number(fine.amount) || 0) / 500),
+                    );
+                    const lateDays =
+                      fine.loan.status === "returned"
+                        ? amountBasedDays
+                        : Math.max(computedLateDays, amountBasedDays);
                     return (
-                      <tr key={fine.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <tr
+                        key={fine.id}
+                        className="hover:bg-slate-50/50 transition-colors group"
+                      >
                         <td className="px-8 py-5">
                           <div>
                             <p className="text-[14px] font-bold text-slate-900 group-hover:text-[#B91C1C] transition-colors">
@@ -274,8 +343,12 @@ export default function FinesSection() {
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <p className="text-[14px] font-bold text-[#B91C1C]">{formatRupiah(fine.amount)}</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">Rp 500/hari</p>
+                          <p className="text-[14px] font-bold text-[#B91C1C]">
+                            {formatRupiah(fine.amount)}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Rp 500/hari
+                          </p>
                         </td>
                         <td className="px-8 py-5 text-right">
                           <button
@@ -289,7 +362,9 @@ export default function FinesSection() {
                             ) : (
                               <CheckCircle size={12} />
                             )}
-                            {payingId === fine.id ? "Memproses..." : "Konfirmasi Bayar"}
+                            {payingId === fine.id
+                              ? "Memproses..."
+                              : "Konfirmasi Bayar"}
                           </button>
                         </td>
                       </tr>
@@ -298,12 +373,17 @@ export default function FinesSection() {
                 ) : (
                   // ── Paid Table ────────────────────────────────────────────
                   (paginatedList as PaidFine[]).map((fine) => (
-                    <tr key={fine.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <tr
+                      key={fine.id}
+                      className="hover:bg-slate-50/50 transition-colors group"
+                    >
                       <td className="px-8 py-5">
                         <p className="text-[14px] font-bold text-slate-900 group-hover:text-[#B91C1C] transition-colors">
                           {fine.loan.member.user.name}
                         </p>
-                        <p className="text-[11px] font-medium text-slate-400">{fine.loan.member.user.email}</p>
+                        <p className="text-[11px] font-medium text-slate-400">
+                          {fine.loan.member.user.email}
+                        </p>
                       </td>
                       <td className="px-8 py-5">
                         <p className="text-[14px] font-bold text-slate-900 truncate max-w-[200px]">
@@ -312,13 +392,20 @@ export default function FinesSection() {
                       </td>
                       <td className="px-8 py-5">
                         <p className="text-[13px] font-medium text-slate-500">
-                          {new Date(fine.loan.dueDate).toLocaleDateString("id-ID", {
-                            day: "numeric", month: "short", year: "numeric",
-                          })}
+                          {new Date(fine.loan.dueDate).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}
                         </p>
                       </td>
                       <td className="px-8 py-5 text-right">
-                        <p className="text-[14px] font-bold text-green-600">{formatRupiah(fine.amount)}</p>
+                        <p className="text-[14px] font-bold text-green-600">
+                          {formatRupiah(fine.amount)}
+                        </p>
                         <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[10px] font-bold">
                           <CheckCircle size={10} /> Lunas
                         </div>
@@ -334,7 +421,10 @@ export default function FinesSection() {
         {/* Pagination Controls */}
         <div className="p-6 border-t border-slate-50 flex items-center justify-between">
           <p className="text-xs text-slate-400 font-medium">
-            Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, activeList.length)}–{Math.min(currentPage * itemsPerPage, activeList.length)} dari {activeList.length} data
+            Menampilkan{" "}
+            {Math.min((currentPage - 1) * itemsPerPage + 1, activeList.length)}–
+            {Math.min(currentPage * itemsPerPage, activeList.length)} dari{" "}
+            {activeList.length} data
           </p>
           <div className="flex items-center gap-1.5">
             <button
@@ -346,9 +436,13 @@ export default function FinesSection() {
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .filter(
+                (p) =>
+                  p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1,
+              )
               .map((p, idx, arr) => {
-                const showDot = idx > 0 && Number(arr[idx - 1]) !== Number(p) - 1;
+                const showDot =
+                  idx > 0 && Number(arr[idx - 1]) !== Number(p) - 1;
                 return (
                   <Fragment key={p.toString()}>
                     {showDot && (

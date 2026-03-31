@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { isAuthenticated, requireRole } from "../../../middlewares/auth.middleware";
+import {
+  isAuthenticated,
+  requireRole,
+} from "../../../middlewares/auth.middleware";
 import { publicApiLimiter } from "../../../middlewares/rateLimiter";
 import auditController from "../controller/audit.controller";
 
@@ -55,7 +58,7 @@ router.get(
   "/logs",
   publicApiLimiter,
   isAuthenticated,
-  requireRole(["super_admin", "staff"]),
+  requireRole(["super_admin"]),
   auditController.getLogs.bind(auditController),
 );
 

@@ -47,6 +47,8 @@ class FinesService {
           loanId: fines.loanId,
 
           dueDate: loans.dueDate,
+          loanStatus: loans.status,
+          returnDate: loans.returnDate,
           memberName: Users.name,
           memberEmail: Users.email,
 
@@ -69,6 +71,8 @@ class FinesService {
         loanId: row.loanId,
         loan: {
           dueDate: row.dueDate,
+          status: row.loanStatus,
+          returnDate: row.returnDate,
           member: {
             user: {
               name: row.memberName,
@@ -230,7 +234,8 @@ class FinesService {
         data: row[0],
       };
     } catch (error) {
-      if (error instanceof BadRequestError || error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError || error instanceof NotFoundError)
+        throw error;
       console.error("FinesService.createFineManual Error:", error);
       throw new InternalServerError("Failed to create fine manual");
     }
@@ -286,7 +291,8 @@ class FinesService {
         };
       });
     } catch (error: unknown) {
-      if (error instanceof BadRequestError || error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError || error instanceof NotFoundError)
+        throw error;
       console.error("FinesService.payFine Error:", error);
       throw new InternalServerError("Failed to process fine payment");
     }

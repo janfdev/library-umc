@@ -5,7 +5,9 @@ import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
 import ReservationList from "@/components/ReservationList";
 import loanService from "@/services/loanService";
-import reservationService, { type Reservation } from "@/services/reservationService";
+import reservationService, {
+  type Reservation,
+} from "@/services/reservationService";
 import { authClient } from "@/utils/auth-client";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -63,6 +65,7 @@ interface LoanRequest {
   status:
     | "pending"
     | "approved"
+    | "extended"
     | "rejected"
     | "active"
     | "returned"
@@ -103,10 +106,11 @@ const KatalogDetail = () => {
   const toast = useToast();
 
   const [collection, setCollection] = useState<Collection | null>(null);
-  const [activeLoans, setActiveLoans] = useState<LoanRequest[]>([]);
   const [userLoans, setUserLoans] = useState<LoanRequest[]>([]);
   const [pendingRequests, setPendingRequests] = useState<LoanRequest[]>([]);
-  const [userReservation, setUserReservation] = useState<Reservation | null>(null);
+  const [userReservation, setUserReservation] = useState<Reservation | null>(
+    null,
+  );
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +121,9 @@ const KatalogDetail = () => {
 
   // Form field disesuaikan dengan schema: loanDate & dueDate
   const defaultLoanDate = new Date().toISOString().split("T")[0];
-  const defaultDueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const defaultDueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
 
   const [loanFormData, setLoanFormData] = useState({
     loanDate: defaultLoanDate,
@@ -172,57 +178,44 @@ const KatalogDetail = () => {
         if (collectionJson.success && collectionJson.data) {
           setCollection(collectionJson.data);
 
-          // 2. Fetch active loans untuk item ini
-          // ✅ Gunakan itemId bukan collectionId
-          const activeLoansResponse = await fetch(
-            `${API_BASE_URL}/api/loans?itemId=${id}&status=active`,
-          );
-          if (activeLoansResponse.ok) {
-            const activeLoansJson = await activeLoansResponse.json();
-            if (
-              activeLoansJson.success &&
-              Array.isArray(activeLoansJson.data)
-            ) {
-              setActiveLoans(activeLoansJson.data);
-            }
-          }
-
-          // 3. Jika user login, fetch loans user untuk item ini
+          // 2. Jika user login, ambil histori pinjaman user (endpoint member)
           const memberId = currentUser?.memberId;
           if (memberId) {
-            // Fetch pending requests user untuk item ini
-            const pendingResponse = await fetch(
-              `${API_BASE_URL}/api/loans?memberId=${memberId}&itemId=${id}&status=pending`,
-            );
-            if (pendingResponse.ok) {
-              const pendingJson = await pendingResponse.json();
-              if (pendingJson.success && Array.isArray(pendingJson.data)) {
-                setPendingRequests(pendingJson.data);
-              }
-            }
+            try {
+              const myLoans = await loanService.getMyLoanHistory();
+              const loansForCollection = myLoans.filter(
+                (loan: any) => loan?.item?.collection?.id === id,
+              ) as LoanRequest[];
 
-            // Fetch active loans user untuk item ini
-            const userLoansResponse = await fetch(
-              `${API_BASE_URL}/api/loans?memberId=${memberId}&itemId=${id}&status=active`,
-            );
-            if (userLoansResponse.ok) {
-              const userLoansJson = await userLoansResponse.json();
-              if (userLoansJson.success && Array.isArray(userLoansJson.data)) {
-                setUserLoans(userLoansJson.data);
-              }
+              setPendingRequests(
+                loansForCollection.filter((loan) => loan.status === "pending"),
+              );
+
+              setUserLoans(
+                loansForCollection.filter(
+                  (loan) =>
+                    loan.status === "approved" || loan.status === "extended",
+                ),
+              );
+            } catch (err) {
+              console.error("Error fetching member loans:", err);
+              setPendingRequests([]);
+              setUserLoans([]);
             }
 
             // Fetch user reservation untuk koleksi ini
             try {
               const reservations = await reservationService.getMyReservations();
-              const activeRes = reservations.find(r => r.collectionId === id && r.status === 'waiting');
+              const activeRes = reservations.find(
+                (r) => r.collectionId === id && r.status === "waiting",
+              );
               setUserReservation(activeRes || null);
             } catch (err) {
               console.error("Error fetching reservation:", err);
             }
           }
 
-          // 4. Fetch similar books
+          // 3. Fetch similar books
           if (collectionJson.data.categoryId) {
             fetchSimilarBooks(collectionJson.data.categoryId);
           }
@@ -259,13 +252,17 @@ const KatalogDetail = () => {
 
   // Helper: Cek status buku
   const getBookStatus = (): "available" | "borrowed" | "reserved" | "empty" => {
-    if (activeLoans.length > 0) return "borrowed";
-    if (pendingRequests.length > 0) return "reserved";
-    
-    // Cek real stock jika backend return daftar fisik buku
-    if (collection?.items) {
-       const availableItems = collection.items.filter(i => i.status === "available");
-       if (availableItems.length === 0) return "empty";
+    // Prioritas 1: gunakan item fisik jika memang ada datanya
+    if (collection?.items && collection.items.length > 0) {
+      const availableItems = collection.items.filter(
+        (i) => i.status === "available",
+      );
+      return availableItems.length > 0 ? "available" : "empty";
+    }
+
+    // Prioritas 2: fallback ke stock agregat jika item fisik belum disediakan
+    if (typeof collection?.stock === "number") {
+      return collection.stock > 0 ? "available" : "empty";
     }
 
     return "available";
@@ -280,15 +277,19 @@ const KatalogDetail = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    
+
     if (name === "loanDate") {
       const selectedDate = new Date(value);
       // Hitung 3 hari ke depan secara otomatis
-      const calculatedDueDate = new Date(selectedDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-      setLoanFormData({ 
-        ...loanFormData, 
-        loanDate: value, 
-        dueDate: calculatedDueDate 
+      const calculatedDueDate = new Date(
+        selectedDate.getTime() + 3 * 24 * 60 * 60 * 1000,
+      )
+        .toISOString()
+        .split("T")[0];
+      setLoanFormData({
+        ...loanFormData,
+        loanDate: value,
+        dueDate: calculatedDueDate,
       });
     } else {
       setLoanFormData({ ...loanFormData, [name]: value });
@@ -306,11 +307,16 @@ const KatalogDetail = () => {
       return;
     }
     if (isUserPending()) {
-      toast.warning("Info Pinjaman", "Anda sudah mengajukan peminjaman untuk buku ini");
+      toast.warning(
+        "Info Pinjaman",
+        "Anda sudah mengajukan peminjaman untuk buku ini",
+      );
       return;
     }
     if (getBookStatus() === "empty" || getBookStatus() === "borrowed") {
-      if (confirm("Buku sedang tidak tersedia. Ingin masuk antrian reservasi?")) {
+      if (
+        confirm("Buku sedang tidak tersedia. Ingin masuk antrian reservasi?")
+      ) {
         handleReserve();
       }
       return;
@@ -320,30 +326,38 @@ const KatalogDetail = () => {
 
   const handleReserve = async () => {
     if (!currentUser || !collection?.id) return;
-    
+
     setBorrowLoading(true);
     const collectionId = collection.id;
-    const loadingId = toast.loading("Memproses", "Mendaftarkan ke antrian reservasi...");
+    const loadingId = toast.loading(
+      "Memproses",
+      "Mendaftarkan ke antrian reservasi...",
+    );
     try {
       await reservationService.createReservation(collectionId);
       toast.removeToast(loadingId);
-      toast.success("Berhasil", "Anda telah masuk dalam antrian reservasi. Kami akan memberitahu Anda via email jika buku sudah tersedia.");
+      toast.success(
+        "Berhasil",
+        "Anda telah masuk dalam antrian reservasi. Kami akan memberitahu Anda via email jika buku sudah tersedia.",
+      );
       setShowReservationList(true);
-      
+
       // Update local status
-      setUserReservation({ 
-        id: 'new', // Temporary ID
-        memberId: currentUser.memberId || '',
+      setUserReservation({
+        id: "new", // Temporary ID
+        memberId: currentUser.memberId || "",
         collectionId: collectionId,
-        status: 'waiting', 
+        status: "waiting",
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
     } catch (error) {
       toast.removeToast(loadingId);
       toast.error(
         "Gagal",
-        error instanceof Error ? error.message : "Terjadi kesalahan saat membuat reservasi"
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat membuat reservasi",
       );
     } finally {
       setBorrowLoading(false);
@@ -360,7 +374,10 @@ const KatalogDetail = () => {
     }
 
     if (!currentUser.memberId) {
-      toast.error("Akses Ditolak", "ID member tidak ditemukan. Silakan login ulang.");
+      toast.error(
+        "Akses Ditolak",
+        "ID member tidak ditemukan. Silakan login ulang.",
+      );
       return;
     }
 
@@ -370,7 +387,10 @@ const KatalogDetail = () => {
     }
 
     if (!loanFormData.loanDate || !loanFormData.dueDate) {
-      toast.warning("Form Belum Lengkap", "Pilih tanggal peminjaman dan pengembalian");
+      toast.warning(
+        "Form Belum Lengkap",
+        "Pilih tanggal peminjaman dan pengembalian",
+      );
       return;
     }
 
@@ -381,12 +401,18 @@ const KatalogDetail = () => {
     today.setHours(0, 0, 0, 0);
 
     if (start < today) {
-      toast.warning("Tanggal Tidak Valid", "Tanggal peminjaman tidak boleh kurang dari hari ini");
+      toast.warning(
+        "Tanggal Tidak Valid",
+        "Tanggal peminjaman tidak boleh kurang dari hari ini",
+      );
       return;
     }
 
     if (end <= start) {
-      toast.warning("Tanggal Tidak Valid", "Tanggal pengembalian harus setelah tanggal peminjaman");
+      toast.warning(
+        "Tanggal Tidak Valid",
+        "Tanggal pengembalian harus setelah tanggal peminjaman",
+      );
       return;
     }
 
@@ -411,22 +437,27 @@ const KatalogDetail = () => {
       });
 
       toast.removeToast(loadingId);
-      toast.success("Berhasil", "Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.");
+      toast.success(
+        "Berhasil",
+        "Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.",
+      );
 
-      setPendingRequests([...pendingRequests, loan as unknown as LoanRequest]);
+      setPendingRequests((prev) => [...prev, loan as unknown as LoanRequest]);
       setShowLoanForm(false);
-      
+
       // Reset form dates
-      setLoanFormData({ 
-        loanDate: defaultLoanDate, 
-        dueDate: defaultDueDate, 
-        notes: "" 
+      setLoanFormData({
+        loanDate: defaultLoanDate,
+        dueDate: defaultDueDate,
+        notes: "",
       });
     } catch (error) {
       toast.removeToast(loadingId);
       toast.error(
         "Gagal",
-        error instanceof Error ? error.message : "Terjadi kesalahan saat mengajukan peminjaman"
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat mengajukan peminjaman",
       );
     } finally {
       setBorrowLoading(false);
@@ -659,11 +690,16 @@ const KatalogDetail = () => {
 
               {collection?.items ? (
                 <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
-                  Stok: {collection.items.filter(i => i.status === "available").length} Fisik Tersedia
+                  Stok:{" "}
+                  {
+                    collection.items.filter((i) => i.status === "available")
+                      .length
+                  }{" "}
+                  Fisik Tersedia
                 </span>
               ) : collection?.stock !== undefined ? (
                 <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
-                  Stok: {collection.stock - activeLoans.length}
+                  Stok: {collection.stock}
                 </span>
               ) : null}
             </div>
