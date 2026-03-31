@@ -6,7 +6,9 @@ import {
   User as UserIcon,
   DownloadCloud,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "@/utils/api-config";
+import loanService, { type Loan } from "@/services/loanService";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +28,91 @@ interface DashboardSectionProps {
 }
 
 export default function DashboardSection({ stats }: DashboardSectionProps) {
+  const [recentLoans, setRecentLoans] = useState<Loan[]>([]);
+  const [loanLoading, setLoanLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRecentLoans = async () => {
+      setLoanLoading(true);
+      try {
+        const loans = await loanService.getAllLoans();
+        if (!isMounted) return;
+
+        const sorted = [...loans].sort((a, b) => {
+          const da = new Date(a.createdAt || a.loanDate || 0).getTime();
+          const db = new Date(b.createdAt || b.loanDate || 0).getTime();
+          return db - da;
+        });
+
+        setRecentLoans(sorted.slice(0, 5));
+      } catch {
+        if (isMounted) {
+          setRecentLoans([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoanLoading(false);
+        }
+      }
+    };
+
+    void loadRecentLoans();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const formattedRecentLoans = useMemo(
+    () =>
+      recentLoans.map((loan) => {
+        const memberName =
+          loan.memberName ||
+          (loan.member?.user as { name?: string } | undefined)?.name ||
+          "Member";
+        const bookTitle =
+          loan.collectionTitle || loan.item?.collection?.title || "Buku";
+        const createdAt = loan.createdAt || loan.loanDate;
+
+        return {
+          id: loan.id,
+          memberName,
+          bookTitle,
+          status: loan.status,
+          timeText: createdAt
+            ? new Date(createdAt).toLocaleString("id-ID", {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "-",
+        };
+      }),
+    [recentLoans],
+  );
+
+  const statusMeta: Record<string, { label: string; className: string }> = {
+    approved: {
+      label: "Dipinjam",
+      className: "bg-[#fff7ed] text-[#ea580c]",
+    },
+    pending: {
+      label: "Menunggu",
+      className: "bg-[#eff6ff] text-[#2563eb]",
+    },
+    returned: {
+      label: "Dikembalikan",
+      className: "bg-[#ecfdf5] text-[#059669]",
+    },
+    rejected: {
+      label: "Ditolak",
+      className: "bg-[#fef2f2] text-[#dc2626]",
+    },
+  };
+
   const statCards = [
     {
       label: "Total Koleksi",
@@ -183,41 +270,54 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
         </div>
 
         <div className="p-4 md:p-6 flex flex-col">
-          {[
-            "Rizqi Noor Fauzan",
-            "Ahmad Fauzi",
-            "Siti Nurhaliza",
-            "Budi Santoso",
-            "Nadilla Putri",
-          ].map((name, idx) => (
-            <div
-              key={idx}
-              className="flex items-center justify-between p-4 px-6 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl flex items-center justify-center text-[#94A3B8]">
-                  <UserIcon size={18} />
-                </div>
-                <div>
-                  <p className="text-[15px] font-bold text-slate-900">
-                    {name}{" "}
-                    <span className="font-normal text-slate-400 mx-0.5">
-                      meminjam
-                    </span>{" "}
-                    Bumi
-                  </p>
-                  <p className="text-[12px] text-slate-400 font-medium mt-0.5">
-                    {idx * 2 + 2} Menit yang lalu
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <span className="px-4 py-1.5 bg-[#ecfdf5] text-[#10b981] rounded-lg text-[13px] font-bold">
-                  Selesai
-                </span>
-              </div>
+          {loanLoading ? (
+            <div className="p-4 px-6 text-sm text-slate-400 font-semibold">
+              Memuat aktivitas peminjaman...
             </div>
-          ))}
+          ) : formattedRecentLoans.length === 0 ? (
+            <div className="p-4 px-6 text-sm text-slate-400 font-semibold">
+              Belum ada aktivitas peminjaman terbaru.
+            </div>
+          ) : (
+            formattedRecentLoans.map((loan) => {
+              const meta = statusMeta[loan.status] || {
+                label: loan.status,
+                className: "bg-slate-100 text-slate-600",
+              };
+
+              return (
+                <div
+                  key={loan.id}
+                  className="flex items-center justify-between p-4 px-6 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl flex items-center justify-center text-[#94A3B8]">
+                      <UserIcon size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-slate-900">
+                        {loan.memberName}{" "}
+                        <span className="font-normal text-slate-400 mx-0.5">
+                          meminjam
+                        </span>{" "}
+                        {loan.bookTitle}
+                      </p>
+                      <p className="text-[12px] text-slate-400 font-medium mt-0.5">
+                        {loan.timeText}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <span
+                      className={`px-4 py-1.5 rounded-lg text-[13px] font-bold ${meta.className}`}
+                    >
+                      {meta.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
