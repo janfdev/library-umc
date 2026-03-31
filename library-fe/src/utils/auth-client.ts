@@ -8,6 +8,6 @@ export const authClient = createAuthClient({
       if (token) {
         ctx.headers.set("Authorization", `Bearer ${token}`);
       }
-    },
-  },
+    }
+  }
 });

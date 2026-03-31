@@ -12,7 +12,8 @@ import {
   Shield,
   Tag,
   Users,
-  Wallet
+  Wallet,
+  BookMarked
 } from "lucide-react";
 
 import Logo from "@/assets/logo_umc.png";
@@ -26,6 +27,7 @@ import GuestsSection from "@/components/dashboard/GuestsSection";
 import LoansSection from "@/components/dashboard/LoansSection";
 import ReportsSection from "@/components/dashboard/ReportsSection";
 import UsersSection from "@/components/dashboard/UsersSection";
+import RecommendationsSection from "@/components/dashboard/RecommendationsSection";
 import {
   CommandDialog,
   CommandEmpty,
@@ -66,7 +68,9 @@ type ActiveMenu =
   | "fines"
   | "users"
   | "audit"
-  | "reports";
+  | "reports"
+  | "recommendations";
+
 
 type MenuConfig = {
   key: ActiveMenu;
@@ -85,7 +89,8 @@ const MENU_CONFIG: MenuConfig[] = [
   { key: "fines", label: "Manajemen Denda", icon: Wallet },
   { key: "users", label: "Manajemen User", icon: Users, superAdminOnly: true },
   { key: "audit", label: "Audit Log", icon: Shield, superAdminOnly: true },
-  { key: "reports", label: "Laporan & Statistik", icon: BarChart3 }
+  { key: "reports", label: "Laporan & Statistik", icon: BarChart3 },
+  { key: "recommendations", label: "Rekomendasi Buku", icon: BookMarked }
 ];
 
 const SIDEBAR_STORAGE_KEY = "umc-super-admin-sidebar-open";
@@ -363,6 +368,8 @@ export default function SuperAdminDashboard() {
         return <AuditLogsSection />;
       case "reports":
         return <ReportsSection />;
+      case "recommendations":
+        return <RecommendationsSection />;
       default:
         return <DashboardSection stats={stats} />;
     }

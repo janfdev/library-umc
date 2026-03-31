@@ -9,7 +9,7 @@ import {
   date,
   numeric,
   index,
-  uuid,
+  uuid
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -21,26 +21,26 @@ export const collectionTypeEnum = pgEnum("collection_type", [
   "physical_book",
   "ebook",
   "journal",
-  "thesis",
+  "thesis"
 ]);
 export const contentTypeEnum = pgEnum("content_type", ["text", "pdf", "url"]);
 export const itemStatusEnum = pgEnum("item_status", [
   "available",
   "loaned",
   "damaged",
-  "lost",
+  "lost"
 ]);
 export const loansStatusEnum = pgEnum("loans_status", [
   "pending",
   "approved",
   "returned",
   "extended",
-  "rejected",
+  "rejected"
 ]);
 export const reservationsStatusEnum = pgEnum("reservations_status", [
   "waiting",
   "fulfilled",
-  "canceled",
+  "canceled"
 ]);
 export const finesStatusEnum = pgEnum("fines_status", ["paid", "unpaid"]);
 export const logsStatusEnum = pgEnum("logs_status", [
@@ -50,7 +50,7 @@ export const logsStatusEnum = pgEnum("logs_status", [
   "approve",
   "blacklist",
   "failed_login",
-  "rate_limited",
+  "rate_limited"
 ]);
 export const logsEntityEnum = pgEnum("logs_entity", [
   "loan",
@@ -60,20 +60,20 @@ export const logsEntityEnum = pgEnum("logs_entity", [
   "category",
   "collection",
   "reservation",
-  "auth",
+  "auth"
 ]);
 
 export const recommendationStatusEnum = pgEnum("recommendation_status", [
   "pending",
   "approved",
-  "rejected",
+  "rejected"
 ]);
 
 export const memberType = pgEnum("member_type", [
   "student",
   "lecturer",
   "staff",
-  "super_admin",
+  "super_admin"
 ]);
 
 // ==========================================
@@ -84,7 +84,7 @@ export const categories = pgTable("categories", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 export const locations = pgTable("locations", {
@@ -92,14 +92,14 @@ export const locations = pgTable("locations", {
   room: varchar("room", { length: 200 }).notNull(),
   rack: varchar("rack", { length: 200 }).notNull(),
   shelf: varchar("shelf", { length: 200 }).notNull(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 export const vendors = pgTable("vendors", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }),
   contact: varchar("contact", { length: 255 }),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 // ==========================================
@@ -125,13 +125,13 @@ export const Users = pgTable(
     role: text("role").default("student"),
     banned: boolean("banned").default(false),
     banReason: text("ban_reason"),
-    banExpires: timestamp("ban_expires"),
+    banExpires: timestamp("ban_expires")
   },
   (table) => {
     return {
-      deletedAtIdx: index("user_deleted_at_idx").on(table.deletedAt),
+      deletedAtIdx: index("user_deleted_at_idx").on(table.deletedAt)
     };
-  },
+  }
 );
 
 export const session = pgTable("session", {
@@ -147,7 +147,7 @@ export const session = pgTable("session", {
     .references(() => Users.id),
 
   // Required by Better Auth Admin Plugin for Impersonation
-  impersonatedBy: text("impersonated_by"),
+  impersonatedBy: text("impersonated_by")
 });
 
 export const account = pgTable("account", {
@@ -165,7 +165,7 @@ export const account = pgTable("account", {
   scope: text("scope"),
   password: text("password"),
   createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull()
 });
 
 export const verification = pgTable("verification", {
@@ -174,7 +174,7 @@ export const verification = pgTable("verification", {
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+  updatedAt: timestamp("updated_at")
 });
 
 // ==========================================
@@ -195,14 +195,14 @@ export const members = pgTable(
     phone: varchar("phone", { length: 100 }),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
-    deletedAt: timestamp("deleted_at"),
+    deletedAt: timestamp("deleted_at")
   },
   (table) => {
     return {
       nimIdx: index("member_nim_idx").on(table.nimNidn),
-      deletedAtIdx: index("member_deleted_at_idx").on(table.deletedAt),
+      deletedAtIdx: index("member_deleted_at_idx").on(table.deletedAt)
     };
-  },
+  }
 );
 
 // ==========================================
@@ -223,7 +223,7 @@ export const collections = pgTable("collections", {
   stock: integer("stock").notNull().default(0), // Total stock/quantity of the collection
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 export const collectionContents = pgTable("collection_contents", {
@@ -234,7 +234,7 @@ export const collectionContents = pgTable("collection_contents", {
   contentUrl: varchar("content_url", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 export const collectionViews = pgTable(
@@ -246,14 +246,14 @@ export const collectionViews = pgTable(
       .references(() => collections.id), // Reference UUID
     userId: text("user_id").references(() => Users.id),
     ipAddress: varchar("ip_address", { length: 45 }),
-    viewedAt: timestamp("viewed_at").defaultNow(),
+    viewedAt: timestamp("viewed_at").defaultNow()
   },
   (table) => {
     return {
       collIdx: index("cv_collection_idx").on(table.collectionId),
-      viewedAtIdx: index("cv_viewed_at_idx").on(table.viewedAt),
+      viewedAtIdx: index("cv_viewed_at_idx").on(table.viewedAt)
     };
-  },
+  }
 );
 
 // ==========================================
@@ -275,16 +275,16 @@ export const items = pgTable(
       .references(() => locations.id), // References Integer
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
-    deletedAt: timestamp("deleted_at"),
+    deletedAt: timestamp("deleted_at")
   },
   (table) => {
     return {
       collIdx: index("item_collection_idx").on(table.collectionId),
       statusIdx: index("item_status_idx").on(table.status),
       deletedAtIdx: index("item_deleted_at_idx").on(table.deletedAt),
-      locationIdx: index("item_location_idx").on(table.locationId),
+      locationIdx: index("item_location_idx").on(table.locationId)
     };
-  },
+  }
 );
 
 export const loans = pgTable(
@@ -301,14 +301,15 @@ export const loans = pgTable(
     dueDate: date("due_date").notNull(),
     returnDate: date("return_date"),
     status: loansStatusEnum("status").notNull(),
+    extendCount: integer("extend_count").default(0).notNull(), // Track how many times loan has been extended (max 1)
     approvedBy: text("approved_by").references(() => Users.id),
     verificationToken: varchar("verification_token", {
-      length: 100,
+      length: 100
     }), // tOken unik QR
     verificationExpiresAt: timestamp("verification_expires_at"), // Waktu Kadaluarsa QR
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
-    deletedAt: timestamp("deleted_at"),
+    deletedAt: timestamp("deleted_at")
   },
   (table) => {
     return {
@@ -317,11 +318,9 @@ export const loans = pgTable(
       memberIdx: index("loan_member_idx").on(table.memberId),
       itemIdx: index("loan_item_idx").on(table.itemId),
       activeLoanIdx: index("loan_active_idx").on(table.itemId, table.status),
-      tokenIdx: index("loan_verification_token_idx").on(
-        table.verificationToken,
-      ),
+      tokenIdx: index("loan_verification_token_idx").on(table.verificationToken)
     };
-  },
+  }
 );
 
 export const reservations = pgTable("reservations", {
@@ -335,7 +334,7 @@ export const reservations = pgTable("reservations", {
   status: reservationsStatusEnum("status").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 export const fines = pgTable("fines", {
@@ -347,7 +346,7 @@ export const fines = pgTable("fines", {
   status: finesStatusEnum("status").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 export const transactions = pgTable("transactions", {
@@ -360,7 +359,7 @@ export const transactions = pgTable("transactions", {
     .notNull()
     .references(() => Users.id),
   paidAt: date("paid_at"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 export const acquisitions = pgTable("acquisitions", {
@@ -373,7 +372,7 @@ export const acquisitions = pgTable("acquisitions", {
     .references(() => collections.id), // Reference UUID
   quantity: integer("quantity"),
   acquiredAt: date("acquired_at"),
-  createdAt: date("created_at").defaultNow(),
+  createdAt: date("created_at").defaultNow()
 });
 
 // Tabel rekomendasi dosen ke pustakaawan
@@ -382,6 +381,7 @@ export const recommendations = pgTable("recommendations", {
   dosenId: text("dosen_id")
     .notNull()
     .references(() => Users.id),
+  isbn: varchar("isbn", { length: 255 }), // ISBN for better deduplication
   title: varchar("title", { length: 255 }),
   author: varchar("author", { length: 255 }),
   publisher: varchar("publisher", { length: 255 }),
@@ -389,7 +389,7 @@ export const recommendations = pgTable("recommendations", {
   status: recommendationStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 // ==========================================
@@ -405,7 +405,7 @@ export const logs = pgTable("logs", {
   ipAddress: varchar("ip_address", { length: 255 }),
   userAgent: text("user_agent"),
   detail: text("detail"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 export const webTraffic = pgTable("web_traffic", {
@@ -414,7 +414,7 @@ export const webTraffic = pgTable("web_traffic", {
   userId: text("user_id").references(() => Users.id),
   pageVisited: varchar("page_visited", { length: 255 }),
   visitTimestamp: timestamp("visit_timestamp").defaultNow(),
-  userAgent: text("user_agent"),
+  userAgent: text("user_agent")
 });
 
 // ==========================================
@@ -429,7 +429,7 @@ export const guestLogs = pgTable("guest_logs", {
   faculty: varchar("faculty", { length: 255 }), // If Student/Lecturer
   major: varchar("major", { length: 255 }), // If Student (Prodi)
   visitDate: timestamp("visit_date").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
+  deletedAt: timestamp("deleted_at")
 });
 
 // ==========================================
@@ -438,52 +438,52 @@ export const guestLogs = pgTable("guest_logs", {
 
 // Relasi Users -> Roles / Members
 export const userRelations = relations(Users, ({ one }) => ({
-  member: one(members),
+  member: one(members)
 }));
 
 export const memberRelations = relations(members, ({ one, many }) => ({
   user: one(Users, {
     fields: [members.userId],
-    references: [Users.id],
+    references: [Users.id]
   }),
-  loans: many(loans),
+  loans: many(loans)
 }));
 
 // Relasi Collections -> Category / Items
 export const collectionRelations = relations(collections, ({ one, many }) => ({
   category: one(categories, {
     fields: [collections.categoryId],
-    references: [categories.id],
+    references: [categories.id]
   }),
   items: many(items),
-  contents: many(collectionContents),
+  contents: many(collectionContents)
 }));
 
 export const itemRelations = relations(items, ({ one, many }) => ({
   collection: one(collections, {
     fields: [items.collectionId],
-    references: [collections.id],
+    references: [collections.id]
   }),
   location: one(locations, {
     fields: [items.locationId],
-    references: [locations.id],
+    references: [locations.id]
   }),
-  activeLoan: many(loans), // Bisa filter 'pending'/'approved' nanti
+  activeLoan: many(loans) // Bisa filter 'pending'/'approved' nanti
 }));
 
 export const loanRelations = relations(loans, ({ one }) => ({
   member: one(members, {
     fields: [loans.memberId],
-    references: [members.id],
+    references: [members.id]
   }),
   item: one(items, {
     fields: [loans.itemId],
-    references: [items.id],
+    references: [items.id]
   }),
   authApproved: one(Users, {
     fields: [loans.approvedBy],
-    references: [Users.id],
-  }),
+    references: [Users.id]
+  })
 }));
 
 export const recommendationRelations = relations(
@@ -491,18 +491,18 @@ export const recommendationRelations = relations(
   ({ one }) => ({
     dosen: one(Users, {
       fields: [recommendations.dosenId],
-      references: [Users.id],
-    }),
-  }),
+      references: [Users.id]
+    })
+  })
 );
 
 export const reservationRelations = relations(reservations, ({ one }) => ({
   member: one(members, {
     fields: [reservations.memberId],
-    references: [members.id],
+    references: [members.id]
   }),
   collection: one(collections, {
     fields: [reservations.collectionId],
-    references: [collections.id],
-  }),
+    references: [collections.id]
+  })
 }));

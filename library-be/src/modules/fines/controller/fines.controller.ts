@@ -4,9 +4,38 @@ import {
   getFinesQuerySchema,
   createFineSchema,
   payFineSchema,
+  auditPaidFinesQuerySchema
 } from "../validation/fines.validation";
 
 class FinesController {
+  async getPaidFinesWithNonReturnedLoans(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validation = auditPaidFinesQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation Error",
+          data: validation.error.flatten()
+        });
+      }
+
+      const { limit, offset } = validation.data;
+
+      const result = await finesService.getPaidFinesWithNonReturnedLoans({
+        limit: limit ? Number(limit) : undefined,
+        offset: offset ? Number(offset) : undefined
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAllFines(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = getFinesQuerySchema.safeParse(req.query);
@@ -14,7 +43,7 @@ class FinesController {
         return res.status(400).json({
           success: false,
           message: "Validation Error",
-          data: validation.error.flatten(),
+          data: validation.error.flatten()
         });
       }
 
@@ -24,7 +53,7 @@ class FinesController {
         status: status as "paid" | "unpaid",
         loanId,
         limit: limit ? Number(limit) : undefined,
-        offset: offset ? Number(offset) : undefined,
+        offset: offset ? Number(offset) : undefined
       });
 
       if (!result.success) {
@@ -60,7 +89,7 @@ class FinesController {
         return res.status(400).json({
           success: false,
           message: "Validation Error",
-          data: validation.error.flatten(),
+          data: validation.error.flatten()
         });
       }
 
@@ -87,7 +116,7 @@ class FinesController {
         return res.status(400).json({
           success: false,
           message: "Validation Error",
-          data: validation.error.flatten(),
+          data: validation.error.flatten()
         });
       }
 
@@ -96,7 +125,7 @@ class FinesController {
       const result = await finesService.payFine(
         id as string,
         adminId as string,
-        paymentMethod,
+        paymentMethod
       );
 
       if (!result.success) {

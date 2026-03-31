@@ -1,4 +1,4 @@
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   Users,
@@ -7,15 +7,105 @@ import {
   items,
   loans,
   members,
-  transactions,
+  transactions
 } from "../../../db/schema";
 import {
   BadRequestError,
   NotFoundError,
-  InternalServerError,
+  InternalServerError
 } from "../../../exceptions/AppError";
 
 class FinesService {
+  async getPaidFinesWithNonReturnedLoans(
+    filters: {
+      limit?: number;
+      offset?: number;
+    } = {}
+  ) {
+    try {
+      const { limit = 100, offset = 0 } = filters;
+
+      const conditions: SQL[] = [
+        isNull(fines.deletedAt),
+        isNull(loans.deletedAt),
+        eq(fines.status, "paid"),
+        sql`${loans.status} <> 'returned'`
+      ];
+
+      const rows = await db
+        .select({
+          fineId: fines.id,
+          fineAmount: fines.amount,
+          fineStatus: fines.status,
+          fineUpdatedAt: fines.updatedAt,
+          loanId: loans.id,
+          loanStatus: loans.status,
+          dueDate: loans.dueDate,
+          returnDate: loans.returnDate,
+          memberId: members.id,
+          memberName: Users.name,
+          memberEmail: Users.email,
+          collectionTitle: collections.title
+        })
+        .from(fines)
+        .innerJoin(loans, eq(fines.loanId, loans.id))
+        .leftJoin(members, eq(loans.memberId, members.id))
+        .leftJoin(Users, eq(members.userId, Users.id))
+        .leftJoin(items, eq(loans.itemId, items.id))
+        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .where(and(...conditions))
+        .limit(limit)
+        .offset(offset);
+
+      const [totalRow] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(fines)
+        .innerJoin(loans, eq(fines.loanId, loans.id))
+        .where(and(...conditions));
+
+      const data = rows.map((row) => ({
+        fineId: row.fineId,
+        amount: Number(row.fineAmount),
+        fineStatus: row.fineStatus,
+        fineUpdatedAt: row.fineUpdatedAt,
+        loan: {
+          id: row.loanId,
+          status: row.loanStatus,
+          dueDate: row.dueDate,
+          returnDate: row.returnDate
+        },
+        member: {
+          id: row.memberId,
+          name: row.memberName,
+          email: row.memberEmail
+        },
+        collection: {
+          title: row.collectionTitle
+        }
+      }));
+
+      return {
+        success: true,
+        message:
+          "Audit paid fines with non-returned loans fetched successfully",
+        data,
+        meta: {
+          total: Number(totalRow?.count ?? 0),
+          limit,
+          offset
+        }
+      };
+    } catch (error) {
+      console.error(
+        "FinesService.getPaidFinesWithNonReturnedLoans Error:",
+        error
+      );
+      throw new InternalServerError(
+        "Failed to fetch audit paid fines with non-returned loans"
+      );
+    }
+  }
+
   async getAllFines(
     filters: {
       status?: "paid" | "unpaid";
@@ -23,7 +113,7 @@ class FinesService {
       memberId?: string;
       limit?: number;
       offset?: number;
-    } = {},
+    } = {}
   ) {
     try {
       const { status, loanId, memberId, limit = 10, offset = 0 } = filters;
@@ -52,7 +142,7 @@ class FinesService {
           memberName: Users.name,
           memberEmail: Users.email,
 
-          title: collections.title,
+          title: collections.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
@@ -76,21 +166,21 @@ class FinesService {
           member: {
             user: {
               name: row.memberName,
-              email: row.memberEmail,
-            },
+              email: row.memberEmail
+            }
           },
           item: {
             collection: {
-              title: row.title,
-            },
-          },
-        },
+              title: row.title
+            }
+          }
+        }
       }));
 
       return {
         success: true,
         message: "Fines fetched successfully",
-        data,
+        data
       };
     } catch (error) {
       console.error("FinesService.getAllFines Error:", error);
@@ -113,7 +203,7 @@ class FinesService {
           memberName: Users.name,
           memberEmail: Users.email,
 
-          title: collections.title,
+          title: collections.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
@@ -137,7 +227,7 @@ class FinesService {
             id: transactions.id,
             paymentMethod: transactions.paymentMethod,
             confirmedBy: transactions.confirmedBy,
-            paidAt: transactions.paidAt,
+            paidAt: transactions.paidAt
           })
           .from(transactions)
           .where(eq(transactions.fineId, id))
@@ -160,22 +250,22 @@ class FinesService {
           member: {
             user: {
               name: row.memberName,
-              email: row.memberEmail,
-            },
+              email: row.memberEmail
+            }
           },
           item: {
             collection: {
-              title: row.title,
-            },
-          },
+              title: row.title
+            }
+          }
         },
-        transaction: transactionData,
+        transaction: transactionData
       };
 
       return {
         success: true,
         message: "Fine fetched successfully",
-        data,
+        data
       };
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
@@ -208,14 +298,14 @@ class FinesService {
           and(
             eq(fines.loanId, loanId),
             eq(fines.status, "unpaid"),
-            isNull(fines.deletedAt),
-          ),
+            isNull(fines.deletedAt)
+          )
         )
         .limit(1);
 
       if (existingFine && existingFine.length > 0) {
         throw new BadRequestError(
-          "An unpaid fine already exists for this loan",
+          "An unpaid fine already exists for this loan"
         );
       }
 
@@ -224,14 +314,14 @@ class FinesService {
         .values({
           loanId,
           amount: amount.toString(), // numeric field usually mapped as string
-          status: "unpaid",
+          status: "unpaid"
         })
         .returning();
 
       return {
         success: true,
         message: "Fine created successfully",
-        data: row[0],
+        data: row[0]
       };
     } catch (error) {
       if (error instanceof BadRequestError || error instanceof NotFoundError)
@@ -244,7 +334,7 @@ class FinesService {
   async payFine(
     fineId: string,
     adminId: string,
-    paymentMethod: string = "cash",
+    paymentMethod: string = "cash"
   ) {
     try {
       return await db.transaction(async (tx) => {
@@ -277,7 +367,7 @@ class FinesService {
             fineId: fineId,
             paymentMethod: paymentMethod,
             confirmedBy: adminId,
-            paidAt: new Date().toISOString().split("T")[0],
+            paidAt: new Date().toISOString().split("T")[0]
           })
           .returning();
 
@@ -286,8 +376,8 @@ class FinesService {
           message: "Fine paid successfully",
           data: {
             fine: updatedFines[0],
-            transaction: newTransactions[0],
-          },
+            transaction: newTransactions[0]
+          }
         };
       });
     } catch (error: unknown) {
@@ -317,7 +407,7 @@ class FinesService {
       return {
         success: true,
         message: "Fine deleted successfully",
-        data: null,
+        data: null
       };
     } catch (error) {
       if (error instanceof NotFoundError) throw error;

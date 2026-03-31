@@ -1,18 +1,27 @@
 // src/pages/Home.tsx
 import { useState } from "react";
-import { useNavigate } from 'react-router';
+import { useNavigate } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Background from "@/assets/bg1.jpeg";
 import DialogUnauthorized from "@/components/DialogUnauthorized";
 import Footer from "@/components/Footer";
 import BookList from "@/components/BookList";
+import { authClient } from "@/utils/auth-client";
+import LecturerRecommendationModal from "@/components/LecturerRecommendationModal";
+import { BookMarked } from "lucide-react";
+import type { AuthUser } from "@/types/auth";
 
 export default function Home() {
   const navigate = useNavigate();
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState("all"); // all, title, author, isbn
+  const [searchType, setSearchType] = useState("all");
+
+  const { data: session } = authClient.useSession();
+  const user = session?.user as AuthUser | undefined;
+  const isLecturer = user?.role === "lecturer" || user?.role === "super_admin";
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Handle search and redirect to Katalog page
   const handleSearch = () => {
@@ -22,12 +31,14 @@ export default function Home() {
     }
 
     // Navigate to Katalog page with search parameters
-    navigate(`/katalog?search=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+    navigate(
+      `/katalog?search=${encodeURIComponent(searchQuery)}&type=${searchType}`
+    );
   };
 
   // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -39,7 +50,7 @@ export default function Home() {
           <Navbar />
           <DialogUnauthorized />
         </div>
-        
+
         {/* Hero Section with Search */}
         <div
           className="flex w-full h-screen items-center justify-center text-center"
@@ -47,7 +58,7 @@ export default function Home() {
             backgroundImage: `url(${Background})`, // Fixed: missing closing parenthesis
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
+            backgroundRepeat: "no-repeat"
           }}
         >
           <div className="space-y-2">
@@ -60,7 +71,7 @@ export default function Home() {
                 Akses koleksi buku, jurnal, dan e-book resmi UMC
               </p>
             </div>
-            
+
             {/* Search Bar */}
             <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
               <div className="flex flex-col space-y-4">
@@ -90,7 +101,7 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <select 
+                  <select
                     value={searchType}
                     onChange={(e) => setSearchType(e.target.value)}
                     className="px-4 py-3 border text-black border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -103,7 +114,7 @@ export default function Home() {
                 </div>
 
                 {/* Tombol Telusuri Koleksi */}
-                <button 
+                <button
                   onClick={handleSearch}
                   className="bg-red-600 hover:bg-red-700 font-medium py-3 px-6 rounded-full transition-colors duration-200"
                 >
@@ -112,6 +123,26 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* Floating Button for Lecturer Recommendation */}
+          {isLecturer && (
+            <div className="absolute bottom-10 right-10 z-30">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="group flex items-center gap-3 bg-white hover:bg-red-600 text-red-600 hover:text-white px-6 py-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 border-4 border-red-600/10"
+              >
+                <BookMarked className="group-hover:rotate-12 transition-transform" />
+                <span className="font-bold text-sm tracking-tight uppercase">
+                  Usul Koleksi Baru
+                </span>
+              </button>
+            </div>
+          )}
+
+          <LecturerRecommendationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
         </div>
       </div>
 

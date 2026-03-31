@@ -6,7 +6,7 @@ import {
   Wallet,
   Loader,
   CheckCircle,
-  AlertTriangle,
+  AlertTriangle
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,7 +43,7 @@ interface PaidFine {
 // ─── Toast Component ──────────────────────────────────────────────────────
 function InlineToast({
   message,
-  type,
+  type
 }: {
   message: string;
   type: "success" | "error";
@@ -89,16 +89,16 @@ export default function FinesSection() {
     try {
       const [unpaidRes, paidRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=100`, {
-          credentials: "include",
+          credentials: "include"
         }),
         fetch(`${API_BASE_URL}/api/fines?status=paid&limit=100`, {
-          credentials: "include",
-        }),
+          credentials: "include"
+        })
       ]);
 
       const [unpaidData, paidData] = await Promise.all([
         unpaidRes.json(),
-        paidRes.json(),
+        paidRes.json()
       ]);
 
       if (unpaidData.success && Array.isArray(unpaidData.data)) {
@@ -119,19 +119,42 @@ export default function FinesSection() {
   }, [fetchFines]);
 
   // ─── Handler: Konfirmasi Pembayaran ─────────────────────────────────────
-  const handlePayFine = async (fineId: string) => {
-    setPayingId(fineId);
+  const handlePayFine = async (fine: UnpaidFine) => {
+    setPayingId(fine.id);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/fines/${fineId}/pay`, {
+      // Jika buku masih berstatus dipinjam, otomatis proses return dulu.
+      if (fine.loan.status === "approved") {
+        const returnRes = await fetch(
+          `${API_BASE_URL}/api/loans/${fine.loanId}/return`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({})
+          }
+        );
+
+        const returnData = await returnRes.json();
+        if (!returnData.success) {
+          showToast(
+            returnData.message ||
+              "Gagal memproses pengembalian buku sebelum bayar denda.",
+            "error"
+          );
+          return;
+        }
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/fines/${fine.id}/pay`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ paymentMethod: "cash" }),
+        body: JSON.stringify({ paymentMethod: "cash" })
       });
       const data = await response.json();
 
       if (data.success) {
-        showToast("✅ Pembayaran denda berhasil dikonfirmasi!", "success");
+        showToast("Pembayaran denda berhasil dikonfirmasi!", "success");
         // Refresh data setelah bayar
         await fetchFines();
       } else {
@@ -146,14 +169,14 @@ export default function FinesSection() {
 
   // ─── Filter & Pagination ─────────────────────────────────────────────────
   const filterFines = <
-    T extends { loan: { member: { user: { name: string } } } },
+    T extends { loan: { member: { user: { name: string } } } }
   >(
-    list: T[],
+    list: T[]
   ) =>
     list.filter((item) =>
       item.loan.member.user.name
         .toLowerCase()
-        .includes(searchTerm.toLowerCase()),
+        .includes(searchTerm.toLowerCase())
     );
 
   const filteredUnpaid = filterFines(unpaidFines);
@@ -162,7 +185,7 @@ export default function FinesSection() {
   const totalPages = Math.max(1, Math.ceil(activeList.length / itemsPerPage));
   const paginatedList = activeList.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   // Reset page when tab or search changes
@@ -309,7 +332,7 @@ export default function FinesSection() {
                     const computedLateDays = calcLateDays(fine.loan.dueDate);
                     const amountBasedDays = Math.max(
                       0,
-                      Math.round((Number(fine.amount) || 0) / 500),
+                      Math.round((Number(fine.amount) || 0) / 500)
                     );
                     const lateDays =
                       fine.loan.status === "returned"
@@ -353,7 +376,7 @@ export default function FinesSection() {
                         <td className="px-8 py-5 text-right">
                           <button
                             id={`btn-pay-fine-${fine.id}`}
-                            onClick={() => handlePayFine(fine.id)}
+                            onClick={() => handlePayFine(fine)}
                             disabled={payingId === fine.id}
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-600 hover:text-white transition-all disabled:opacity-50"
                           >
@@ -397,8 +420,8 @@ export default function FinesSection() {
                             {
                               day: "numeric",
                               month: "short",
-                              year: "numeric",
-                            },
+                              year: "numeric"
+                            }
                           )}
                         </p>
                       </td>
@@ -438,7 +461,7 @@ export default function FinesSection() {
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(
                 (p) =>
-                  p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1,
+                  p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1
               )
               .map((p, idx, arr) => {
                 const showDot =

@@ -131,6 +131,19 @@ class LoanService {
     if (!result.success) throw new Error(result.message || 'Token tidak valid');
     return result.data;
   }
+
+  // POST /api/loans/{loanId}/extend - Extend a book loan (Member)
+  async extendLoan(loanId: string): Promise<{ success: boolean; message: string; data: unknown }> {
+    const response = await fetch(`${this.baseUrl}/api/loans/${loanId}/extend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || "Gagal memperpanjang peminjaman");
+    return result;
+  }
 }
+
 
 export default new LoanService();

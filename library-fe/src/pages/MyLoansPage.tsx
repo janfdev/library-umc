@@ -369,17 +369,14 @@ export default function MyLoansPage() {
     setExtendingId(loanId);
     const loadingId = toast.loading("Memproses...", "Sedang mengajukan perpanjangan");
     try {
-      // Hitung dueDate baru: +7 hari dari sekarang
-      const newDueDate = new Date();
-      newDueDate.setDate(newDueDate.getDate() + 7);
-      const newDueDateStr = newDueDate.toISOString().split("T")[0];
-
-      // Backend endpoint perpanjang (notes sebagai info)
-      await loanService.approveLoan(loanId, `Perpanjangan. Jatuh tempo baru: ${newDueDateStr}`);
+      // Panggil service perpanjangan baru
+      const result = await loanService.extendLoan(loanId);
+      
       toast.removeToast(loadingId);
-      toast.success("Perpanjangan Berhasil", `Jatuh tempo baru: ${formatDateID(newDueDateStr)}`);
+      toast.success("Perpanjangan Berhasil", result.message);
       await fetchLoans(true);
     } catch (err) {
+
       toast.removeToast(loadingId);
       toast.error(
         "Perpanjangan Gagal",

@@ -7,6 +7,11 @@ export const createLoanSchema = z.object({
 });
 
 export const getLoansQuerySchema = z.object({
-  status: z.enum(["pending", "approved", "rejected", "returned", "overdue", "canceled"]).optional(),
+  status: z.enum(["pending", "approved", "rejected", "returned", "extended", "overdue", "canceled"]).optional(),
   memberId: z.string().optional(),
 });
+
+export const extendLoanSchema = z.object({
+  loanId: z.string().uuid("Loan ID tidak valid"),
+});
+
