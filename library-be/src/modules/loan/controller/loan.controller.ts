@@ -2,15 +2,17 @@ import { type NextFunction, type Request, type Response } from "express";
 import { LoanService } from "../service/loan.service";
 import {
   createLoanSchema,
-  getLoansQuerySchema,
+  getLoansQuerySchema
 } from "../validation/loan.validation";
 import {
   sendSuccess,
   sendError,
-  sendValidationError,
+  sendValidationError
 } from "../../../utils/api-utils";
+import { MemberService } from "../../member/service/member.service";
 
 const loanService = new LoanService();
+const memberService = new MemberService();
 
 export class LoanController {
   /**
@@ -27,17 +29,15 @@ export class LoanController {
         return sendError(res, "Tidak terautentikasi", 401);
       }
 
-      const memberId = await loanService.getMemberIdByUserId(req.user.id);
-      if (!memberId) {
-        return sendError(
-          res,
-          "Profil member tidak ditemukan. Silakan lengkapi profil Anda terlebih dahulu.",
-          400,
-        );
+      const eligibility = await memberService.getBorrowEligibilityByUserId(
+        req.user.id
+      );
+      if (!eligibility.success || !eligibility.data?.memberId) {
+        return sendError(res, eligibility.message, 400);
       }
 
       const result = await loanService.requestLoan(
-        memberId,
+        eligibility.data.memberId,
         validation.data.collectionId,
         validation.data.loanDate,
         validation.data.dueDate
@@ -79,7 +79,7 @@ export class LoanController {
 
       const result = await loanService.approveLoan(
         String(req.params.requestId),
-        user.id,
+        user.id
       );
       sendSuccess(res, "Peminjaman berhasil diapprove", result);
     } catch (error) {
@@ -100,7 +100,7 @@ export class LoanController {
 
       const result = await loanService.rejectLoan(
         String(req.params.requestId),
-        user.id,
+        user.id
       );
       sendSuccess(res, "Peminjaman berhasil ditolak", result);
     } catch (error) {
@@ -119,7 +119,10 @@ export class LoanController {
         return sendError(res, "Akses ditolak — hanya Admin/Staff", 403);
       }
 
-      const result = await loanService.returnLoan(String(req.params.loanId), user.id);
+      const result = await loanService.returnLoan(
+        String(req.params.loanId),
+        user.id
+      );
       sendSuccess(res, "Buku berhasil dikembalikan", result);
     } catch (error) {
       next(error);
@@ -168,7 +171,7 @@ export class LoanController {
       const result = await loanService.getAllLoans({
         status: status as any,
         memberId,
-        limit: 100,
+        limit: 100
       });
 
       res.status(200).json(result);
@@ -197,15 +200,15 @@ export class LoanController {
     } catch (error: unknown) {
       const err = error as Error;
       // Jika error message kita kenali, kirim sebagai 400
-      if (err.message && (
-        err.message.includes("sudah pernah diperpanjang") ||
-        err.message.includes("melewati batas waktu") ||
-        err.message.includes("dipesan (reserved)")
-      )) {
+      if (
+        err.message &&
+        (err.message.includes("sudah pernah diperpanjang") ||
+          err.message.includes("melewati batas waktu") ||
+          err.message.includes("dipesan (reserved)"))
+      ) {
         return sendError(res, err.message, 400);
       }
       next(error);
     }
   }
 }
-

@@ -3,6 +3,13 @@ import z from "zod";
 export const updateProfileSchema = z.object({
   nimNidn: z.string().min(5, "NIM/NIDN is required").max(50).optional(),
   faculty: z.string().max(200).optional(),
-  phone: z.string().max(100).optional(),
+  phone: z.string().max(100).optional()
 });
 
+export const approveCardSchema = z.object({
+  cardNumber: z.string().min(6).max(100).optional()
+});
+
+export const rejectCardSchema = z.object({
+  reason: z.string().min(3, "Reason is required").max(255)
+});

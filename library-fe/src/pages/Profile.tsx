@@ -5,8 +5,10 @@ import Footer from "@/components/Footer";
 import { authClient } from "@/utils/auth-client";
 import memberService, {
   type MemberProfile,
-  type UpdateProfilePayload,
+  type UpdateProfilePayload
 } from "@/services/memberService";
+import loanService from "@/services/loanService";
+import fineService from "@/services/fineService";
 import RiwayatPeminjaman from "@/components/RiwayatPeminjaman";
 import FinesList from "@/components/FinesList";
 import MemberCard from "@/components/MemberCard";
@@ -21,27 +23,44 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("peminjaman-aktif");
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [activeLoanCount, setActiveLoanCount] = useState(0);
+  const [unpaidFineCount, setUnpaidFineCount] = useState(0);
   const { notifications, success, error, removeToast } = useToast();
+  const currentUserId = session?.user?.id;
 
   const [formData, setFormData] = useState<UpdateProfilePayload>({
     nimNidn: "",
     faculty: "",
-    phone: "",
+    phone: ""
   });
 
   useEffect(() => {
+    const currentUserId = session?.user?.id;
+
+    // Reset profile snapshot when account context changes.
+    setProfile(null);
+    setFormData({
+      nimNidn: "",
+      faculty: "",
+      phone: ""
+    });
+
     const fetchProfile = async () => {
       try {
         setLoading(true);
         const data = await memberService.getMyProfile();
+        if (currentUserId && data.user?.id && data.user.id !== currentUserId) {
+          return;
+        }
         setProfile(data);
         setFormData({
           nimNidn: data.nimNidn || "",
           faculty: data.faculty || "",
-          phone: data.phone || "",
+          phone: data.phone || ""
         });
       } catch (err) {
         console.error("Profile fetch error:", err);
+        setProfile(null);
       } finally {
         setLoading(false);
       }
@@ -53,6 +72,39 @@ const Profile = () => {
       navigate("/login");
     }
   }, [session, sessionLoading, navigate]);
+
+  useEffect(() => {
+    const fetchProfileCounters = async () => {
+      try {
+        if (!currentUserId) {
+          setActiveLoanCount(0);
+          setUnpaidFineCount(0);
+          return;
+        }
+
+        const [loans, fines] = await Promise.all([
+          loanService.getMyLoanHistory(),
+          fineService.getMyFines()
+        ]);
+
+        const activeLoans = loans.filter((loan) =>
+          ["pending", "approved", "extended"].includes(loan.status)
+        ).length;
+        const unpaidFines = fines.filter(
+          (fine) => fine.status === "unpaid"
+        ).length;
+
+        setActiveLoanCount(activeLoans);
+        setUnpaidFineCount(unpaidFines);
+      } catch (err) {
+        console.error("Failed to fetch profile counters:", err);
+        setActiveLoanCount(0);
+        setUnpaidFineCount(0);
+      }
+    };
+
+    void fetchProfileCounters();
+  }, [currentUserId]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +121,6 @@ const Profile = () => {
     }
   };
 
-
   if (sessionLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -78,7 +129,6 @@ const Profile = () => {
     );
   }
 
-  const userId = profile?.id || "";
   const initials =
     profile?.user?.name
       ?.split(" ")
@@ -88,11 +138,19 @@ const Profile = () => {
       .substring(0, 2) || "U";
 
   const tabs = [
-    { id: "peminjaman-aktif", label: "Peminjaman Aktif", count: 3 },
+    {
+      id: "peminjaman-aktif",
+      label: "Peminjaman Aktif",
+      count: activeLoanCount > 0 ? activeLoanCount : null
+    },
     { id: "riwayat-peminjaman", label: "Riwayat Peminjaman", count: null },
-    { id: "tagihan-denda", label: "Tagihan & Denda", count: 1 },
+    {
+      id: "tagihan-denda",
+      label: "Tagihan & Denda",
+      count: unpaidFineCount > 0 ? unpaidFineCount : null
+    },
     { id: "kartu-member", label: "Kartu Member", count: null },
-    { id: "edit-profil", label: "Pengaturan", icon: <Settings size={14} /> },
+    { id: "edit-profil", label: "Pengaturan", icon: <Settings size={14} /> }
   ];
 
   return (
@@ -116,7 +174,7 @@ const Profile = () => {
           <div
             className="absolute inset-0 opacity-30"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928l2.105.842c.399.16.812.32 1.25.48a12.82 12.82 0 0 0 4.19.75h14.195a14.28 14.28 0 0 0 3.631-.469L100 20H21.184zM100 0h-5.263l-1.052.42c-10.272 4.11-15.363 5.333-24.63 9.038l-2.105.842c-.399.16-.812.32-1.25.48A12.82 12.82 0 0 1 62.5 11.533H48.305a14.28 14.28 0 0 1-3.631-.469L41.184 10c-.357-.13-.72-.264-1.088-.402l-1.768-.661C28.36 5.347 22.353 4 12 4 1.729 4-3.362 5.222-12.629 8.928l-2.105.842c-.399.16-.812.32-1.25.48A12.82 12.82 0 0 0-20.174 11H-100V0h100z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928l2.105.842c.399.16.812.32 1.25.48a12.82 12.82 0 0 0 4.19.75h14.195a14.28 14.28 0 0 0 3.631-.469L100 20H21.184zM100 0h-5.263l-1.052.42c-10.272 4.11-15.363 5.333-24.63 9.038l-2.105.842c-.399.16-.812.32-1.25.48A12.82 12.82 0 0 1 62.5 11.533H48.305a14.28 14.28 0 0 1-3.631-.469L41.184 10c-.357-.13-.72-.264-1.088-.402l-1.768-.661C28.36 5.347 22.353 4 12 4 1.729 4-3.362 5.222-12.629 8.928l-2.105.842c-.399.16-.812.32-1.25.48A12.82 12.82 0 0 0-20.174 11H-100V0h100z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`
             }}
           />
         </div>
@@ -187,7 +245,7 @@ const Profile = () => {
           {activeTab === "riwayat-peminjaman" && (
             <RiwayatPeminjaman type="history" view="table" />
           )}
-          {activeTab === "tagihan-denda" && <FinesList memberId={userId} />}
+          {activeTab === "tagihan-denda" && <FinesList />}
           {activeTab === "kartu-member" && (
             <div className="flex justify-center">
               <MemberCard profile={profile} />

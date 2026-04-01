@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   UserX,
   Save,
+  Link
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/utils/auth-client";
@@ -21,7 +22,7 @@ export default function UsersSection() {
     success,
     error: showErrorToast,
     warning,
-    removeToast,
+    removeToast
   } = useToast();
 
   const {
@@ -29,13 +30,15 @@ export default function UsersSection() {
     loading,
     error: usersError,
     stats,
-    refetch,
+    refetch
   } = useUsersManagement(true);
 
   const [search, setSearch] = useState("");
   const [pageError, setPageError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [banSavingId, setBanSavingId] = useState<string | null>(null);
+  const [syncSavingId, setSyncSavingId] = useState<string | null>(null);
+  const [showOnlyUnsynced, setShowOnlyUnsynced] = useState(false);
   const [roleDraft, setRoleDraft] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -51,15 +54,19 @@ export default function UsersSection() {
 
   const filteredUsers = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return users;
+    const list = showOnlyUnsynced
+      ? users.filter((u) => !u.hasSyncedMember)
+      : users;
 
-    return users.filter((u) => {
+    if (!q) return list;
+
+    return list.filter((u) => {
       const name = (u.name || "").toLowerCase();
       const email = (u.email || "").toLowerCase();
       const role = (u.role || "").toLowerCase();
       return name.includes(q) || email.includes(q) || role.includes(q);
     });
-  }, [users, search]);
+  }, [users, search, showOnlyUnsynced]);
 
   const roleBadgeClass = (role: string) => {
     if (role === "super_admin") return "bg-red-50 text-red-700 border-red-200";
@@ -72,7 +79,7 @@ export default function UsersSection() {
     if (!nextRole || nextRole === user.role) {
       warning(
         "Tidak Ada Perubahan",
-        "Role yang dipilih sama dengan role saat ini.",
+        "Role yang dipilih sama dengan role saat ini."
       );
       return;
     }
@@ -84,7 +91,7 @@ export default function UsersSection() {
       await refetch();
       success(
         "Role Diperbarui",
-        `Role ${user.name} berhasil diubah menjadi ${nextRole}.`,
+        `Role ${user.name} berhasil diubah menjadi ${nextRole}.`
       );
     } catch (err) {
       const message =
@@ -105,7 +112,7 @@ export default function UsersSection() {
     if (nextBanned) {
       const reason = window.prompt(
         "Alasan ban user (opsional):",
-        "Pelanggaran kebijakan sistem",
+        "Pelanggaran kebijakan sistem"
       );
       if (reason === null) return;
       banReason = reason.trim() || undefined;
@@ -117,7 +124,7 @@ export default function UsersSection() {
       await usersManagementService.updateBanStatus(
         user.id,
         nextBanned,
-        banReason,
+        banReason
       );
       await refetch();
       if (nextBanned) {
@@ -134,6 +141,27 @@ export default function UsersSection() {
       showErrorToast("Update Status User Gagal", message);
     } finally {
       setBanSavingId(null);
+    }
+  };
+
+  const handleSyncMember = async (user: (typeof users)[number]) => {
+    setSyncSavingId(user.id);
+    setPageError(null);
+    try {
+      const result = await usersManagementService.syncMemberByUserId(user.id);
+      const mode = String(result?.data?.mode || "updated");
+      await refetch();
+      success(
+        "Sinkronisasi Berhasil",
+        `Member ${user.name} berhasil disinkronkan (${mode}).`
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Gagal sinkronisasi member";
+      setPageError(message);
+      showErrorToast("Sync Member Gagal", message);
+    } finally {
+      setSyncSavingId(null);
     }
   };
 
@@ -181,6 +209,14 @@ export default function UsersSection() {
             {stats.banned}
           </p>
         </div>
+        <div className="bg-white rounded-2xl border border-slate-100 p-5">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Belum Sinkron
+          </p>
+          <p className="mt-2 text-2xl font-black text-sky-700">
+            {users.filter((u) => !u.hasSyncedMember).length}
+          </p>
+        </div>
       </div>
 
       <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
@@ -201,6 +237,16 @@ export default function UsersSection() {
           >
             <RefreshCw size={14} /> Refresh
           </button>
+
+          <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+            <input
+              type="checkbox"
+              className="accent-sky-600"
+              checked={showOnlyUnsynced}
+              onChange={(e) => setShowOnlyUnsynced(e.target.checked)}
+            />
+            Tampilkan yang belum sinkron saja
+          </label>
         </div>
 
         {loading ? (
@@ -297,7 +343,7 @@ export default function UsersSection() {
                         ? new Date(user.createdAt).toLocaleDateString("id-ID", {
                             day: "2-digit",
                             month: "short",
-                            year: "numeric",
+                            year: "numeric"
                           })
                         : "-"}
                     </td>
@@ -308,7 +354,7 @@ export default function UsersSection() {
                           onChange={(e) =>
                             setRoleDraft((prev) => ({
                               ...prev,
-                              [user.id]: e.target.value,
+                              [user.id]: e.target.value
                             }))
                           }
                           disabled={
@@ -353,6 +399,23 @@ export default function UsersSection() {
                               ? "Unban"
                               : "Ban"}
                         </button>
+
+                        {!user.hasSyncedMember ? (
+                          <button
+                            onClick={() => void handleSyncMember(user)}
+                            disabled={syncSavingId === user.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100 transition-colors disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200"
+                          >
+                            <Link size={12} />
+                            {syncSavingId === user.id
+                              ? "Sync..."
+                              : "Sync Member"}
+                          </button>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                            Sudah Sync
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>

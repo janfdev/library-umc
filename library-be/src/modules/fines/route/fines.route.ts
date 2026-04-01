@@ -93,6 +93,13 @@ router.get(
   FinesController.getAllFines
 );
 
+router.get(
+  "/fines/my",
+  isAuthenticated,
+  publicApiLimiter,
+  FinesController.getMyFines
+);
+
 /**
  * @swagger
  * /fines/{id}:

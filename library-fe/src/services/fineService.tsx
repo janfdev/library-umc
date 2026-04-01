@@ -19,9 +19,9 @@ export interface Fine {
 class FineService {
   private baseUrl = `${API_BASE_URL}/api/fines`;
 
-  async getMyFines(memberId: string): Promise<Fine[]> {
-    const response = await fetch(`${this.baseUrl}?memberId=${memberId}`, {
-      credentials: "include",
+  async getMyFines(): Promise<Fine[]> {
+    const response = await fetch(`${this.baseUrl}/my`, {
+      credentials: "include"
     });
     const result = await response.json();
     if (!result.success)

@@ -4,8 +4,8 @@ import LogoUmc from "@/assets/logo_umc.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-red-800 text-white py-4 lg:py-6 px-6 md:px-12">
-      <div className="max-w-6xl mx-auto block lg:flex lg:justify-between gap-8 space-y-4 lg:space-y-0">
+    <footer className="bg-red-800 text-white py-6 md:py-8 px-4 sm:px-6 md:px-12">
+      <div className="max-w-6xl mx-auto block lg:flex lg:justify-between gap-6 lg:gap-8 space-y-6 lg:space-y-0">
         {/* Kolom 1: Logo & Media Sosial */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center space-x-3">
@@ -18,10 +18,10 @@ const Footer = () => {
           {/* Ikon Media Sosial — SVG Inline (tanpa FontAwesome, tanpa Lucide brand icons) */}
           <div className="block">
             <div>
-              <h3 className="font-bold text-md">
+              <h3 className="font-bold text-sm sm:text-base">
                 Universitas Muhammadiyah Cirebon
               </h3>
-              <p className="text-sm opacity-80">
+              <p className="text-xs sm:text-sm opacity-80">
                 Waqaf, Islami, Mandiri & Profesional
               </p>
             </div>
@@ -140,8 +140,10 @@ const Footer = () => {
 
         {/* Kolom 2: Lembaga dan Pusat */}
         <div className="max-w-68">
-          <h4 className="font-bold mb-4">Lembaga dan Pusat</h4>
-          <ul className="space-y-2 text-sm opacity-90">
+          <h4 className="font-bold text-sm sm:text-base mb-4">
+            Lembaga dan Pusat
+          </h4>
+          <ul className="space-y-2 text-xs sm:text-sm opacity-90">
             <li>
               <a href="#">Lembaga Penjamin Mutu (LPM) UMC</a>
             </li>
@@ -158,8 +160,8 @@ const Footer = () => {
 
         {/* Kolom 3: Hubungi Kami */}
         <div>
-          <h4 className="font-bold mb-4">Hubungi Kami</h4>
-          <div className="space-y-3 text-sm opacity-90">
+          <h4 className="font-bold text-sm sm:text-base mb-4">Hubungi Kami</h4>
+          <div className="space-y-3 text-xs sm:text-sm opacity-90">
             <p>
               <strong>Kampus 1:</strong>
               <br />
@@ -185,7 +187,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="border-t border-red-700 mt-8 pt-2 text-center text-[12px] lg:text-sm opacity-80">
+      <div className="border-t border-red-700 mt-8 pt-4 text-center text-[10px] sm:text-[12px] lg:text-sm opacity-80">
         Copyright © {new Date().getFullYear()} Universitas Muhammadiyah Cirebon
       </div>
     </footer>

@@ -1,5 +1,6 @@
 import { type Request, type Response, type NextFunction } from "express";
 import finesService from "../service/fines.service";
+import { MemberService } from "../../member/service/member.service";
 import {
   getFinesQuerySchema,
   createFineSchema,
@@ -7,7 +8,52 @@ import {
   auditPaidFinesQuerySchema
 } from "../validation/fines.validation";
 
+const memberService = new MemberService();
+
 class FinesController {
+  async getMyFines(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({
+          success: false,
+          message: "Tidak terautentikasi",
+          data: null
+        });
+      }
+
+      const memberRes = await memberService.getMemberByUserId(req.user.id);
+      if (!memberRes.success || !memberRes.data?.id) {
+        return res.status(200).json({
+          success: true,
+          message: "Member belum tersedia",
+          data: []
+        });
+      }
+
+      const validation = getFinesQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation Error",
+          data: validation.error.flatten()
+        });
+      }
+
+      const { status, loanId, limit, offset } = validation.data;
+      const result = await finesService.getAllFines({
+        status: status as "paid" | "unpaid",
+        loanId,
+        memberId: String(memberRes.data.id),
+        limit: limit ? Number(limit) : undefined,
+        offset: offset ? Number(offset) : undefined
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getPaidFinesWithNonReturnedLoans(
     req: Request,
     res: Response,

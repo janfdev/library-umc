@@ -2,7 +2,7 @@ import { Router } from "express";
 import { AuthController } from "../controller/auth.controller";
 import {
   isAuthenticated,
-  requireRole,
+  requireRole
 } from "../../../middlewares/auth.middleware";
 import { authLimiter } from "../../../middlewares/rateLimiter";
 
@@ -103,21 +103,28 @@ router.get(
   "/users/all",
   isAuthenticated,
   requireRole(["super_admin"]),
-  authController.getAllUsers,
+  authController.getAllUsers
 );
 
 router.patch(
   "/users/:id/role",
   isAuthenticated,
   requireRole(["super_admin"]),
-  authController.updateUserRole,
+  authController.updateUserRole
 );
 
 router.patch(
   "/users/:id/ban",
   isAuthenticated,
   requireRole(["super_admin"]),
-  authController.updateUserBanStatus,
+  authController.updateUserBanStatus
+);
+
+router.post(
+  "/users/:id/sync-member",
+  isAuthenticated,
+  requireRole(["super_admin"]),
+  authController.syncUserMember
 );
 
 export const authRoutes = router;

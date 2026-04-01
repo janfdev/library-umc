@@ -76,6 +76,14 @@ export const memberType = pgEnum("member_type", [
   "super_admin"
 ]);
 
+export const memberCardStatusEnum = pgEnum("member_card_status", [
+  "not_requested",
+  "pending",
+  "active",
+  "rejected",
+  "expired"
+]);
+
 // ==========================================
 // 2. MASTER DATA (Keep Integer for Static Data)
 // ==========================================
@@ -193,6 +201,14 @@ export const members = pgTable(
     nimNidn: varchar("nim_nidn", { length: 255 }),
     faculty: varchar("faculty", { length: 255 }),
     phone: varchar("phone", { length: 100 }),
+    cardStatus: memberCardStatusEnum("card_status")
+      .notNull()
+      .default("not_requested"),
+    cardNumber: varchar("card_number", { length: 100 }).unique(),
+    cardRequestedAt: timestamp("card_requested_at"),
+    cardApprovedAt: timestamp("card_approved_at"),
+    cardRejectedAt: timestamp("card_rejected_at"),
+    cardRejectedReason: text("card_rejected_reason"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
     deletedAt: timestamp("deleted_at")

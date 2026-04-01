@@ -3,13 +3,13 @@ import { AuthService } from "../service/auth.service";
 import {
   loginSchema,
   registerSchema,
-  loginCredentialSchema,
+  loginCredentialSchema
 } from "../validation/auth.validation";
 import { UserService } from "../service/user.service";
 import {
   sendSuccess,
   sendError,
-  sendValidationError,
+  sendValidationError
 } from "../../../utils/api-utils";
 import auditService from "../../audit/service/audit.service";
 
@@ -27,7 +27,7 @@ export class AuthController {
       const result = await authService.registerWithCredentials(
         name,
         email,
-        password,
+        password
       );
 
       sendSuccess(res, "Registrasi berhasil", result, 201);
@@ -49,7 +49,7 @@ export class AuthController {
           userAgent: req.get("user-agent") || undefined,
           detail: `validation_failed${
             attemptedEmail ? `; email=${attemptedEmail}` : ""
-          }`,
+          }`
         });
         return sendValidationError(res, validation.error.flatten());
       }
@@ -74,7 +74,7 @@ export class AuthController {
           userAgent: req.get("user-agent") || undefined,
           detail: `invalid_credentials${
             attemptedEmail ? `; email=${attemptedEmail}` : ""
-          }`,
+          }`
         });
       }
       next(error);
@@ -109,7 +109,7 @@ export class AuthController {
         return sendError(
           res,
           result.message ?? "Gagal mengambil data pengguna",
-          500,
+          500
         );
       }
 
@@ -132,14 +132,14 @@ export class AuthController {
       const result = await UserService.updateUserRole(
         userId,
         role,
-        actorUserId,
+        actorUserId
       );
 
       if (!result.success) {
         return sendError(
           res,
           result.message ?? "Gagal memperbarui role user",
-          400,
+          400
         );
       }
 
@@ -148,7 +148,7 @@ export class AuthController {
         action: "update",
         entity: "Users",
         entityId: userId,
-        ipAddress: req.ip,
+        ipAddress: req.ip
       });
 
       sendSuccess(res, "Role user berhasil diperbarui", result.data);
@@ -174,14 +174,14 @@ export class AuthController {
         userId,
         banned,
         actorUserId,
-        banReason,
+        banReason
       );
 
       if (!result.success) {
         return sendError(
           res,
           result.message ?? "Gagal memperbarui status ban user",
-          400,
+          400
         );
       }
 
@@ -190,14 +190,65 @@ export class AuthController {
         action: banned ? "blacklist" : "update",
         entity: "Users",
         entityId: userId,
-        ipAddress: req.ip,
+        ipAddress: req.ip
       });
 
       sendSuccess(
         res,
         banned ? "User berhasil diblokir" : "User berhasil diaktifkan kembali",
-        result.data,
+        result.data
       );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async syncUserMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = String(req.params.id || "");
+      const actorUserId = String(req.user?.id || "");
+
+      if (!userId || !actorUserId) {
+        return sendError(res, "Data sinkronisasi tidak lengkap", 400);
+      }
+
+      const result = await authService.syncUserMemberByUserId(userId);
+
+      await auditService.createLog({
+        userId: actorUserId,
+        action: "update",
+        entity: "Users",
+        entityId: userId,
+        ipAddress: req.ip,
+        detail: `sync_member; mode=${result.mode}; email=${result.email}`
+      });
+
+      sendSuccess(res, "Sinkronisasi member user berhasil", result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async syncMyMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = String(req.user?.id || "");
+
+      if (!userId) {
+        return sendError(res, "Unauthorized", 401);
+      }
+
+      const result = await authService.syncUserMemberByUserId(userId);
+
+      await auditService.createLog({
+        userId,
+        action: "update",
+        entity: "auth",
+        entityId: userId,
+        ipAddress: req.ip,
+        detail: `self_sync_member; mode=${result.mode}; email=${result.email}`
+      });
+
+      sendSuccess(res, "Sinkronisasi profil member Anda berhasil", result);
     } catch (error) {
       next(error);
     }

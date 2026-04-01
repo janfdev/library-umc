@@ -1,12 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Info, AlertCircle } from 'lucide-react';
-import fineService, { type Fine } from '@/services/fineService';
+import { useEffect, useState } from "react";
+import { Info, AlertCircle } from "lucide-react";
+import fineService, { type Fine } from "@/services/fineService";
 
-interface FinesListProps {
-  memberId: string;
-}
-
-const FinesList = ({ memberId }: FinesListProps) => {
+const FinesList = () => {
   const [fines, setFines] = useState<Fine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,26 +11,26 @@ const FinesList = ({ memberId }: FinesListProps) => {
     const fetchFines = async () => {
       try {
         setLoading(true);
-        const data = await fineService.getMyFines(memberId);
+        const data = await fineService.getMyFines();
         setFines(data);
       } catch (err) {
-        console.error('Fetch fines error:', err);
-        setError('Gagal memuat daftar denda');
+        console.error("Fetch fines error:", err);
+        setError("Gagal memuat daftar denda");
       } finally {
         setLoading(false);
       }
     };
 
-    if (memberId) {
-      fetchFines();
-    }
-  }, [memberId]);
+    fetchFines();
+  }, []);
 
   if (loading) {
     return (
       <div className="py-12 text-center animate-pulse">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-700 mb-4"></div>
-        <p className="text-slate-400 font-medium italic">Memuat data denda...</p>
+        <p className="text-slate-400 font-medium italic">
+          Memuat data denda...
+        </p>
       </div>
     );
   }
@@ -56,7 +52,9 @@ const FinesList = ({ memberId }: FinesListProps) => {
           <Info size={24} />
         </div>
         <h3 className="text-slate-600 font-bold mb-1">Tidak Ada Denda</h3>
-        <p className="text-slate-400 text-xs">Mantap! Kamu tidak memiliki tunggakan denda saat ini.</p>
+        <p className="text-slate-400 text-xs">
+          Mantap! Kamu tidak memiliki tunggakan denda saat ini.
+        </p>
       </div>
     );
   }
@@ -76,43 +74,68 @@ const FinesList = ({ memberId }: FinesListProps) => {
           </thead>
           <tbody className="divide-y divide-slate-50">
             {fines.map((fine) => {
-                const bookTitle = fine.loan?.item?.collection?.title || 'Unknown Title';
-                const borrowDate = fine.loan?.loanDate ? new Date(fine.loan.loanDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
-                
-                return (
-                  <tr key={fine.id} className="text-[11px] font-bold text-slate-600 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4">{bookTitle}</td>
-                    <td className="px-6 py-4">{borrowDate}</td>
-                    <td className="px-6 py-4 text-slate-900">Rp. {fine.amount.toLocaleString('id-ID')}</td>
-                    <td className="px-6 py-4">
-                       <span className={`px-4 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-colors ${
-                         fine.status === 'paid' 
-                           ? 'bg-green-50 text-green-600' 
-                           : 'bg-red-50 text-red-600'
-                       }`}>
-                          {fine.status === 'paid' ? 'Sudah Dibayar' : 'Belum di Bayar'}
-                       </span>
-                    </td>
-                  </tr>
-                );
+              const bookTitle =
+                fine.loan?.item?.collection?.title || "Unknown Title";
+              const borrowDate = fine.loan?.loanDate
+                ? new Date(fine.loan.loanDate).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                  })
+                : "-";
+
+              return (
+                <tr
+                  key={fine.id}
+                  className="text-[11px] font-bold text-slate-600 hover:bg-slate-50/50 transition-colors"
+                >
+                  <td className="px-6 py-4">{bookTitle}</td>
+                  <td className="px-6 py-4">{borrowDate}</td>
+                  <td className="px-6 py-4 text-slate-900">
+                    Rp. {fine.amount.toLocaleString("id-ID")}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-4 py-1.5 rounded-lg text-[9px] uppercase tracking-widest transition-colors ${
+                        fine.status === "paid"
+                          ? "bg-green-50 text-green-600"
+                          : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {fine.status === "paid"
+                        ? "Sudah Dibayar"
+                        : "Belum di Bayar"}
+                    </span>
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
       </div>
 
       <div className="mt-8 bg-red-50 p-6 rounded-[24px] border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6">
-         <div>
-            <h4 className="text-red-900 font-black text-sm mb-1 uppercase tracking-tight">Total Tunggakan</h4>
-            <p className="text-2xl font-black text-red-700">
-               Rp. {fines.filter(f => f.status === 'unpaid').reduce((total, f) => total + f.amount, 0).toLocaleString('id-ID')}
-            </p>
-         </div>
-         <div className="text-right">
-            <p className="text-[10px] text-red-700/60 font-bold mb-4 uppercase tracking-widest max-w-[300px]">Silahkan hubungi petugas perpustakaan di meja administrasi untuk pelunasan denda.</p>
-            <button className="bg-red-700 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-800 transition-all active:scale-95 shadow-lg shadow-red-200">
-               BAGAIMANA CARA BAYAR?
-            </button>
-         </div>
+        <div>
+          <h4 className="text-red-900 font-black text-sm mb-1 uppercase tracking-tight">
+            Total Tunggakan
+          </h4>
+          <p className="text-2xl font-black text-red-700">
+            Rp.{" "}
+            {fines
+              .filter((f) => f.status === "unpaid")
+              .reduce((total, f) => total + f.amount, 0)
+              .toLocaleString("id-ID")}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-red-700/60 font-bold mb-4 uppercase tracking-widest max-w-[300px]">
+            Silahkan hubungi petugas perpustakaan di meja administrasi untuk
+            pelunasan denda.
+          </p>
+          <button className="bg-red-700 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-800 transition-all active:scale-95 shadow-lg shadow-red-200">
+            BAGAIMANA CARA BAYAR?
+          </button>
+        </div>
       </div>
     </div>
   );

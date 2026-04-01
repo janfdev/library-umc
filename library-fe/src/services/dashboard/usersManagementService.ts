@@ -8,6 +8,7 @@ export interface DashboardUser {
   role: "super_admin" | "staff" | "student" | "lecturer" | string;
   banned: boolean;
   createdAt: string;
+  hasSyncedMember?: boolean;
 }
 
 const jsonOrThrow = async (res: Response) => {
@@ -21,7 +22,7 @@ const jsonOrThrow = async (res: Response) => {
 export const usersManagementService = {
   async getUsers(): Promise<DashboardUser[]> {
     const res = await fetch(`${API_BASE_URL}/api/users/all`, {
-      credentials: "include",
+      credentials: "include"
     });
     const data = await jsonOrThrow(res);
     return data.success && Array.isArray(data.data) ? data.data : [];
@@ -32,7 +33,7 @@ export const usersManagementService = {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ role }),
+      body: JSON.stringify({ role })
     });
     return jsonOrThrow(res);
   },
@@ -42,8 +43,17 @@ export const usersManagementService = {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ banned, banReason }),
+      body: JSON.stringify({ banned, banReason })
     });
     return jsonOrThrow(res);
   },
+
+  async syncMemberByUserId(userId: string) {
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}/sync-member`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" }
+    });
+    return jsonOrThrow(res);
+  }
 };
