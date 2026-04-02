@@ -1,11 +1,10 @@
-// src/pages/KatalogDetail.tsx
-
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { API_BASE_URL } from '@/utils/api-config';
 import Navbar from '@/components/ui/navbar';
 import Footer from '@/components/Footer';
 import ReservationList from '@/components/ReservationList';
+import LoanRequestForm from '@/components/LoanRequestForm';
 import loanService from '@/services/loanService';
 import { authClient } from '@/utils/auth-client';
 import { 
@@ -55,14 +54,13 @@ interface User {
 }
 
 // ✅ Interface Loan sesuai schema backend
-// Field: id, memberId, itemId, loanDate, dueDate, returnDate, status, approvedBy, createdAt, updatedAt
 interface LoanRequest {
   id: string;
   status: 'pending' | 'approved' | 'rejected' | 'active' | 'returned' | 'overdue';
-  itemId: string;      // ✅ bukan collectionId
+  itemId: string;
   memberId: string;
-  loanDate?: string;   // ✅ bukan startDate
-  dueDate?: string;    // ✅ bukan endDate
+  loanDate?: string;
+  dueDate?: string;
   returnDate?: string;
   approvedBy?: string;
   createdAt?: string;
@@ -101,13 +99,6 @@ const KatalogDetail = () => {
   const [borrowLoading, setBorrowLoading] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
 
-  // ✅ Form field disesuaikan dengan schema: loanDate & dueDate
-  const [loanFormData, setLoanFormData] = useState({
-    loanDate: '',
-    dueDate: '',
-    notes: ''
-  });
-
   const [notification, setNotification] = useState<{
     show: boolean;
     message: string;
@@ -139,7 +130,6 @@ const KatalogDetail = () => {
           setCollection(collectionJson.data);
 
           // 2. Fetch active loans untuk item ini
-          // ✅ Gunakan itemId bukan collectionId
           const activeLoansResponse = await fetch(
             `${API_BASE_URL}/api/loans?itemId=${id}&status=active`
           );
@@ -217,11 +207,6 @@ const KatalogDetail = () => {
   const isUserBorrowing = (): boolean => userLoans.length > 0;
   const isUserPending = (): boolean => pendingRequests.length > 0;
 
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setLoanFormData({ ...loanFormData, [e.target.name]: e.target.value });
-  };
-
   // Handle klik tombol pinjam
   const handleBorrow = () => {
     if (!currentUser) {
@@ -246,7 +231,7 @@ const KatalogDetail = () => {
   };
 
   // Submit form peminjaman
-  const handleSubmitLoan = async () => {
+  const handleSubmitLoan = async (formData: { loanDate: string; dueDate: string; notes: string }) => {
     // ✅ Validasi lengkap sebelum kirim request
     if (!currentUser) {
       showNotification('Anda harus login terlebih dahulu', 'error');
@@ -264,54 +249,27 @@ const KatalogDetail = () => {
       return;
     }
 
-    if (!loanFormData.loanDate || !loanFormData.dueDate) {
-      showNotification('Pilih tanggal peminjaman dan pengembalian', 'error');
-      return;
-    }
-
-    // Validasi tanggal
-    const start = new Date(loanFormData.loanDate);
-    const end = new Date(loanFormData.dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (start < today) {
-      showNotification('Tanggal peminjaman tidak boleh kurang dari hari ini', 'error');
-      return;
-    }
-
-    if (end <= start) {
-      showNotification('Tanggal pengembalian harus setelah tanggal peminjaman', 'error');
-      return;
-    }
-
-    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
-    if (diffDays > 14) {
-      showNotification('Maksimal peminjaman 14 hari', 'error');
-      return;
-    }
-
     setBorrowLoading(true);
     try {
       // ✅ Kirim dengan field sesuai schema backend
       const loan = await loanService.requestLoan({
-        memberId: currentUser.memberId,   // ✅ ID dari session nyata
-        itemId: collection.id,             // ✅ itemId bukan collectionId
-        loanDate: loanFormData.loanDate,  // ✅ loanDate bukan startDate
-        dueDate: loanFormData.dueDate,    // ✅ dueDate bukan endDate
-        notes: loanFormData.notes
+        memberId: currentUser.memberId,
+        itemId: collection.id,
+        loanDate: formData.loanDate,
+        dueDate: formData.dueDate,
+        notes: formData.notes
       });
 
       showNotification('Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.', 'success');
       setPendingRequests([...pendingRequests, loan as unknown as LoanRequest]);
       setShowLoanForm(false);
-      setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
 
     } catch (error) {
       showNotification(
         error instanceof Error ? error.message : 'Terjadi kesalahan saat mengajukan peminjaman',
         'error'
       );
+      throw error; // Re-throw agar form component bisa menangani error
     } finally {
       setBorrowLoading(false);
     }
@@ -369,94 +327,15 @@ const KatalogDetail = () => {
         </div>
       )}
 
-      {/* Modal Form Peminjaman */}
-      {showLoanForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Ajukan Peminjaman Buku</h3>
-
-            <div className="space-y-4 mb-6">
-              {/* Info Buku */}
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <p className="font-medium text-slate-900">{collection?.title}</p>
-                <p className="text-sm text-slate-600">{collection?.author}</p>
-              </div>
-
-              {/* ✅ Tanggal Peminjaman — field: loanDate */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tanggal Peminjaman
-                </label>
-                <input
-                  type="date"
-                  name="loanDate"
-                  value={loanFormData.loanDate}
-                  onChange={handleInputChange}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
-                  required
-                />
-              </div>
-
-              {/* ✅ Tanggal Pengembalian — field: dueDate */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tanggal Pengembalian
-                </label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={loanFormData.dueDate}
-                  onChange={handleInputChange}
-                  min={loanFormData.loanDate || new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
-                  required
-                />
-              </div>
-
-              {/* Catatan */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Catatan (opsional)
-                </label>
-                <textarea
-                  name="notes"
-                  value={loanFormData.notes}
-                  onChange={handleInputChange}
-                  placeholder="Contoh: untuk tugas akhir, dll"
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
-                  rows={3}
-                />
-              </div>
-
-              <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl space-y-1">
-                <p>• Maksimal peminjaman 14 hari</p>
-                <p>• Denda keterlambatan Rp 2.000/hari</p>
-                <p>• Permintaan akan diproses oleh petugas</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowLoanForm(false);
-                  setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
-                }}
-                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleSubmitLoan}
-                disabled={borrowLoading}
-                className="flex-1 bg-[#9a1b1b] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#7a1515] disabled:bg-slate-400 transition-all"
-              >
-                {borrowLoading ? 'Memproses...' : 'Ajukan Peminjaman'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Loan Request Form Component */}
+      <LoanRequestForm
+        isOpen={showLoanForm}
+        collectionTitle={collection?.title || ''}
+        collectionAuthor={collection?.author || ''}
+        onSubmit={handleSubmitLoan}
+        onClose={() => setShowLoanForm(false)}
+        isLoading={borrowLoading}
+      />
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}

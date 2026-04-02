@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { admin } from "better-auth/plugins";
-import { AuthService } from "../service/auth.service";
+import { AuthService } from "../modules/auth/service/auth.service";
 
 const authService = new AuthService();
 

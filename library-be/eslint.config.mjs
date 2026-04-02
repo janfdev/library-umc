@@ -32,7 +32,9 @@ export default tseslint.config(
         ...globals.es2020,
       },
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["*.ts"],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

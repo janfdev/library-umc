@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { loans, fines, items, collections, Users, members } from "../db/schema";
 import { eq, lt, and } from "drizzle-orm";
-import { NotificationService } from "../service/notification.service";
+import { NotificationService } from "../modules/notification/service/notification.service";
 
 const DENDA_PER_HARI = 500; // Rp 500 per hari
 const JADWAL_JAM = 0; // Jam 00:xx (tengah malam)

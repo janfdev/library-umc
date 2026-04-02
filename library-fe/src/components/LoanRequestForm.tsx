@@ -1,0 +1,234 @@
+import { useState } from 'react';
+import { CheckCircle, XCircle, AlertCircle, Calendar, FileText, X } from 'lucide-react';
+
+interface LoanRequestFormProps {
+  isOpen: boolean;
+  collectionTitle: string;
+  collectionAuthor: string;
+  onSubmit: (formData: { loanDate: string; dueDate: string; notes: string }) => Promise<void>;
+  onClose: () => void;
+  isLoading?: boolean;
+}
+
+const LoanRequestForm = ({
+  isOpen,
+  collectionTitle,
+  collectionAuthor,
+  onSubmit,
+  onClose,
+  isLoading = false
+}: LoanRequestFormProps) => {
+  const [loanFormData, setLoanFormData] = useState({
+    loanDate: '',
+    dueDate: '',
+    notes: ''
+  });
+  
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setLoanFormData({ ...loanFormData, [e.target.name]: e.target.value });
+  };
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 5000);
+  };
+
+  const handleSubmit = async () => {
+    if (!loanFormData.loanDate || !loanFormData.dueDate) {
+      showNotification('Pilih tanggal peminjaman dan pengembalian', 'error');
+      return;
+    }
+
+    const start = new Date(loanFormData.loanDate);
+    const end = new Date(loanFormData.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (start < today) {
+      showNotification('Tanggal peminjaman tidak boleh kurang dari hari ini', 'error');
+      return;
+    }
+
+    if (end <= start) {
+      showNotification('Tanggal pengembalian harus setelah tanggal peminjaman', 'error');
+      return;
+    }
+
+    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+    if (diffDays > 14) {
+      showNotification('Maksimal peminjaman 14 hari', 'error');
+      return;
+    }
+
+    try {
+      await onSubmit(loanFormData);
+      setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
+      onClose();
+    } catch (error) {
+      showNotification(
+        error instanceof Error ? error.message : 'Terjadi kesalahan saat mengajukan peminjaman',
+        'error'
+      );
+    }
+  };
+
+  const handleClose = () => {
+    if (isLoading) return;
+    setLoanFormData({ loanDate: '', dueDate: '', notes: '' });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Notification Toast */}
+      {notification.show && (
+        <div className={`fixed top-6 right-6 z-[60] p-4 rounded-xl shadow-2xl border transition-all duration-300 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 ${
+          notification.type === 'success' ? 'bg-white border-green-200' :
+          notification.type === 'error' ? 'bg-white border-red-200' :
+          'bg-white border-blue-200'
+        }`}>
+          {notification.type === 'success' ? (
+            <CheckCircle size={20} className="text-green-600" />
+          ) : notification.type === 'error' ? (
+            <XCircle size={20} className="text-red-600" />
+          ) : (
+            <AlertCircle size={20} className="text-blue-600" />
+          )}
+          <p className="text-sm font-semibold text-slate-900">
+            {notification.message}
+          </p>
+        </div>
+      )}
+
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
+        {/* Modal Container */}
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+          
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Form Peminjaman</h3>
+              <p className="text-xs text-slate-500 mt-1">Silakan lengkapi data peminjaman buku</p>
+            </div>
+            <button 
+              onClick={handleClose}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X size={20} className="text-slate-400" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Info Buku - High Contrast */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Detail Koleksi</span>
+              <p className="font-bold text-slate-900 text-lg leading-tight mt-1">{collectionTitle}</p>
+              <p className="text-sm text-slate-600 font-medium">{collectionAuthor}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Tanggal Peminjaman */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                  <Calendar size={16} className="text-red-600" />
+                  Mulai Pinjam
+                </label>
+                <input
+                  type="date"
+                  name="loanDate"
+                  value={loanFormData.loanDate}
+                  onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 font-medium focus:border-red-500/20 focus:ring-4 focus:ring-red-500/10 outline-none transition-all"
+                  required
+                />
+              </div>
+
+              {/* Tanggal Pengembalian */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                  <Calendar size={16} className="text-red-600" />
+                  Kembali
+                </label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={loanFormData.dueDate}
+                  onChange={handleInputChange}
+                  min={loanFormData.loanDate || new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 font-medium focus:border-red-500/20 focus:ring-4 focus:ring-red-500/10 outline-none transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Catatan */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                <FileText size={16} className="text-red-600" />
+                Catatan (Opsional)
+              </label>
+              <textarea
+                name="notes"
+                value={loanFormData.notes}
+                onChange={handleInputChange}
+                placeholder="Contoh: Untuk keperluan penelitian..."
+                className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 font-medium focus:border-red-500/20 focus:ring-4 focus:ring-red-500/10 outline-none transition-all resize-none"
+                rows={3}
+              />
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl">
+              <h4 className="text-xs font-bold text-amber-800 uppercase mb-2 tracking-wide">Ketentuan:</h4>
+              <ul className="text-xs text-amber-900/80 space-y-1.5 font-medium">
+                <li className="flex items-center gap-2">• Maksimal durasi peminjaman 14 hari</li>
+                <li className="flex items-center gap-2">• Denda keterlambatan Rp 2.000 / hari</li>
+                <li className="flex items-center gap-2">• Pastikan data sudah benar sebelum mengirim</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
+            <button
+              onClick={handleClose}
+              disabled={isLoading}
+              className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-white hover:border-slate-300 transition-all disabled:opacity-50"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="flex-[2] bg-[#9a1b1b] text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-[#7a1515] active:scale-[0.98] disabled:bg-slate-400 shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Memproses...
+                </>
+              ) : 'Ajukan Peminjaman'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default LoanRequestForm;
