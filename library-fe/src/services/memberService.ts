@@ -1,9 +1,9 @@
-import { API_BASE_URL } from '@/utils/api-config';
+import { API_BASE_URL } from "@/utils/api-config";
 
 export interface MemberProfile {
   id: string;
   userId: string;
-  memberType: 'student' | 'lecturer' | 'staff' | 'super_admin';
+  memberType: "student" | "lecturer" | "staff" | "super_admin";
   nimNidn: string | null;
   faculty: string | null;
   phone: string | null;
@@ -27,32 +27,31 @@ export interface UpdateProfilePayload {
 class MemberService {
   private baseUrl = API_BASE_URL;
 
-
   async getMyProfile(): Promise<MemberProfile> {
     const response = await fetch(`${this.baseUrl}/api/members/me`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" }
     });
 
     const result = await response.json();
     if (!result.success) {
-      throw new Error(result.message || 'Gagal memuat profil');
+      throw new Error(result.message || "Gagal memuat profil");
     }
     return result.data;
   }
 
   async updateMyProfile(payload: UpdateProfilePayload): Promise<MemberProfile> {
     const response = await fetch(`${this.baseUrl}/api/members/me`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
 
     const result = await response.json();
     if (!result.success) {
-      throw new Error(result.message || 'Gagal memperbarui profil');
+      throw new Error(result.message || "Gagal memperbarui profil");
     }
     return result.data;
   }

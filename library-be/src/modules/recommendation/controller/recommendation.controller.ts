@@ -1,130 +1,134 @@
-import { type Request, type Response, type NextFunction } from "express";
-import recommendationsService from "../service/recommendation.service";
-import { 
-  createRecommendationSchema, 
+import { type NextFunction, type Request, type Response } from "express";
+import recommendationService from "../service/recommendation.service";
+import {
+  createRecommendationSchema,
   updateRecommendationStatusSchema,
-  getRecommendationsQuerySchema
 } from "../validation/recommendation.validation";
+import {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} from "../../../utils/api-utils";
 
-class RecommendationsController {
-  async createRecommendation(req: Request, res: Response, next: NextFunction) {
+class RecommendationController {
+  /**
+   * Submit Rekomendasi
+   */
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const dosenId = req.user?.id;
-      if (!dosenId) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized." });
-      }
-
       const validation = createRecommendationSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
-      const { title, author, publisher, reason } = validation.data;
+      const user = (req as any).user;
+      if (!user?.id) {
+        return sendError(res, "Tidak terautentikasi", 401);
+      }
 
-      const result = await recommendationsService.createRecommendation(
-        dosenId,
-        {
-          title,
-          author,
-          publisher,
-          reason,
-        },
+      const result = await recommendationService.createRecommendation(
+        user.id,
+        validation.data
       );
 
-      return res.status(201).json(result);
+      sendSuccess(res, "Rekomendasi berhasil diajukan", result);
     } catch (error) {
       next(error);
     }
   }
 
-  async getAllRecommendations(req: Request, res: Response, next: NextFunction) {
+  /**
+   * Get All (Admin) or My (Dosen) Recommendations
+   */
+  async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const validation = getRecommendationsQuerySchema.safeParse(req.query);
-      if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+      const user = (req as any).user;
+      if (!user) return sendError(res, "Tidak terautentikasi", 401);
+
+
+      let dosenId: string | undefined;
+      // Jika bukan admin/staff, hanya bisa lihat miliknya sendiri
+      if (user.role !== "super_admin" && user.role !== "staff") {
+        dosenId = user.id;
       }
 
-      const { status } = validation.data;
+      const statusStr = req.query.status as string | undefined;
+      const validStatuses = ["pending", "approved", "rejected"];
+      const status = (validStatuses.includes(statusStr || "") 
+        ? statusStr 
+        : undefined) as "pending" | "approved" | "rejected" | undefined;
 
-      const result = await recommendationsService.getAllRecommendations({
-        status: status as "pending" | "approved" | "rejected",
+      const result = await recommendationService.getRecommendations({
+        dosenId,
+        status,
       });
 
-      return res.status(200).json(result);
-    } catch (error) {
+      sendSuccess(res, "Berhasil mengambil data recommendation", result);
+    } catch (error: unknown) {
       next(error);
     }
   }
 
-  async getMyRecommendations(req: Request, res: Response, next: NextFunction) {
-    try {
-      const dosenId = req.user?.id;
-      if (!dosenId) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized." });
-      }
-
-      const result = await recommendationsService.getMyRecommendations(dosenId);
-
-      return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async updateRecommendationStatus(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  /**
+   * Update Status (Admin)
+   */
+  async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const validation = updateRecommendationStatusSchema.safeParse(req.body);
+      
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
-      const { status } = validation.data;
-
-      const result = await recommendationsService.updateRecommendationStatus(
-        id as string,
-        status,
-      );
-
-      return res.status(200).json(result);
+      const result = await recommendationService.updateStatus(String(id), validation.data.status);
+      sendSuccess(res, "Status rekomendasi berhasil diperbarui", result);
     } catch (error) {
       next(error);
     }
   }
 
+  /**
+   * getMyRecommendations (Dosen)
+   */
+  async getMyRecommendations(req: Request, res: Response, next: NextFunction) {
+    return this.getAll(req, res, next);
+  }
+
+  /**
+   * getAllRecommendations (Admin)
+   */
+  async getAllRecommendations(req: Request, res: Response, next: NextFunction) {
+    return this.getAll(req, res, next);
+  }
+
+  /**
+   * createRecommendation (Dosen)
+   */
+  async createRecommendation(req: Request, res: Response, next: NextFunction) {
+    return this.create(req, res, next);
+  }
+
+  /**
+   * updateRecommendationStatus (Admin)
+   */
+  async updateRecommendationStatus(req: Request, res: Response, next: NextFunction) {
+    return this.updateStatus(req, res, next);
+  }
+
+  /**
+   * Soft Delete Recommendation
+   */
   async deleteRecommendation(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-
-      const result = await recommendationsService.deleteRecommendation(
-        id as string,
-      );
-
-      return res.status(200).json(result);
-    } catch (error) {
+      const result = await recommendationService.deleteRecommendation(String(id));
+      sendSuccess(res, "Rekomendasi berhasil dihapus", result);
+    } catch (error: unknown) {
       next(error);
     }
   }
+
 }
 
-export default new RecommendationsController();
+export default new RecommendationController();

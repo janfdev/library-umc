@@ -1,33 +1,9 @@
-// src/components/ReservationList.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, BookOpen, Calendar, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
-import { API_BASE_URL } from '@/utils/api-config';
+import reservationService, { type Reservation } from '@/services/reservationService';
+import { useToast } from '@/hooks/useToast';
 
-interface Reservation {
-  id: string;
-  memberId: string;
-  collectionId: string;
-  status: 'waiting' | 'fulfilled' | 'canceled';
-  createdAt: string;
-  updatedAt: string;
-  collection?: {
-    id: string;
-    title: string;
-    author: string;
-    publisher: string;
-    publicationYear: number;
-    isbn?: string;
-    type: string;
-    image?: string;
-  };
-  member?: {
-    id: string;
-    nimNidn: string;
-    user?: {
-      name: string;
-    };
-  };
-}
+
 
 interface ReservationListProps {
   isOpen: boolean;
@@ -40,65 +16,45 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'waiting' | 'fulfilled' | 'canceled'>('all');
+  const toast = useToast();
+
+  const fetchUserReservations = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await reservationService.getMyReservations();
+      setReservations(data);
+      
+    } catch (error) {
+      console.error('Error fetching reservations:', error);
+      const errMsg = error instanceof Error ? error.message : 'Gagal memuat daftar reservasi';
+      setError(errMsg);
+      toast.error('Gagal', errMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  const handleCancel = async (reservationId: string) => {
+    if (!confirm('Apakah Anda yakin ingin membatalkan reservasi ini?')) return;
+
+    try {
+      const loadingId = toast.loading('Memproses', 'Membatalkan reservasi...');
+      await reservationService.cancelReservation(reservationId);
+      toast.removeToast(loadingId);
+      toast.success('Berhasil', 'Reservasi telah dibatalkan');
+      fetchUserReservations(); // Refresh list
+    } catch (error) {
+      toast.error('Gagal', error instanceof Error ? error.message : 'Terjadi kesalahan saat membatalkan reservasi');
+    }
+  };
 
   useEffect(() => {
     if (isOpen && memberId) {
       fetchUserReservations();
     }
-  }, [isOpen, memberId]);
-
-  const fetchUserReservations = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Sesuaikan endpoint dengan schema backend
-      // Coba beberapa kemungkinan endpoint:
-      
-      // Kemungkinan 1: /api/reservations?memberId={memberId}
-      const response = await fetch(`${API_BASE_URL}/api/reservations?memberId=${memberId}`);
-      
-      if (!response.ok) {
-        // Kemungkinan 2: /api/reservations/member/{memberId}
-        const response2 = await fetch(`${API_BASE_URL}/api/reservations/member/${memberId}`);
-        if (!response2.ok) {
-          // Kemungkinan 3: /api/members/{memberId}/reservations
-          const response3 = await fetch(`${API_BASE_URL}/api/members/${memberId}/reservations`);
-          if (!response3.ok) {
-            throw new Error('Gagal memuat reservasi');
-          }
-          const data3 = await response3.json();
-          processReservationData(data3);
-          return;
-        }
-        const data2 = await response2.json();
-        processReservationData(data2);
-        return;
-      }
-      
-      const data = await response.json();
-      processReservationData(data);
-      
-    } catch (error) {
-      console.error('Error fetching reservations:', error);
-      setError('Gagal memuat daftar reservasi');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const processReservationData = (data: any) => {
-    // Sesuaikan dengan struktur response API
-    if (data.success && Array.isArray(data.data)) {
-      setReservations(data.data);
-    } else if (Array.isArray(data)) {
-      setReservations(data);
-    } else if (data.data && Array.isArray(data.data)) {
-      setReservations(data.data);
-    } else {
-      setReservations([]);
-    }
-  };
+  }, [isOpen, memberId, fetchUserReservations]);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -197,7 +153,7 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'all' | 'waiting' | 'fulfilled' | 'canceled')}
                 className={`px-4 py-2 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-red-50 text-red-700'
@@ -244,7 +200,7 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
                   <div key={res.id} className="bg-slate-50 rounded-2xl p-4 hover:bg-slate-100 transition-colors">
                     <div className="flex gap-4">
                       {/* Book Cover */}
-                      <div className="w-16 h-20 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
+                      <div className="w-16 h-20 rounded-lg bg-slate-200 overflow-hidden shrink-0">
                         {res.collection?.image ? (
                           <img 
                             src={res.collection.image} 
@@ -295,12 +251,25 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
                           )}
                         </div>
 
-                        {/* Status Description */}
-                        <p className="text-[10px] text-slate-400 mt-2">
-                          Status: <span className="font-medium text-slate-600">
-                            {getStatusText(res.status)}
-                          </span>
-                        </p>
+                        <div className="flex items-center justify-between mt-3">
+                          <p className="text-[10px] text-slate-400">
+                            Status: <span className="font-medium text-slate-600">
+                              {getStatusText(res.status)}
+                            </span>
+                          </p>
+                          
+                          {res.status === 'waiting' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancel(res.id);
+                              }}
+                              className="text-[10px] font-bold text-red-600 hover:text-red-700 underline underline-offset-2"
+                            >
+                              Batalkan
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

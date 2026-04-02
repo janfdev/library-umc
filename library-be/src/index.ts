@@ -9,6 +9,7 @@ import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
 import { generalLimiter } from "./middlewares/rateLimiter";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { initCronJobs } from "./cron/fineScheduler";
 
 dotenv.config();
 
@@ -46,7 +47,6 @@ app.all("/api/auth/*path", toNodeHandler(auth));
 // Routes
 app.use("/api", routes);
 
-
 app.get("/", (req, res) => {
   res.redirect("/docs");
 });
@@ -61,4 +61,5 @@ app.use(errorMiddleware);
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`SERVER RUNNING ON PORT ${PORT}`);
+  initCronJobs();
 });

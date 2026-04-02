@@ -7,11 +7,42 @@ export const getPopularBooksQuerySchema = z.object({
 export const exportLoansQuerySchema = z.object({
   format: z.enum(["csv", "pdf"]).optional().default("csv"),
   status: z.string().optional(),
-  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)").optional(),
-  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)").optional(),
+  from: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)",
+    )
+    .optional(),
+  to: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)",
+    )
+    .optional(),
 });
 
 export const exportFinesQuerySchema = z.object({
   format: z.enum(["csv", "pdf"]).optional().default("csv"),
   status: z.string().optional(),
+  month: z
+    .string()
+    .regex(/^(0?[1-9]|1[0-2])$/, "Bulan harus 1-12")
+    .optional(),
+  year: z
+    .string()
+    .regex(/^\d{4}$/, "Tahun harus 4 digit")
+    .optional(),
+});
+
+export const finesRevenueSummaryQuerySchema = z.object({
+  month: z
+    .string()
+    .regex(/^(0?[1-9]|1[0-2])$/, "Bulan harus 1-12")
+    .optional(),
+  year: z
+    .string()
+    .regex(/^\d{4}$/, "Tahun harus 4 digit")
+    .optional(),
 });

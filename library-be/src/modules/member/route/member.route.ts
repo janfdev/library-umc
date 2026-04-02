@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { isAuthenticated } from "../../../middlewares/auth.middleware";
+import {
+  isAuthenticated,
+  requireRole
+} from "../../../middlewares/auth.middleware";
 import { MemberController } from "../controller/member.controller";
 
 const router = Router();
@@ -59,4 +62,38 @@ router.get("/members/me", isAuthenticated, memberController.getMyProfile);
  *               $ref: '#/components/schemas/Member'
  */
 router.patch("/members/me", isAuthenticated, memberController.updateMyProfile);
+
+router.get(
+  "/members/me/card",
+  isAuthenticated,
+  memberController.getMyMemberCard
+);
+
+router.post(
+  "/members/me/card/request",
+  isAuthenticated,
+  memberController.requestMyMemberCard
+);
+
+router.get(
+  "/members/cards/pending",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  memberController.getPendingCardRequests
+);
+
+router.patch(
+  "/members/:id/card/approve",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  memberController.approveMemberCard
+);
+
+router.patch(
+  "/members/:id/card/reject",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  memberController.rejectMemberCard
+);
+
 export const memberRoutes = router;

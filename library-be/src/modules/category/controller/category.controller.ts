@@ -1,182 +1,92 @@
-import { type Request, type Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import { CategoryService } from "../service/category.service";
 import {
   createCategorySchema,
   updateCategorySchema,
 } from "../validation/category.validation";
+import {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} from "../../../utils/api-utils";
 
 const categoryService = new CategoryService();
 
 export class CategoryController {
-  /**
-   * Get All Categories
-   */
-  async getAllCategories(req: Request, res: Response) {
+  async getAllCategories(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await categoryService.getAllCategories();
       res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[CategoryController] Error getting categories:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+    } catch (error) {
+      next(error);
     }
   }
 
-  /**
-   * Get Category By ID
-   */
-  async getCategoryById(req: Request, res: Response) {
+  async getCategoryById(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as { id: string };
-      const categoryId = parseInt(id);
-
-      if (isNaN(categoryId)) {
-        res.status(400).json({
-          success: false,
-          message: "Invalid Category ID",
-        });
-        return;
-      }
+      const categoryId = parseInt(String(req.params.id));
+      if (isNaN(categoryId)) return sendError(res, "ID kategori tidak valid", 400);
 
       const result = await categoryService.getCategoryById(categoryId);
-      if (!result.success) {
-        res.status(404).json(result);
-        return;
-      }
+      if (!result.success) return sendError(res, result.message ?? "Kategori tidak ditemukan", 404);
 
-      res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[CategoryController] Error getting category by ID:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Data kategori berhasil diambil", result.data);
+    } catch (error) {
+      next(error);
     }
   }
 
-  /**
-   * Create New Category (Admin Only)
-   */
-  async createCategory(req: Request, res: Response) {
+  async createCategory(req: Request, res: Response, next: NextFunction) {
     try {
-      // Role Validation handled in middleware
       const validation = createCategorySchema.safeParse(req.body);
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
 
-      if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
-      }
+      const userId = req.user?.id ?? "";
+      const ipAddress = req.ip ?? "";
 
-      const userId = (req as any).user?.id || "";
-      const ipAddress = req.ip || "";
-
-      const result = await categoryService.createCategory(
-        validation.data as any,
-        userId,
-        ipAddress,
-      );
-      res.status(201).json(result);
-    } catch (err: any) {
-      console.error("[CategoryController] Error creating category:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await categoryService.createCategory(validation.data as any, userId, ipAddress);
+      sendSuccess(res, "Kategori berhasil dibuat", result.data, 201);
+    } catch (error) {
+      next(error);
     }
   }
 
-  /**
-   * Update Category (Admin Only)
-   */
-  async updateCategory(req: Request, res: Response) {
+  async updateCategory(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as { id: string };
-      const categoryId = parseInt(id);
-
-      if (isNaN(categoryId)) {
-        res.status(400).json({
-          success: false,
-          message: "Invalid Category ID",
-        });
-        return;
-      }
+      const categoryId = parseInt(String(req.params.id));
+      if (isNaN(categoryId)) return sendError(res, "ID kategori tidak valid", 400);
 
       const validation = updateCategorySchema.safeParse(req.body);
-      if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
-      }
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
 
-      const userId = (req as any).user?.id || "";
-      const ipAddress = req.ip || "";
+      const userId = req.user?.id ?? "";
+      const ipAddress = req.ip ?? "";
 
-      const result = await categoryService.updateCategory(
-        categoryId,
-        validation.data as any,
-        userId,
-        ipAddress,
-      );
-      if (!result.success) {
-        res.status(404).json(result);
-        return;
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await categoryService.updateCategory(categoryId, validation.data as any, userId, ipAddress);
+      if (!result.success) return sendError(res, result.message ?? "Kategori tidak ditemukan", 404);
 
-      res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[CategoryController] Error updating category:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Kategori berhasil diperbarui", result.data);
+    } catch (error) {
+      next(error);
     }
   }
 
-  /**
-   * Delete Category (Admin Only)
-   */
-  async deleteCategory(req: Request, res: Response) {
+  async deleteCategory(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as { id: string };
-      const categoryId = parseInt(id);
+      const categoryId = parseInt(String(req.params.id));
+      if (isNaN(categoryId)) return sendError(res, "ID kategori tidak valid", 400);
 
-      if (isNaN(categoryId)) {
-        res.status(400).json({
-          success: false,
-          message: "Invalid Category ID",
-        });
-        return;
-      }
+      const userId = req.user?.id ?? "";
+      const ipAddress = req.ip ?? "";
 
-      const userId = (req as any).user?.id || "";
-      const ipAddress = req.ip || "";
+      const result = await categoryService.deleteCategory(categoryId, userId, ipAddress);
+      if (!result.success) return sendError(res, result.message ?? "Kategori tidak ditemukan", 404);
 
-      const result = await categoryService.deleteCategory(
-        categoryId,
-        userId,
-        ipAddress,
-      );
-      if (!result.success) {
-        res.status(404).json(result);
-        return;
-      }
-
-      res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[CategoryController] Error deleting category:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Kategori berhasil dihapus", null);
+    } catch (error) {
+      next(error);
     }
   }
 }

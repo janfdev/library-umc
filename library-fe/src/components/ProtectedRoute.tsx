@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({
   children,
-  requiredRole = "super_admin",
+  requiredRole = "super_admin"
 }: ProtectedRouteProps) {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
@@ -32,16 +32,9 @@ export default function ProtectedRoute({
     }
   }, [session, isPending, navigate, requiredRole]);
 
-  // Show loading state
+  // Avoid double loading UI; page-level skeleton handles content loading.
   if (isPending) {
-    return (
-      <div className="min-h-screen bg-[#030304] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#F7931A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#94A3B8] font-mono">Loading...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Not authorized

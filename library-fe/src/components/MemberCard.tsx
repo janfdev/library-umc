@@ -1,123 +1,79 @@
-import { useState } from "react";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer } from 'lucide-react';
+import { type MemberProfile } from '@/services/memberService';
 
 interface MemberCardProps {
-  name: string;
-  nim: string;
-  category?: string;
-  major: string;
-  validUntil?: string; // ✅ Tambahkan
-  status?: string;     // ✅ Tambahkan
-  profileImage?: string;
-  onPrint?: () => void;
-  onSave?: () => void;
+  profile: MemberProfile | null;
 }
 
-const MemberCard = ({
-  name = "Rizqi Noor Fauzan",
-  nim = "202400000", // ✅ Default value untuk nim
-  category = "Mahasiswa",
-  major = "Teknik Informatika",
-  profileImage,
-  onPrint = () => {},
-  onSave = () => {}
-}: MemberCardProps) => {
-  const [isPrinting, setIsPrinting] = useState(false);
+const MemberCard = ({ profile }: MemberCardProps) => {
+  if (!profile) return null;
 
-  const handlePrint = () => {
-    setIsPrinting(true);
-    onPrint();
-    setTimeout(() => setIsPrinting(false), 2000);
-  };
+  const user = profile.user;
+  const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'U';
 
   return (
-    <div className="max-w-2xl mx-auto p-4 flex flex-col items-center gap-6">
-      {/* Container Kartu Utama */}
-      <div className="w-full aspect-[1.6/1] bg-white rounded-[24px] shadow-xl border-2 border-blue-400 overflow-hidden flex flex-col">
+    <div className="flex flex-col items-center gap-10 py-10">
+      {/* Front of the card as shown in mockup */}
+      <div className="w-[450px] aspect-[1.6/1] bg-white rounded-[24px] shadow-2xl relative overflow-hidden border border-slate-100 animate-slide-up">
         
-        {/* Header Merah Melengkung */}
-        <div className="bg-[#B21F24] p-4 flex items-center gap-3 relative">
-          {/* Logo UMC Placeholder */}
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden border border-white/20">
-            <div className="bg-red-600 w-8 h-8 rounded-full flex items-center justify-center text-[8px] text-white font-bold">UMC</div>
-          </div>
-          <div>
-            <h2 className="text-white font-bold text-lg leading-tight uppercase tracking-tight">UMC Library</h2>
-            <p className="text-white/80 text-[10px] font-medium uppercase tracking-wider italic">Digital Library System</p>
-          </div>
-          
-          {/* ✅ NIM ditampilkan di pojok kanan header - sesuai desain asli */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-right">
-            <p className="text-white/90 text-[9px] font-medium uppercase tracking-wider">NIM</p>
-            <p className="text-white font-mono text-xs font-bold mt-0.5">{nim}</p>
-          </div>
+        {/* Card Header (Red) */}
+        <div className="bg-[#9c1b1b] p-4 flex items-center gap-3">
+           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#9c1b1b] font-bold text-xs italic border border-white/20 shadow-inner">UMC</div>
+           <div className="leading-tight">
+              <h3 className="text-white font-bold text-[11px] uppercase tracking-[0.15em]">UMC Library</h3>
+              <p className="text-white/60 text-[8px] font-black uppercase tracking-tighter">Digital Library System</p>
+           </div>
         </div>
 
-        {/* Konten Utama */}
-        <div className="flex-1 flex items-center px-10 gap-10">
-          {/* Foto Profil */}
-          <div className="w-32 h-40 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 shadow-inner">
-            {profileImage ? (
-              <img src={profileImage} alt={name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                <div className="w-20 h-24 bg-gray-400 rounded-md"></div>
-              </div>
-            )}
-          </div>
+        {/* Card Content Area */}
+        <div className="p-8 flex gap-6">
+           {/* Member Info */}
+           <div className="shrink-0 w-24 h-32 bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-50">
+              {user?.image ? (
+                <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 font-bold text-3xl">
+                   {initials}
+                </div>
+              )}
+           </div>
 
-          {/* Informasi Anggota */}
-          <div className="flex-1 flex flex-col gap-1">
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
-              {name}
-            </h3>
-            <p className="text-[#B21F24] font-bold text-sm">
-              {category}
-            </p>
-            <p className="text-slate-800 font-bold text-sm tracking-tight">
-              {major}
-            </p>
-          </div>
+           {/* User Meta */}
+           <div className="flex-1 flex flex-col justify-center pt-2">
+              <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-tight mb-0.5">{user?.name}</h4>
+              <p className="text-red-700 text-[10px] font-black uppercase tracking-widest">{profile.memberType}</p>
+              <p className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">{profile.faculty || "Teknik Informatika"}</p>
+           </div>
         </div>
 
-        {/* Barcode Area */}
-        <div className="px-8 pb-6">
-          <div className="w-full h-20 bg-[#0F172A] rounded-xl flex flex-col items-center justify-center p-3">
-            {/* Simulasi Garis Barcode */}
-            <div className="w-full h-full flex items-end justify-center gap-[2px] bg-white p-2 rounded-sm overflow-hidden">
-              {[...Array(40)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className="bg-black h-full" 
-                  style={{ width: `${Math.random() * 4 + 1}px` }}
-                ></div>
-              ))}
-            </div>
-          </div>
+        {/* Barcode Section as in mockup */}
+        <div className="mx-6 mb-6">
+           <div className="w-full h-12 bg-slate-900 rounded-xl relative shadow-inner shadow-black/20 overflow-hidden">
+              <div 
+                className="absolute inset-0 opacity-80"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(90deg, #fff, #fff 1px, transparent 1px, transparent 4px)`
+                }}
+              />
+           </div>
         </div>
       </div>
 
-      {/* Tombol Aksi Bawah */}
-      <div className="flex gap-4">
-        <button
-          onClick={onSave}
-          className="flex items-center gap-2 bg-[#0F172A] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all active:scale-95"
-        >
-          <Download size={18} />
-          Simpan Gambar
-        </button>
-        <button
-          onClick={handlePrint}
-          disabled={isPrinting}
-          className="flex items-center gap-2 bg-white border-2 border-slate-100 text-slate-700 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {isPrinting ? (
-            <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-800 rounded-full animate-spin" />
-          ) : (
-            <Printer size={18} />
-          )}
-          Cetak Kartu
-        </button>
+      {/* Buttons and Footer */}
+      <div className="flex flex-col items-center gap-6">
+         <div className="flex gap-4">
+            <button className="flex items-center gap-3 bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200">
+               <Download size={14} className="text-red-500" />
+               Simpan Gambar
+            </button>
+            <button className="flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 shadow-sm">
+               <Printer size={14} className="text-red-500" />
+               Cetak Kartu
+            </button>
+         </div>
+         <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest max-w-[400px] text-center leading-relaxed italic">
+            *Tunjukan kartu-barcode di atas kepada petugas perpustakaan saat melakukan peminjaman buku
+         </p>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 // src/components/dashboard/CollectionsSection.tsx
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { Plus, Edit, Trash2, Search, ChevronDown, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ChevronDown, ChevronLeft, ChevronRight, BookOpen, Eye } from "lucide-react";
 import AddCollectionModal from "./AddCollectionModal";
+import ViewCollectionModal from "./collections/ViewCollectionModal";
 
 interface Collection {
   id: string;
@@ -11,9 +11,13 @@ interface Collection {
   publisher: string;
   publicationYear: string;
   type: string;
-  category: {
+  category?: {
+    id: string;
     name: string;
   };
+  categoryId?: string;
+  isbn?: string;
+  stock: number;
   image: string | null;
 }
 
@@ -32,8 +36,25 @@ export default function CollectionsSection({
   onDelete,
   onRefresh
 }: CollectionsSectionProps) {
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [editingCollection, setEditingCollection] = useState<any | null>(null);
+  const [viewingCollection, setViewingCollection] = useState<any | null>(null);
+
+  const openAddModal = () => {
+    setEditingCollection(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (collection: any) => {
+    setEditingCollection(collection);
+    setIsModalOpen(true);
+  };
+
+  const openViewModal = (collection: any) => {
+    setViewingCollection(collection);
+    setIsViewModalOpen(true);
+  };
 
   const filteredCollections = collections.filter(
     (item) =>
@@ -52,7 +73,7 @@ export default function CollectionsSection({
           </p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAddModal}
           className="bg-[#B91C1C] hover:bg-[#9a1b1b] text-white px-6 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all"
         >
           <Plus size={18} strokeWidth={2.5} /> Tambah Buku Baru
@@ -102,11 +123,9 @@ export default function CollectionsSection({
                   </td>
                 </tr>
               ) : (
-                filteredCollections.map((collection, idx) => {
-                  // Mockup data untuk menyelaraskan desain dengan screenshot
-                  const mockIsbn = "978602030112" + (idx % 10);
-                  const mockStock = idx === 3 ? 0 : 5 + (idx * 3);
-                  const statusInfo = mockStock === 0 
+                filteredCollections.map((collection) => {
+                  const stockValue = Number(collection.stock) || 0;
+                  const statusInfo = stockValue === 0 
                     ? { bg: "bg-orange-50", text: "text-orange-500", label: "Dipinjam" }
                     : { bg: "bg-[#ecfdf5]", text: "text-[#10b981]", label: "Tersedia" };
 
@@ -119,15 +138,15 @@ export default function CollectionsSection({
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-[13px] font-medium text-slate-500">{mockIsbn}</span>
+                        <span className="text-[13px] font-medium text-slate-500">{collection.isbn || "-"}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-[13px] font-semibold text-[#3b82f6]/80 capitalize">
-                          {collection.category?.name || "Umum"}
+                          {collection.category?.name || "Tanpa Kategori"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-[14px] font-bold text-slate-700">{mockStock}</span>
+                        <span className="text-[14px] font-bold text-slate-700">{stockValue}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className={`inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide ${statusInfo.bg} ${statusInfo.text}`}>
@@ -137,15 +156,22 @@ export default function CollectionsSection({
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
                           <button 
-                            onClick={() => navigate(`/dashboard/collections/edit/${collection.id}`)} 
-                            className="p-2 text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-lg transition-all"
+                            onClick={() => openViewModal(collection)} 
+                            className="p-2 text-slate-400 hover:text-[#B91C1C] hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all"
+                            title="Lihat Detail"
+                          >
+                            <Eye size={16} strokeWidth={2.5} />
+                          </button>
+                          <button 
+                            onClick={() => openEditModal(collection)} 
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-lg transition-all"
                             title="Edit Data"
                           >
                             <Edit size={16} strokeWidth={2.5} />
                           </button>
                           <button 
                             onClick={() => onDelete(collection.id, collection.title)} 
-                            className="p-2 text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all"
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all"
                             title="Hapus Data"
                           >
                             <Trash2 size={16} strokeWidth={2.5} />
@@ -183,6 +209,13 @@ export default function CollectionsSection({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onRefresh={onRefresh}
+        collection={editingCollection}
+      />
+
+      <ViewCollectionModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        collection={viewingCollection}
       />
     </div>
   );

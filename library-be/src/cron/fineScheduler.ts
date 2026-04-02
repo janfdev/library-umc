@@ -121,6 +121,9 @@ export function initCronJobs(): void {
     `[Scheduler] 🕐 Denda scheduler aktif. Akan berjalan pertama kali dalam ${Math.round(msUntilFirst / 1000 / 60)} menit (di jam ${hh}:${mm}).`,
   );
 
+  // Jalankan sekali saat startup agar nominal denda langsung sinkron.
+  void checkAndUpdateFines();
+
   // Tunggu sampai jadwal pertama, lalu jalankan & set interval 24 jam
   setTimeout(() => {
     // Jalankan pertama kali

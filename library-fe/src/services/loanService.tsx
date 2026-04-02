@@ -20,8 +20,20 @@ export interface Loan {
   notes?: string;
   rejectReason?: string;
   fine?: number;
+  verificationToken?: string;
+  qrCodeUrl?: string;
   member?: Record<string, unknown>;
-  item?: Record<string, unknown>;
+  item?: {
+    id: string;
+    collectionId: string;
+    status: string;
+    collection: {
+      id: string;
+      title: string;
+      author: string;
+      image?: string;
+    }
+  } & Record<string, unknown>;
 }
 
 class LoanService {
@@ -30,9 +42,9 @@ class LoanService {
   // POST /loans/request - Request a book loan (Member)
   async requestLoan(data: {
     memberId: string;
-    itemId: string;       // ✅ ganti dari collectionId → itemId
-    loanDate: string;     // ✅ ganti dari startDate → loanDate
-    dueDate: string;      // ✅ ganti dari endDate → dueDate
+    collectionId: string;
+    loanDate: string;
+    dueDate: string;
     notes?: string;
   }): Promise<Loan> {
     const response = await fetch(`${this.baseUrl}/api/loans/request`, {
@@ -50,12 +62,12 @@ class LoanService {
   async getAllLoans(params?: {
     status?: string;
     memberId?: string;
-    itemId?: string;      // ✅ ganti dari collectionId → itemId
+    itemId?: string;
   }): Promise<Loan[]> {
     const queryParams = new URLSearchParams();
     if (params?.status) queryParams.append('status', params.status);
     if (params?.memberId) queryParams.append('memberId', params.memberId);
-    if (params?.itemId) queryParams.append('itemId', params.itemId); // ✅
+    if (params?.itemId) queryParams.append('itemId', params.itemId);
 
     const url = `${this.baseUrl}/api/loans${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await fetch(url, { credentials: 'include' });
@@ -119,6 +131,19 @@ class LoanService {
     if (!result.success) throw new Error(result.message || 'Token tidak valid');
     return result.data;
   }
+
+  // POST /api/loans/{loanId}/extend - Extend a book loan (Member)
+  async extendLoan(loanId: string): Promise<{ success: boolean; message: string; data: unknown }> {
+    const response = await fetch(`${this.baseUrl}/api/loans/${loanId}/extend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || "Gagal memperpanjang peminjaman");
+    return result;
+  }
 }
+
 
 export default new LoanService();

@@ -1,150 +1,116 @@
-import { type Request, type Response } from "express";
+import { type NextFunction, type Request, type Response } from "express";
 import { ItemService } from "../service/item.service";
 import {
   createItemSchema,
   updateItemSchema,
 } from "../validation/item.validation";
+import {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} from "../../../utils/api-utils";
 
 const itemService = new ItemService();
 
 export class ItemController {
   /**
-   * Get All Items (Public or Auth User)
-   * Optionally filter by collectionId ?collectionId=...
+   * GET /items — Ambil semua item fisik (opsional filter ?collectionId=)
    */
-  async getAllItems(req: Request, res: Response) {
+  async getAllItems(req: Request, res: Response, next: NextFunction) {
     try {
       const { collectionId } = req.query;
       const result = await itemService.getAllItems(collectionId as string);
 
       res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[ItemController] Error getting items:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+    } catch (error) {
+      next(error);
     }
   }
 
   /**
-   * Get Item By ID
+   * GET /items/:id — Ambil item berdasarkan ID
    */
-  async getItemById(req: Request, res: Response) {
+  async getItemById(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as { id: string };
-      const result = await itemService.getItemById(id);
+      const result = await itemService.getItemById(String(req.params.id));
 
       if (!result.success) {
-        res.status(404).json(result);
-        return;
+        return sendError(res, result.message ?? "Item tidak ditemukan", 404);
       }
 
-      res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[ItemController] Error getting item by ID:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Data item berhasil diambil", result.data);
+    } catch (error) {
+      next(error);
     }
   }
 
   /**
-   * Create Item (Admin/Staff Only)
+   * POST /items — Buat item baru (Admin/Staff)
    */
-  async createItem(req: Request, res: Response) {
+  async createItem(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = createItemSchema.safeParse(req.body);
-
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const result = await itemService.createItem(validation.data as any);
 
       if (!result.success) {
-        res.status(400).json(result); // Generic bad request (e.g. barcode exists)
-        return;
+        return sendError(res, result.message ?? "Gagal membuat item", 400);
       }
 
-      res.status(201).json(result);
-    } catch (err: any) {
-      console.error("[ItemController] Error creating item:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Item berhasil dibuat", result.data, 201);
+    } catch (error) {
+      next(error);
     }
   }
 
   /**
-   * Update Item (Admin/Staff Only)
+   * PATCH /items/:id — Update item (Admin/Staff)
    */
-  async updateItem(req: Request, res: Response) {
+  async updateItem(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as { id: string };
       const validation = updateItemSchema.safeParse(req.body);
-
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
-        return;
+        return sendValidationError(res, validation.error.flatten());
       }
 
-      const result = await itemService.updateItem(id, validation.data as any);
+      const result = await itemService.updateItem(
+        String(req.params.id),
+        validation.data as any,
+      );
 
       if (!result.success) {
-        if (result.message === "Item not found") {
-          res.status(404).json(result);
-          return;
-        }
-        res.status(400).json(result);
-        return;
+        const status = result.message === "Item not found" ? 404 : 400;
+        return sendError(
+          res,
+          result.message ?? "Gagal memperbarui item",
+          status,
+        );
       }
 
-      res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[ItemController] Error updating item:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Item berhasil diperbarui", result.data);
+    } catch (error) {
+      next(error);
     }
   }
 
   /**
-   * Delete Item (Admin/Staff Only)
+   * DELETE /items/:id — Hapus item (Admin/Staff)
    */
-  async deleteItem(req: Request, res: Response) {
+  async deleteItem(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as { id: string };
-      const result = await itemService.deleteItem(id);
+      const result = await itemService.deleteItem(String(req.params.id));
 
       if (!result.success) {
-        if (result.message === "Item not found") {
-          res.status(404).json(result);
-          return;
-        }
-        res.status(400).json(result);
-        return;
+        const status = result.message === "Item not found" ? 404 : 400;
+        return sendError(res, result.message ?? "Gagal menghapus item", status);
       }
 
-      res.status(200).json(result);
-    } catch (err: any) {
-      console.error("[ItemController] Error deleting item:", err);
-      res.status(500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-      });
+      sendSuccess(res, "Item berhasil dihapus", null);
+    } catch (error) {
+      next(error);
     }
   }
 }

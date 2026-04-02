@@ -59,7 +59,13 @@ export interface Loan {
   endDate: string;
   purpose: string;
   notes?: string;
-  status: "pending" | "approved" | "rejected" | "active" | "returned" | "overdue";
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "active"
+    | "returned"
+    | "overdue";
   requestDate: string;
   approvedBy?: string;
   approvedDate?: string;
@@ -71,7 +77,8 @@ export interface DashboardStats {
   totalCategories: number;
   totalGuests: number;
   activeBorrowings?: number;
-  totalFines?: number;
+  outstandingFines?: number;
+  totalFineRevenue?: number;
 }
 
 export type ActiveMenu =

@@ -1,8 +1,87 @@
 import { type Request, type Response, type NextFunction } from "express";
 import finesService from "../service/fines.service";
-import { getFinesQuerySchema, createFineSchema, payFineSchema } from "../validation/fines.validation";
+import { MemberService } from "../../member/service/member.service";
+import {
+  getFinesQuerySchema,
+  createFineSchema,
+  payFineSchema,
+  auditPaidFinesQuerySchema
+} from "../validation/fines.validation";
+
+const memberService = new MemberService();
 
 class FinesController {
+  async getMyFines(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({
+          success: false,
+          message: "Tidak terautentikasi",
+          data: null
+        });
+      }
+
+      const memberRes = await memberService.getMemberByUserId(req.user.id);
+      if (!memberRes.success || !memberRes.data?.id) {
+        return res.status(200).json({
+          success: true,
+          message: "Member belum tersedia",
+          data: []
+        });
+      }
+
+      const validation = getFinesQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation Error",
+          data: validation.error.flatten()
+        });
+      }
+
+      const { status, loanId, limit, offset } = validation.data;
+      const result = await finesService.getAllFines({
+        status: status as "paid" | "unpaid",
+        loanId,
+        memberId: String(memberRes.data.id),
+        limit: limit ? Number(limit) : undefined,
+        offset: offset ? Number(offset) : undefined
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPaidFinesWithNonReturnedLoans(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const validation = auditPaidFinesQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation Error",
+          data: validation.error.flatten()
+        });
+      }
+
+      const { limit, offset } = validation.data;
+
+      const result = await finesService.getPaidFinesWithNonReturnedLoans({
+        limit: limit ? Number(limit) : undefined,
+        offset: offset ? Number(offset) : undefined
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAllFines(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = getFinesQuerySchema.safeParse(req.query);
@@ -10,7 +89,7 @@ class FinesController {
         return res.status(400).json({
           success: false,
           message: "Validation Error",
-          data: validation.error.flatten(),
+          data: validation.error.flatten()
         });
       }
 
@@ -20,7 +99,7 @@ class FinesController {
         status: status as "paid" | "unpaid",
         loanId,
         limit: limit ? Number(limit) : undefined,
-        offset: offset ? Number(offset) : undefined,
+        offset: offset ? Number(offset) : undefined
       });
 
       if (!result.success) {
@@ -56,16 +135,13 @@ class FinesController {
         return res.status(400).json({
           success: false,
           message: "Validation Error",
-          data: validation.error.flatten(),
+          data: validation.error.flatten()
         });
       }
 
       const { loanId, amount } = validation.data;
 
-      const result = await finesService.createFineManual(
-        loanId,
-        amount,
-      );
+      const result = await finesService.createFineManual(loanId, amount);
 
       if (!result.success) {
         return res.status(404).json(result);
@@ -86,16 +162,16 @@ class FinesController {
         return res.status(400).json({
           success: false,
           message: "Validation Error",
-          data: validation.error.flatten(),
+          data: validation.error.flatten()
         });
       }
-      
+
       const { paymentMethod } = validation.data;
 
       const result = await finesService.payFine(
         id as string,
         adminId as string,
-        paymentMethod,
+        paymentMethod
       );
 
       if (!result.success) {

@@ -239,4 +239,35 @@ router.get(
   loanController.getMyLoans,
 );
 
+/**
+ * @swagger
+ * /loans/{loanId}/extend:
+ *   post:
+ *     summary: Extend a book loan
+ *     description: Member extends their current loan by 7 days. Limit 1x, only if not overdue and no reservations.
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Loan ID
+ *     responses:
+ *       200:
+ *         description: Loan extended
+ *       400:
+ *         description: Cannot extend (overdue, reserved, or already extended)
+ *       401:
+ *         description: Unauthorized
+ */
+router.post(
+  "/loans/:loanId/extend",
+  publicApiLimiter,
+  isAuthenticated,
+  loanController.extendLoan,
+);
+
 export const loanRoutes = router;

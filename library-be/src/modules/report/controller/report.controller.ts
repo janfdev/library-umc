@@ -1,18 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type Request, type Response, type NextFunction } from "express";
 import reportService from "../service/report.service";
-import { 
-  getPopularBooksQuerySchema, 
-  exportLoansQuerySchema, 
-  exportFinesQuerySchema 
+import {
+  getPopularBooksQuerySchema,
+  exportLoansQuerySchema,
+  exportFinesQuerySchema,
+  finesRevenueSummaryQuerySchema,
 } from "../validation/report.validation";
+import { sendValidationError } from "../../../utils/api-utils";
 
 class ReportController {
+  private getMonthName(month: number): string {
+    const monthNames = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+    return monthNames[month - 1] ?? String(month);
+  }
+
   // GET /reports/dashboard
   async getDashboardStats(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await reportService.getDashboardStats();
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -23,16 +43,12 @@ class ReportController {
     try {
       const validation = getPopularBooksQuerySchema.safeParse(req.query);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const limit = validation.data.limit ? Number(validation.data.limit) : 10;
       const result = await reportService.getPopularBooks(limit);
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -42,7 +58,7 @@ class ReportController {
   async getGuestStats(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await reportService.getGuestStats();
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -53,11 +69,7 @@ class ReportController {
     try {
       const validation = exportLoansQuerySchema.safeParse(req.query);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
       const { format, status, from, to } = validation.data;
@@ -98,7 +110,7 @@ class ReportController {
       }
 
       // Default: CSV
-      return reportService.exportToCSV(res, "laporan-peminjaman", rows, [
+      return reportService.exportToCSV(res, "Laporan Peminjaman", rows, [
         { key: "memberName", header: "Nama Peminjam" },
         { key: "memberEmail", header: "Email" },
         { key: "bookTitle", header: "Judul Buku" },
@@ -118,60 +130,94 @@ class ReportController {
     try {
       const validation = exportFinesQuerySchema.safeParse(req.query);
       if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation Error",
-          data: validation.error.flatten(),
-        });
+        return sendValidationError(res, validation.error.flatten());
       }
 
-      const { format, status } = validation.data;
+      const { format, status, month, year } = validation.data;
 
-      const { data } = await reportService.getFinesReport({
+      const numericMonth = month ? Number(month) : undefined;
+      const numericYear = year ? Number(year) : undefined;
+      const isMonthlyRevenueExport =
+        status === "paid" && !!numericMonth && !!numericYear;
+      const monthLabel = isMonthlyRevenueExport
+        ? this.getMonthName(numericMonth)
+        : null;
+
+      const finesReportName = isMonthlyRevenueExport
+        ? `Laporan Pendapatan Denda Bulanan_${monthLabel}-${numericYear}`
+        : "Laporan Denda";
+
+      const { data } = await reportService.getFinesReportForAudit({
         status,
+        month: numericMonth,
+        year: numericYear,
       });
 
       const rows = data.map((fine) => ({
-        memberName: (fine as any).loan?.member?.user?.name ?? "-",
-        memberEmail: (fine as any).loan?.member?.user?.email ?? "-",
-        bookTitle: (fine as any).loan?.item?.collection?.title ?? "-",
+        memberName: (fine as any).memberName ?? "-",
+        memberEmail: (fine as any).memberEmail ?? "-",
+        bookTitle: (fine as any).bookTitle ?? "-",
         amount: `Rp ${Number((fine as any).amount).toLocaleString("id-ID")}`,
         status: (fine as any).status,
-        createdAt: (fine as any).createdAt
-          ? new Date((fine as any).createdAt).toLocaleDateString("id-ID")
+        createdAt: (fine as any).fineCreatedAt
+          ? new Date((fine as any).fineCreatedAt).toLocaleDateString("id-ID")
+          : "-",
+        paidAt: (fine as any).paidAt
+          ? new Date((fine as any).paidAt).toLocaleDateString("id-ID")
           : "-",
       }));
 
       if (format === "pdf") {
-        // Reuse loan PDF renderer with fines columns
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-          "Content-Disposition",
-          `attachment; filename="laporan-denda.pdf"`,
-        );
         const pdfRows = rows.map((r) => ({
           memberName: r.memberName,
           bookTitle: r.bookTitle,
           status: r.status,
-          borrowDate: r.createdAt,
-          dueDate: r.amount,
-          returnDate: null,
+          paidAt: r.paidAt !== "-" ? r.paidAt : r.createdAt,
+          amount: r.amount,
         }));
-        return reportService.exportLoansToPDF(
+        return reportService.exportFinesToPDF(
           res,
           pdfRows,
-          "Laporan Denda Peminjaman",
+          isMonthlyRevenueExport
+            ? `Laporan Pendapatan Denda Bulanan ${monthLabel} ${numericYear}`
+            : "Laporan Denda Peminjaman",
+          finesReportName,
         );
       }
 
-      return reportService.exportToCSV(res, "laporan-denda", rows, [
+      return reportService.exportToCSV(res, finesReportName, rows, [
         { key: "memberName", header: "Nama Member" },
         { key: "memberEmail", header: "Email" },
         { key: "bookTitle", header: "Judul Buku" },
         { key: "amount", header: "Jumlah Denda" },
         { key: "status", header: "Status Denda" },
         { key: "createdAt", header: "Tgl Denda Dibuat" },
+        { key: "paidAt", header: "Tgl Pembayaran" },
       ]);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /reports/fines/revenue?month=3&year=2026
+  async getFinesRevenueSummary(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const validation = finesRevenueSummaryQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+
+      const { month, year } = validation.data;
+      const result = await reportService.getFinesRevenueSummary({
+        month: month ? Number(month) : undefined,
+        year: year ? Number(year) : undefined,
+      });
+
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }

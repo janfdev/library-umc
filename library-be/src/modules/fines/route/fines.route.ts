@@ -1,9 +1,47 @@
 import { Router } from "express";
-import { isAuthenticated } from "../../../middlewares/auth.middleware";
+import {
+  isAuthenticated,
+  requireRole
+} from "../../../middlewares/auth.middleware";
 import { publicApiLimiter } from "../../../middlewares/rateLimiter";
 import FinesController from "../controller/fines.controller";
 
 const router = Router();
+
+/**
+ * @swagger
+ * /fines/audit/paid-active-loans:
+ *   get:
+ *     summary: Audit paid fines whose loans are not returned
+ *     tags: [Fines]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of records to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *         description: Number of records to skip
+ *     responses:
+ *       200:
+ *         description: Audit data retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin/Staff only
+ */
+router.get(
+  "/fines/audit/paid-active-loans",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  publicApiLimiter,
+  FinesController.getPaidFinesWithNonReturnedLoans
+);
 
 /**
  * @swagger
@@ -52,7 +90,14 @@ router.get(
   "/fines",
   isAuthenticated,
   publicApiLimiter,
-  FinesController.getAllFines,
+  FinesController.getAllFines
+);
+
+router.get(
+  "/fines/my",
+  isAuthenticated,
+  publicApiLimiter,
+  FinesController.getMyFines
 );
 
 /**
@@ -82,7 +127,7 @@ router.get(
   "/fines/:id",
   isAuthenticated,
   publicApiLimiter,
-  FinesController.getFineById,
+  FinesController.getFineById
 );
 
 /**
@@ -119,7 +164,7 @@ router.post(
   "/fines",
   isAuthenticated,
   publicApiLimiter,
-  FinesController.createFineManual,
+  FinesController.createFineManual
 );
 
 /**
@@ -163,7 +208,7 @@ router.post(
   "/fines/:id/pay",
   isAuthenticated,
   publicApiLimiter,
-  FinesController.payFine,
+  FinesController.payFine
 );
 
 /**
@@ -193,7 +238,7 @@ router.delete(
   "/fines/:id",
   isAuthenticated,
   publicApiLimiter,
-  FinesController.deleteFine,
+  FinesController.deleteFine
 );
 
 export default router;
