@@ -23,10 +23,10 @@ app.use(
     origin: [
       process.env.FRONTEND_URL || "http://localhost:5173",
       "http://localhost:4173",
-      "https://library-fe-one.vercel.app",
+      "https://library-fe-one.vercel.app"
     ],
-    credentials: true,
-  }),
+    credentials: true
+  })
 );
 app.use(express.json());
 
@@ -52,7 +52,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.status(200).send("OK");
+  res.status(200).send("API IS OK");
 });
 
 // Error Middleware (MuST be at the end)

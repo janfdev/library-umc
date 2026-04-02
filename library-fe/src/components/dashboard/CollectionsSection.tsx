@@ -1,6 +1,16 @@
 // src/components/dashboard/CollectionsSection.tsx
 import { useState } from "react";
-import { Plus, Edit, Trash2, Search, ChevronDown, ChevronLeft, ChevronRight, BookOpen, Eye } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  Eye
+} from "lucide-react";
 import AddCollectionModal from "./AddCollectionModal";
 import ViewCollectionModal from "./collections/ViewCollectionModal";
 
@@ -29,9 +39,9 @@ interface CollectionsSectionProps {
   onRefresh: () => void;
 }
 
-export default function CollectionsSection({ 
-  collections, 
-  searchTerm, 
+export default function CollectionsSection({
+  collections,
+  searchTerm,
   onSearchChange,
   onDelete,
   onRefresh
@@ -59,7 +69,7 @@ export default function CollectionsSection({
   const filteredCollections = collections.filter(
     (item) =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.author.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.author.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -67,12 +77,14 @@ export default function CollectionsSection({
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">Manajemen Koleksi</h2>
+          <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+            Manajemen Koleksi
+          </h2>
           <p className="text-slate-500 font-medium text-[15px] mt-1">
             Kelola data buku dan E-book.
           </p>
         </div>
-        <button 
+        <button
           onClick={openAddModal}
           className="bg-[#B91C1C] hover:bg-[#9a1b1b] text-white px-6 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all"
         >
@@ -85,10 +97,11 @@ export default function CollectionsSection({
         {/* Controls Bar */}
         <div className="p-6 flex flex-col sm:flex-row items-center justify-end gap-3 border-b border-slate-50">
           <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-sm font-bold transition-colors border border-slate-100">
-            Filter: <span className="font-medium text-slate-400">Tidak ada</span>
+            Filter:{" "}
+            <span className="font-medium text-slate-400">Tidak ada</span>
             <ChevronDown size={16} className="text-slate-400 ml-1" />
           </button>
-          
+
           <div className="relative w-full sm:w-[300px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
@@ -106,39 +119,82 @@ export default function CollectionsSection({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">BUKU</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">ISBN</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">KATEGORI</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">STOK</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">STATUS</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">AKSI</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  NO
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  BUKU
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  ISBN
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  KATEGORI
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  STOK
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  STATUS
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">
+                  AKSI
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filteredCollections.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                  <td
+                    colSpan={7}
+                    className="px-6 py-12 text-center text-slate-400"
+                  >
                     <BookOpen size={48} className="mx-auto mb-4 opacity-20" />
-                    <p className="font-semibold">Tidak ada data koleksi ditemukan</p>
+                    <p className="font-semibold">
+                      Tidak ada data koleksi ditemukan
+                    </p>
                   </td>
                 </tr>
               ) : (
-                filteredCollections.map((collection) => {
+                filteredCollections.map((collection, index) => {
                   const stockValue = Number(collection.stock) || 0;
-                  const statusInfo = stockValue === 0 
-                    ? { bg: "bg-orange-50", text: "text-orange-500", label: "Dipinjam" }
-                    : { bg: "bg-[#ecfdf5]", text: "text-[#10b981]", label: "Tersedia" };
+                  const statusInfo =
+                    stockValue === 0
+                      ? {
+                          bg: "bg-orange-50",
+                          text: "text-orange-500",
+                          label: "Dipinjam"
+                        }
+                      : {
+                          bg: "bg-[#ecfdf5]",
+                          text: "text-[#10b981]",
+                          label: "Tersedia"
+                        };
 
                   return (
-                    <tr key={collection.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <tr
+                      key={collection.id}
+                      className="hover:bg-slate-50/50 transition-colors group"
+                    >
+                      <td className="px-6 py-4">
+                        <span className="text-[13px] font-bold text-slate-500">
+                          {index + 1}
+                        </span>
+                      </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-[14px] font-bold text-slate-900 group-hover:text-[#B91C1C] transition-colors line-clamp-1 max-w-[250px]">{collection.title}</p>
-                          <p className="text-[12px] text-slate-400 font-medium mt-0.5">{collection.author || "Anonim"}</p>
+                          <p className="text-[14px] font-bold text-slate-900 group-hover:text-[#B91C1C] transition-colors line-clamp-1 max-w-[250px]">
+                            {collection.title}
+                          </p>
+                          <p className="text-[12px] text-slate-400 font-medium mt-0.5">
+                            {collection.author || "Anonim"}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-[13px] font-medium text-slate-500">{collection.isbn || "-"}</span>
+                        <span className="text-[13px] font-medium text-slate-500">
+                          {collection.isbn || "-"}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-[13px] font-semibold text-[#3b82f6]/80 capitalize">
@@ -146,31 +202,37 @@ export default function CollectionsSection({
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-[14px] font-bold text-slate-700">{stockValue}</span>
+                        <span className="text-[14px] font-bold text-slate-700">
+                          {stockValue}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={`inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide ${statusInfo.bg} ${statusInfo.text}`}>
+                        <div
+                          className={`inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide ${statusInfo.bg} ${statusInfo.text}`}
+                        >
                           {statusInfo.label}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => openViewModal(collection)} 
+                          <button
+                            onClick={() => openViewModal(collection)}
                             className="p-2 text-slate-400 hover:text-[#B91C1C] hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all"
                             title="Lihat Detail"
                           >
                             <Eye size={16} strokeWidth={2.5} />
                           </button>
-                          <button 
-                            onClick={() => openEditModal(collection)} 
+                          <button
+                            onClick={() => openEditModal(collection)}
                             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-lg transition-all"
                             title="Edit Data"
                           >
                             <Edit size={16} strokeWidth={2.5} />
                           </button>
-                          <button 
-                            onClick={() => onDelete(collection.id, collection.title)} 
+                          <button
+                            onClick={() =>
+                              onDelete(collection.id, collection.title)
+                            }
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-lg transition-all"
                             title="Hapus Data"
                           >
@@ -179,7 +241,7 @@ export default function CollectionsSection({
                         </div>
                       </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -205,7 +267,7 @@ export default function CollectionsSection({
         </div>
       </div>
 
-      <AddCollectionModal 
+      <AddCollectionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onRefresh={onRefresh}

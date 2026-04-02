@@ -1,79 +1,270 @@
-import { Download, Printer } from 'lucide-react';
-import { type MemberProfile } from '@/services/memberService';
+import {
+  BadgeCheck,
+  Clock3,
+  Printer,
+  RefreshCcw,
+  ShieldAlert,
+  Sparkles,
+  UserRound
+} from "lucide-react";
+import { type MemberProfile } from "@/services/memberService";
 
 interface MemberCardProps {
   profile: MemberProfile | null;
+  requestLoading?: boolean;
+  onRequestCard?: () => Promise<void> | void;
 }
 
-const MemberCard = ({ profile }: MemberCardProps) => {
+const statusConfig = {
+  not_requested: {
+    label: "Belum Diajukan",
+    chipClass: "bg-slate-900 text-white",
+    accentClass: "from-slate-950 via-slate-900 to-red-900",
+    description:
+      "Kartu member belum dibuat. Ajukan kartu ke petugas agar bisa diproses.",
+    icon: ShieldAlert
+  },
+  pending: {
+    label: "Menunggu Persetujuan",
+    chipClass: "bg-amber-100 text-amber-800",
+    accentClass: "from-amber-950 via-red-900 to-slate-900",
+    description:
+      "Pengajuan kartu sedang diperiksa admin. Status ini akan berubah setelah disetujui.",
+    icon: Clock3
+  },
+  active: {
+    label: "Aktif",
+    chipClass: "bg-emerald-100 text-emerald-800",
+    accentClass: "from-red-950 via-red-800 to-slate-900",
+    description:
+      "Kartu aktif dan siap digunakan untuk peminjaman buku di perpustakaan.",
+    icon: BadgeCheck
+  },
+  rejected: {
+    label: "Ditolak",
+    chipClass: "bg-rose-100 text-rose-800",
+    accentClass: "from-rose-950 via-red-900 to-slate-900",
+    description:
+      "Pengajuan kartu ditolak. Cek alasan penolakan atau ajukan ulang setelah data diperbaiki.",
+    icon: ShieldAlert
+  },
+  expired: {
+    label: "Kedaluwarsa",
+    chipClass: "bg-orange-100 text-orange-800",
+    accentClass: "from-orange-950 via-amber-900 to-slate-900",
+    description:
+      "Kartu perlu diperbarui sebelum bisa dipakai kembali untuk transaksi peminjaman.",
+    icon: RefreshCcw
+  }
+} as const;
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "-";
+
+  return new Date(value).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+};
+
+const MemberCard = ({
+  profile,
+  requestLoading,
+  onRequestCard
+}: MemberCardProps) => {
   if (!profile) return null;
 
   const user = profile.user;
-  const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'U';
+  const status = statusConfig[profile.cardStatus] ?? statusConfig.not_requested;
+  const StatusIcon = status.icon;
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
+
+  const canRequest =
+    profile.cardStatus === "not_requested" ||
+    profile.cardStatus === "rejected" ||
+    profile.cardStatus === "expired";
 
   return (
-    <div className="flex flex-col items-center gap-10 py-10">
-      {/* Front of the card as shown in mockup */}
-      <div className="w-[450px] aspect-[1.6/1] bg-white rounded-[24px] shadow-2xl relative overflow-hidden border border-slate-100 animate-slide-up">
-        
-        {/* Card Header (Red) */}
-        <div className="bg-[#9c1b1b] p-4 flex items-center gap-3">
-           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#9c1b1b] font-bold text-xs italic border border-white/20 shadow-inner">UMC</div>
-           <div className="leading-tight">
-              <h3 className="text-white font-bold text-[11px] uppercase tracking-[0.15em]">UMC Library</h3>
-              <p className="text-white/60 text-[8px] font-black uppercase tracking-tighter">Digital Library System</p>
-           </div>
-        </div>
+    <div className="w-full max-w-4xl space-y-6">
+      <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.24)]">
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${status.accentClass}`}
+        />
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-12 left-0 h-40 w-40 rounded-full bg-red-400/20 blur-3xl" />
 
-        {/* Card Content Area */}
-        <div className="p-8 flex gap-6">
-           {/* Member Info */}
-           <div className="shrink-0 w-24 h-32 bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-50">
-              {user?.image ? (
-                <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+        <div className="relative p-6 sm:p-8 text-white">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/70">
+                    UMC Library
+                  </p>
+                  <p className="text-[11px] font-semibold text-white/60">
+                    Member access card
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.32em] text-white/65">
+                  Kartu Member Digital
+                </p>
+                <h3 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
+                  {user?.name || "Nama Anggota"}
+                </h3>
+                <p className="max-w-2xl text-sm leading-6 text-white/75 sm:text-base">
+                  {status.description}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-start gap-3 lg:items-end">
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] ${status.chipClass}`}
+              >
+                <StatusIcon size={12} />
+                {status.label}
+              </span>
+              {profile.cardNumber ? (
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55">
+                    Nomor Kartu
+                  </p>
+                  <p className="mt-1 font-mono text-sm font-bold tracking-[0.24em] text-white sm:text-base">
+                    {profile.cardNumber}
+                  </p>
+                </div>
               ) : (
-                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 font-bold text-3xl">
-                   {initials}
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-right backdrop-blur">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55">
+                    Nomor Kartu
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-white/75">
+                    Belum tersedia
+                  </p>
                 </div>
               )}
-           </div>
+            </div>
+          </div>
 
-           {/* User Meta */}
-           <div className="flex-1 flex flex-col justify-center pt-2">
-              <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-tight mb-0.5">{user?.name}</h4>
-              <p className="text-red-700 text-[10px] font-black uppercase tracking-widest">{profile.memberType}</p>
-              <p className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">{profile.faculty || "Teknik Informatika"}</p>
-           </div>
+          <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div className="rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur">
+              <div className="flex items-start gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[24px] border border-white/10 bg-white/10 text-2xl font-black text-white shadow-inner">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user?.name || "Member"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                <div className="min-w-0 space-y-2">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55">
+                      Identitas
+                    </p>
+                    <h4 className="truncate text-xl font-black text-white">
+                      {user?.name || "Nama belum tersedia"}
+                    </h4>
+                  </div>
+                  <div className="space-y-1 text-sm text-white/75">
+                    <p>{user?.email || "Email belum tersedia"}</p>
+                    <p>{profile.nimNidn || "NIM/NIDN belum diisi"}</p>
+                    <p>{profile.faculty || "Fakultas belum diisi"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur">
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55">
+                    Diajukan
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-white">
+                    {formatDate(profile.cardRequestedAt)}
+                  </p>
+                </div>
+                <UserRound size={18} className="text-white/60" />
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55">
+                    Disetujui
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-white">
+                    {formatDate(profile.cardApprovedAt)}
+                  </p>
+                </div>
+                <BadgeCheck size={18} className="text-emerald-200" />
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/55">
+                    Ditolak
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-white">
+                    {formatDate(profile.cardRejectedAt)}
+                  </p>
+                </div>
+                <ShieldAlert size={18} className="text-rose-200" />
+              </div>
+            </div>
+          </div>
+
+          {profile.cardRejectedReason ? (
+            <div className="mt-5 rounded-[22px] border border-rose-200/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-50">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-100/80">
+                Alasan Penolakan
+              </p>
+              <p className="mt-1 font-medium leading-6">
+                {profile.cardRejectedReason}
+              </p>
+            </div>
+          ) : null}
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
+              Tunjukkan kartu ini kepada petugas saat peminjaman.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-white/20"
+              >
+                <Printer size={14} />
+                Cetak
+              </button>
+              {canRequest && onRequestCard ? (
+                <button
+                  type="button"
+                  onClick={() => void onRequestCard()}
+                  disabled={requestLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:bg-white/50"
+                >
+                  {requestLoading ? "Mengajukan..." : "Ajukan Kartu"}
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
-
-        {/* Barcode Section as in mockup */}
-        <div className="mx-6 mb-6">
-           <div className="w-full h-12 bg-slate-900 rounded-xl relative shadow-inner shadow-black/20 overflow-hidden">
-              <div 
-                className="absolute inset-0 opacity-80"
-                style={{
-                  backgroundImage: `repeating-linear-gradient(90deg, #fff, #fff 1px, transparent 1px, transparent 4px)`
-                }}
-              />
-           </div>
-        </div>
-      </div>
-
-      {/* Buttons and Footer */}
-      <div className="flex flex-col items-center gap-6">
-         <div className="flex gap-4">
-            <button className="flex items-center gap-3 bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200">
-               <Download size={14} className="text-red-500" />
-               Simpan Gambar
-            </button>
-            <button className="flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 shadow-sm">
-               <Printer size={14} className="text-red-500" />
-               Cetak Kartu
-            </button>
-         </div>
-         <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest max-w-[400px] text-center leading-relaxed italic">
-            *Tunjukan kartu-barcode di atas kepada petugas perpustakaan saat melakukan peminjaman buku
-         </p>
       </div>
     </div>
   );

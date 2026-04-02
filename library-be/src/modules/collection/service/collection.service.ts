@@ -1,7 +1,7 @@
 import { db } from "../../../db";
 import { collections, categories, items, locations } from "../../../db/schema";
 import { uploadToCloudinary } from "../../../utils/upload";
-import { eq, or, ilike, and, isNull, sql } from "drizzle-orm";
+import { eq, ne, or, ilike, and, isNull, sql } from "drizzle-orm";
 
 type CollectionData = {
   coverImageUrl?: string;
@@ -25,8 +25,8 @@ export class CollectionService {
         and(
           eq(items.collectionId, collectionId),
           eq(items.status, "available"),
-          isNull(items.deletedAt),
-        ),
+          isNull(items.deletedAt)
+        )
       );
 
     await tx
@@ -38,7 +38,7 @@ export class CollectionService {
   private generateAutoCode(
     prefix: string,
     collectionId: string,
-    index: number,
+    index: number
   ) {
     const shortId = collectionId.replace(/-/g, "").slice(0, 8).toUpperCase();
     return `${prefix}-${shortId}-${Date.now()}-${index + 1}`;
@@ -47,10 +47,10 @@ export class CollectionService {
   private async syncItemsWithStock(
     tx: any,
     collectionId: string,
-    targetStock: number,
+    targetStock: number
   ) {
     const existingItems = await tx.query.items.findMany({
-      where: and(eq(items.collectionId, collectionId), isNull(items.deletedAt)),
+      where: and(eq(items.collectionId, collectionId), isNull(items.deletedAt))
     });
 
     const currentStock = existingItems.length;
@@ -63,12 +63,12 @@ export class CollectionService {
       const diff = targetStock - currentStock;
 
       const defaultLocation = await tx.query.locations.findFirst({
-        where: isNull(locations.deletedAt),
+        where: isNull(locations.deletedAt)
       });
 
       if (!defaultLocation) {
         throw new Error(
-          "Tidak ada lokasi aktif. Tambahkan lokasi terlebih dahulu sebelum menambah stock.",
+          "Tidak ada lokasi aktif. Tambahkan lokasi terlebih dahulu sebelum menambah stock."
         );
       }
 
@@ -77,7 +77,7 @@ export class CollectionService {
         locationId: defaultLocation.id,
         status: "available" as const,
         barcode: this.generateAutoCode("AUTO", collectionId, idx),
-        uniqueCode: this.generateAutoCode("UC", collectionId, idx),
+        uniqueCode: this.generateAutoCode("UC", collectionId, idx)
       }));
 
       await tx.insert(items).values(values);
@@ -89,7 +89,7 @@ export class CollectionService {
 
       if (removableItems.length < diff) {
         throw new Error(
-          "Stock tidak bisa dikurangi karena sebagian item sedang dipinjam atau tidak tersedia.",
+          "Stock tidak bisa dikurangi karena sebagian item sedang dipinjam atau tidak tersedia."
         );
       }
 
@@ -100,10 +100,10 @@ export class CollectionService {
             .set({
               deletedAt: new Date(),
               status: "lost",
-              updatedAt: new Date(),
+              updatedAt: new Date()
             })
-            .where(eq(items.id, item.id)),
-        ),
+            .where(eq(items.id, item.id))
+        )
       );
     }
 
@@ -126,8 +126,8 @@ export class CollectionService {
           or(
             ilike(collections.title, `%${search}%`),
             ilike(collections.author, `%${search}%`),
-            ilike(collections.isbn, `%${search}%`),
-          ),
+            ilike(collections.isbn, `%${search}%`)
+          )
         );
       }
 
@@ -142,23 +142,23 @@ export class CollectionService {
       const result = await db.query.collections.findMany({
         where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
         with: {
-          category: true,
+          category: true
         },
         orderBy: (collections, { desc }) => [desc(collections.createdAt)],
-        limit: 100,
+        limit: 100
       });
 
       return {
         success: true,
         message: "Get Collections Successfully",
-        data: result,
+        data: result
       };
     } catch (err) {
       console.error("[CollectionService] Error getting collections:", err);
       return {
         success: false,
         message: "Failed to get collections",
-        data: null,
+        data: null
       };
     }
   }
@@ -166,35 +166,37 @@ export class CollectionService {
   // Create New Collection
   async createCollection(data: CollectionData, file?: Express.Multer.File) {
     try {
+      const incomingIsbn = data.isbn?.trim() || null;
+
       // 1. Validate categoryId
       if (data.categoryId) {
         const category = await db.query.categories.findFirst({
-          where: eq(categories.id, data.categoryId),
+          where: eq(categories.id, data.categoryId)
         });
 
         if (!category) {
           return {
             success: false,
             message: "Category not found. Please select a valid category.",
-            data: null,
+            data: null
           };
         }
       }
 
       // 2. Check for duplicate ISBN (if provided)
-      if (data.isbn && data.isbn.trim() !== "") {
+      if (incomingIsbn) {
         const existingBook = await db.query.collections.findFirst({
           where: and(
-            eq(collections.isbn, data.isbn.trim()),
-            isNull(collections.deletedAt),
-          ),
+            eq(collections.isbn, incomingIsbn),
+            isNull(collections.deletedAt)
+          )
         });
 
         if (existingBook) {
           return {
             success: false,
             message: "A book with this ISBN already exists",
-            data: null,
+            data: null
           };
         }
       }
@@ -205,7 +207,7 @@ export class CollectionService {
       if (file) {
         const uploadResult = await uploadToCloudinary(
           file.buffer,
-          "library/covers",
+          "library/covers"
         );
         coverImageUrl = uploadResult.url;
       }
@@ -224,12 +226,12 @@ export class CollectionService {
         author: data.author,
         publisher: data.publisher,
         publicationYear: data.publicationYear,
-        isbn: data.isbn?.trim() || null,
+        isbn: incomingIsbn,
         type: normalizedType,
         categoryId: data.categoryId,
         description: data.description,
         image: coverImageUrl,
-        stock: 0,
+        stock: 0
       };
 
       // 4. Insert ke Database + sync stock ke items
@@ -246,11 +248,11 @@ export class CollectionService {
         await this.syncItemsWithStock(
           tx,
           inserted.id,
-          Math.max(0, targetStock),
+          Math.max(0, targetStock)
         );
 
         const refreshed = await tx.query.collections.findFirst({
-          where: eq(collections.id, inserted.id),
+          where: eq(collections.id, inserted.id)
         });
 
         if (!refreshed) {
@@ -264,7 +266,7 @@ export class CollectionService {
         return {
           success: false,
           message: "Failed to insert collection",
-          data: null,
+          data: null
         };
       }
 
@@ -273,15 +275,15 @@ export class CollectionService {
         message: "Collection created successfully",
         data: {
           ...newCollection,
-          coverImageUrl, // Sertakan URL di response agar frontend bisa lihat
-        },
+          coverImageUrl // Sertakan URL di response agar frontend bisa lihat
+        }
       };
     } catch (err) {
       console.error("[CollectionService] Error creating collection:", err);
       return {
         success: false,
         message: "Failed to create collection. Please try again.",
-        data: null,
+        data: null
       };
     }
   }
@@ -289,19 +291,45 @@ export class CollectionService {
   async updateCollection(
     id: string,
     data: CollectionData,
-    file?: Express.Multer.File,
+    file?: Express.Multer.File
   ) {
     try {
       const collection = await db.query.collections.findFirst({
-        where: and(eq(collections.id, id), isNull(collections.deletedAt)),
+        where: and(eq(collections.id, id), isNull(collections.deletedAt))
       });
 
       if (!collection) {
         return {
           success: false,
           message: "Collection not found",
-          data: null,
+          data: null
         };
+      }
+
+      const hasIsbnInPayload = Object.prototype.hasOwnProperty.call(
+        data,
+        "isbn"
+      );
+      const nextIsbn = hasIsbnInPayload
+        ? data.isbn?.trim() || null
+        : collection.isbn;
+
+      if (hasIsbnInPayload && nextIsbn) {
+        const existingBook = await db.query.collections.findFirst({
+          where: and(
+            eq(collections.isbn, nextIsbn),
+            ne(collections.id, id),
+            isNull(collections.deletedAt)
+          )
+        });
+
+        if (existingBook) {
+          return {
+            success: false,
+            message: "A book with this ISBN already exists",
+            data: null
+          };
+        }
       }
 
       // Handle Image Upload if file provided
@@ -309,7 +337,7 @@ export class CollectionService {
       if (file) {
         const uploadResult = await uploadToCloudinary(
           file.buffer,
-          "library/covers",
+          "library/covers"
         );
         coverImageUrl = uploadResult.url;
       }
@@ -318,8 +346,9 @@ export class CollectionService {
 
       const updateData = {
         ...restData,
+        isbn: nextIsbn,
         image: coverImageUrl,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
       const updatedCollection = await db.transaction(async (tx) => {
@@ -341,7 +370,7 @@ export class CollectionService {
         await this.syncItemsWithStock(tx, id, Math.max(0, targetStock));
 
         const refreshed = await tx.query.collections.findFirst({
-          where: eq(collections.id, id),
+          where: eq(collections.id, id)
         });
 
         if (!refreshed) {
@@ -355,21 +384,21 @@ export class CollectionService {
         return {
           success: false,
           message: "Failed to update collection",
-          data: null,
+          data: null
         };
       }
 
       return {
         success: true,
         message: "Collection updated successfully",
-        data: updatedCollection,
+        data: updatedCollection
       };
     } catch (err) {
       console.error("[CollectionService] Error updating collection:", err);
       return {
         success: false,
         message: "Failed to update collection",
-        data: null,
+        data: null
       };
     }
   }
@@ -377,14 +406,14 @@ export class CollectionService {
   async deleteCollection(id: string) {
     try {
       const collection = await db.query.collections.findFirst({
-        where: and(eq(collections.id, id), isNull(collections.deletedAt)),
+        where: and(eq(collections.id, id), isNull(collections.deletedAt))
       });
 
       if (!collection) {
         return {
           success: false,
           message: "Collection not found",
-          data: null,
+          data: null
         };
       }
 
@@ -398,21 +427,21 @@ export class CollectionService {
         return {
           success: false,
           message: "Failed to delete collection",
-          data: null,
+          data: null
         };
       }
 
       return {
         success: true,
         message: "Collection deleted successfully",
-        data: deletedCollection,
+        data: deletedCollection
       };
     } catch (err) {
       console.error("[Collection Service] Error deleting collections ", err);
       return {
         success: false,
         message: "Failed to delete collection",
-        data: null,
+        data: null
       };
     }
   }
@@ -424,7 +453,7 @@ export class CollectionService {
         return {
           success: false,
           message: "Invalid collection ID",
-          data: null,
+          data: null
         };
       }
 
@@ -432,29 +461,29 @@ export class CollectionService {
       const existingCollection = await db.query.collections.findFirst({
         where: and(eq(collections.id, id), isNull(collections.deletedAt)),
         with: {
-          items: true,
-        },
+          items: true
+        }
       });
 
       if (!existingCollection) {
         return {
           success: false,
           message: "Collection not found",
-          data: null,
+          data: null
         };
       }
 
       return {
         success: true,
         message: "Collection retrieved successfully",
-        data: existingCollection,
+        data: existingCollection
       };
     } catch (err) {
       console.error("[CollectionService] Error getting collection:", err);
       return {
         success: false,
         message: "Failed to get collection",
-        data: null,
+        data: null
       };
     }
   }

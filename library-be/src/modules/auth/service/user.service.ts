@@ -3,6 +3,7 @@ import { members, Users } from "../../../db/schema";
 import { and, eq, ne } from "drizzle-orm";
 
 const ALLOWED_ROLES = ["super_admin", "staff", "student", "lecturer"] as const;
+
 type AllowedRole = (typeof ALLOWED_ROLES)[number];
 
 export const UserService = {
@@ -18,7 +19,13 @@ export const UserService = {
           banned: Users.banned,
           createdAt: Users.createdAt,
           memberId: members.id,
-          memberDeletedAt: members.deletedAt
+          memberDeletedAt: members.deletedAt,
+          memberCardStatus: members.cardStatus,
+          memberCardNumber: members.cardNumber,
+          memberCardRequestedAt: members.cardRequestedAt,
+          memberCardApprovedAt: members.cardApprovedAt,
+          memberCardRejectedAt: members.cardRejectedAt,
+          memberCardRejectedReason: members.cardRejectedReason
         })
         .from(Users)
         .leftJoin(members, eq(members.userId, Users.id));
@@ -31,7 +38,27 @@ export const UserService = {
         role: row.role,
         banned: row.banned,
         createdAt: row.createdAt,
-        hasSyncedMember: Boolean(row.memberId && !row.memberDeletedAt)
+        hasSyncedMember: Boolean(row.memberId && !row.memberDeletedAt),
+        cardStatus:
+          row.memberId && !row.memberDeletedAt ? row.memberCardStatus : null,
+        cardNumber:
+          row.memberId && !row.memberDeletedAt ? row.memberCardNumber : null,
+        cardRequestedAt:
+          row.memberId && !row.memberDeletedAt
+            ? row.memberCardRequestedAt
+            : null,
+        cardApprovedAt:
+          row.memberId && !row.memberDeletedAt
+            ? row.memberCardApprovedAt
+            : null,
+        cardRejectedAt:
+          row.memberId && !row.memberDeletedAt
+            ? row.memberCardRejectedAt
+            : null,
+        cardRejectedReason:
+          row.memberId && !row.memberDeletedAt
+            ? row.memberCardRejectedReason
+            : null
       }));
 
       if (!users) {

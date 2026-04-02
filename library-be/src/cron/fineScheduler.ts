@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { loans, fines, items, collections, Users, members } from "../db/schema";
-import { eq, lt, and } from "drizzle-orm";
+import { eq, lt, and, isNull, sql } from "drizzle-orm";
 import { NotificationService } from "../modules/notification/service/notification.service";
 
 const DENDA_PER_HARI = 500; // Rp 500 per hari
@@ -9,11 +9,29 @@ const JADWAL_MENIT = 1; // Menit :01 → mirip cron "1 0 * * *"
 
 const notificationService = new NotificationService();
 
+function getBusinessDateJakarta(): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  })
+    .formatToParts(new Date())
+    .reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== "literal") {
+        acc[part.type] = part.value;
+      }
+      return acc;
+    }, {});
+
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 async function checkAndUpdateFines(): Promise<void> {
   console.log("[Scheduler] ⏳ Menjalankan pengecekan denda otomatis...");
 
   try {
-    const today = new Date();
+    const todayDate = getBusinessDateJakarta();
 
     const overdueLoans = await db
       .select({
@@ -23,7 +41,7 @@ async function checkAndUpdateFines(): Promise<void> {
         userId: members.userId,
         userEmail: Users.email,
         userName: Users.name,
-        bookTitle: collections.title,
+        bookTitle: collections.title
       })
       .from(loans)
       .leftJoin(members, eq(loans.memberId, members.id))
@@ -32,22 +50,23 @@ async function checkAndUpdateFines(): Promise<void> {
       .leftJoin(collections, eq(items.collectionId, collections.id))
       .where(
         and(
-          lt(loans.dueDate, today.toISOString().split("T")[0]), // Bandingkan tanggal saja
-          eq(loans.status, "approved"),
-        ),
+          isNull(loans.deletedAt),
+          lt(loans.dueDate, todayDate),
+          sql`${loans.status} IN ('approved', 'extended')`
+        )
       );
 
     console.log(
-      `[Scheduler] 🔍 Ditemukan ${overdueLoans.length} peminjaman terlambat.`,
+      `[Scheduler] 🔍 Ditemukan ${overdueLoans.length} peminjaman terlambat.`
     );
 
     for (const loan of overdueLoans) {
       if (!loan.dueDate) continue;
 
       // Hitung selisih hari keterlambatan
-      const dueDateObj = new Date(loan.dueDate);
+      const dueDateObj = new Date(`${loan.dueDate}T00:00:00+07:00`);
       dueDateObj.setHours(0, 0, 0, 0);
-      const todayMidnight = new Date(today);
+      const todayMidnight = new Date(`${todayDate}T00:00:00+07:00`);
       todayMidnight.setHours(0, 0, 0, 0);
 
       const diffMs = todayMidnight.getTime() - dueDateObj.getTime();
@@ -58,7 +77,7 @@ async function checkAndUpdateFines(): Promise<void> {
       const existingFine = await db
         .select()
         .from(fines)
-        .where(eq(fines.loanId, loan.loanId))
+        .where(and(eq(fines.loanId, loan.loanId), isNull(fines.deletedAt)))
         .limit(1);
 
       if (existingFine.length > 0) {
@@ -68,7 +87,7 @@ async function checkAndUpdateFines(): Promise<void> {
             .update(fines)
             .set({
               amount: totalDenda.toString(),
-              updatedAt: new Date(),
+              updatedAt: new Date()
             })
             .where(eq(fines.id, existingFine[0].id));
         }
@@ -77,7 +96,7 @@ async function checkAndUpdateFines(): Promise<void> {
         await db.insert(fines).values({
           loanId: loan.loanId,
           amount: totalDenda.toString(),
-          status: "unpaid",
+          status: "unpaid"
         });
       }
 
@@ -87,7 +106,7 @@ async function checkAndUpdateFines(): Promise<void> {
           loan.userEmail,
           loan.userName,
           totalDenda,
-          loan.bookTitle,
+          loan.bookTitle
         );
       }
     }
@@ -118,7 +137,7 @@ export function initCronJobs(): void {
   const mm = String(JADWAL_MENIT).padStart(2, "0");
 
   console.log(
-    `[Scheduler] 🕐 Denda scheduler aktif. Akan berjalan pertama kali dalam ${Math.round(msUntilFirst / 1000 / 60)} menit (di jam ${hh}:${mm}).`,
+    `[Scheduler] 🕐 Denda scheduler aktif. Akan berjalan pertama kali dalam ${Math.round(msUntilFirst / 1000 / 60)} menit (di jam ${hh}:${mm}).`
   );
 
   // Jalankan sekali saat startup agar nominal denda langsung sinkron.

@@ -123,7 +123,7 @@ export default function FinesSection() {
     setPayingId(fine.id);
     try {
       // Jika buku masih berstatus dipinjam, otomatis proses return dulu.
-      if (fine.loan.status === "approved") {
+      if (fine.loan.status === "approved" || fine.loan.status === "extended") {
         const returnRes = await fetch(
           `${API_BASE_URL}/api/loans/${fine.loanId}/return`,
           {

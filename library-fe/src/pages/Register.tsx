@@ -2,8 +2,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { authClient } from "@/utils/auth-client";
-import { Mail, Lock, User, UserCircle2, ArrowLeft, Loader2 } from "lucide-react";
-import Notification from "@/components/ui/toast";
+import {
+  Mail,
+  Lock,
+  User,
+  UserCircle2,
+  ArrowLeft,
+  Loader2
+} from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 
 const Register = () => {
@@ -11,19 +17,21 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    confirmPassword: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
   const navigate = useNavigate();
-  const { notifications, success, error, loading, removeToast } = useToast();
+  const { success, error, loading, removeToast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Hapus error spesifik field saat mengetik
     if (validationErrors[name]) {
-      setValidationErrors(prev => {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
@@ -87,7 +95,7 @@ const Register = () => {
       const { data, error: authError } = await authClient.signUp.email({
         name: formData.name.trim(),
         email: formData.email.toLowerCase().trim(),
-        password: formData.password,
+        password: formData.password
       });
 
       removeToast(loadingId);
@@ -100,13 +108,19 @@ const Register = () => {
           msg.toLowerCase().includes("duplicate") ||
           msg.toLowerCase().includes("taken")
         ) {
-          throw new Error("Email sudah terdaftar. Gunakan email lain atau login.");
+          throw new Error(
+            "Email sudah terdaftar. Gunakan email lain atau login."
+          );
         }
         throw new Error(msg || "Gagal mendaftar. Silakan coba lagi.");
       }
 
       if (data?.user) {
-        success("Registrasi Berhasil! 🎉", "Akun Anda berhasil dibuat. Silakan login.", 4000);
+        success(
+          "Registrasi Berhasil! 🎉",
+          "Akun Anda berhasil dibuat. Silakan login.",
+          4000
+        );
         setTimeout(() => navigate("/login"), 2500);
       }
     } catch (err: unknown) {
@@ -122,23 +136,9 @@ const Register = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
-
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80">
-        {notifications.map((toast) => (
-          <Notification
-            key={toast.id}
-            {...toast}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
-
       <div className="w-full max-w-[420px] bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-
         {/* Header dengan Gradasi */}
         <div className="bg-gradient-to-br from-[#B21F24] to-[#8a181b] pt-10 pb-12 px-6 text-center relative">
           <div className="flex justify-center mb-4">
@@ -146,8 +146,12 @@ const Register = () => {
               <UserCircle2 className="text-white w-10 h-10" />
             </div>
           </div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Buat Akun Baru</h1>
-          <p className="text-white/80 text-sm mt-1">Perpustakaan Digital Universitas Muhammadiyah Cirebon</p>
+          <h1 className="text-white text-2xl font-bold tracking-tight">
+            Buat Akun Baru
+          </h1>
+          <p className="text-white/80 text-sm mt-1">
+            Perpustakaan Digital Universitas Muhammadiyah Cirebon
+          </p>
           {/* Curve Decor */}
           <div className="absolute -bottom-1 left-0 right-0 h-6 bg-white rounded-t-[32px]"></div>
         </div>
@@ -156,9 +160,14 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Nama Field */}
             <div className="space-y-1.5">
-              <label className="text-slate-700 text-xs font-semibold ml-1">Nama Lengkap</label>
+              <label className="text-slate-700 text-xs font-semibold ml-1">
+                Nama Lengkap
+              </label>
               <div className="relative group">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors" size={18} />
+                <User
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                  size={18}
+                />
                 <input
                   name="name"
                   type="text"
@@ -166,21 +175,30 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="Masukkan nama lengkap"
                   className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
-                    validationErrors.name ? 'border-red-300 bg-red-50/50' : 'border-slate-200 focus:border-[#B21F24]'
+                    validationErrors.name
+                      ? "border-red-300 bg-red-50/50"
+                      : "border-slate-200 focus:border-[#B21F24]"
                   }`}
                   required
                 />
               </div>
               {validationErrors.name && (
-                <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.name}</p>
+                <p className="text-red-500 text-[10px] font-medium ml-1">
+                  {validationErrors.name}
+                </p>
               )}
             </div>
 
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-slate-700 text-xs font-semibold ml-1">Email</label>
+              <label className="text-slate-700 text-xs font-semibold ml-1">
+                Email
+              </label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors" size={18} />
+                <Mail
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                  size={18}
+                />
                 <input
                   name="email"
                   type="email"
@@ -188,22 +206,31 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="contoh@student.umc.ac.id"
                   className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
-                    validationErrors.email ? 'border-red-300 bg-red-50/50' : 'border-slate-200 focus:border-[#B21F24]'
+                    validationErrors.email
+                      ? "border-red-300 bg-red-50/50"
+                      : "border-slate-200 focus:border-[#B21F24]"
                   }`}
                   required
                 />
               </div>
               {validationErrors.email && (
-                <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.email}</p>
+                <p className="text-red-500 text-[10px] font-medium ml-1">
+                  {validationErrors.email}
+                </p>
               )}
             </div>
 
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-slate-700 text-xs font-semibold ml-1">Password</label>
+                <label className="text-slate-700 text-xs font-semibold ml-1">
+                  Password
+                </label>
                 <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors" size={18} />
+                  <Lock
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                    size={18}
+                  />
                   <input
                     name="password"
                     type="password"
@@ -211,19 +238,28 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="Min. 8 karakter"
                     className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
-                      validationErrors.password ? 'border-red-300 bg-red-50/50' : 'border-slate-200 focus:border-[#B21F24]'
+                      validationErrors.password
+                        ? "border-red-300 bg-red-50/50"
+                        : "border-slate-200 focus:border-[#B21F24]"
                     }`}
                     required
                   />
                 </div>
                 {validationErrors.password && (
-                  <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.password}</p>
+                  <p className="text-red-500 text-[10px] font-medium ml-1">
+                    {validationErrors.password}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">
-                <label className="text-slate-700 text-xs font-semibold ml-1">Konfirmasi</label>
+                <label className="text-slate-700 text-xs font-semibold ml-1">
+                  Konfirmasi
+                </label>
                 <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors" size={18} />
+                  <Lock
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                    size={18}
+                  />
                   <input
                     name="confirmPassword"
                     type="password"
@@ -231,13 +267,17 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="Ulangi password"
                     className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
-                      validationErrors.confirmPassword ? 'border-red-300 bg-red-50/50' : 'border-slate-200 focus:border-[#B21F24]'
+                      validationErrors.confirmPassword
+                        ? "border-red-300 bg-red-50/50"
+                        : "border-slate-200 focus:border-[#B21F24]"
                     }`}
                     required
                   />
                 </div>
                 {validationErrors.confirmPassword && (
-                  <p className="text-red-500 text-[10px] font-medium ml-1">{validationErrors.confirmPassword}</p>
+                  <p className="text-red-500 text-[10px] font-medium ml-1">
+                    {validationErrors.confirmPassword}
+                  </p>
                 )}
               </div>
             </div>

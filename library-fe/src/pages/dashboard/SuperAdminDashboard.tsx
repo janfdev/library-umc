@@ -18,6 +18,7 @@ import {
 
 import Logo from "@/assets/logo_umc.png";
 import AuditLogsSection from "@/components/dashboard/AuditLogsSection";
+import CardApprovalsSection from "@/components/dashboard/CardApprovalsSection";
 import CategoriesSection from "@/components/dashboard/CategoriesSection";
 import CirculationSection from "@/components/dashboard/CirculationSection";
 import CollectionsSection from "@/components/dashboard/CollectionsSection";
@@ -66,11 +67,11 @@ type ActiveMenu =
   | "loans"
   | "categories"
   | "fines"
+  | "cardApprovals"
   | "users"
   | "audit"
   | "reports"
   | "recommendations";
-
 
 type MenuConfig = {
   key: ActiveMenu;
@@ -87,6 +88,7 @@ const MENU_CONFIG: MenuConfig[] = [
   { key: "loans", label: "Peminjaman & Persetujuan", icon: BookOpen },
   { key: "categories", label: "Manajemen Kategori", icon: Tag },
   { key: "fines", label: "Manajemen Denda", icon: Wallet },
+  { key: "cardApprovals", label: "Persetujuan Kartu", icon: Shield },
   { key: "users", label: "Manajemen User", icon: Users, superAdminOnly: true },
   { key: "audit", label: "Audit Log", icon: Shield, superAdminOnly: true },
   { key: "reports", label: "Laporan & Statistik", icon: BarChart3 },
@@ -343,6 +345,8 @@ export default function SuperAdminDashboard() {
         return <CirculationSection />;
       case "fines":
         return <FinesSection />;
+      case "cardApprovals":
+        return <CardApprovalsSection />;
       case "users":
         if (!isSuperAdmin) {
           return (

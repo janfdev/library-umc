@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
+import { and, eq, isNull, lt, sql, type SQL } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   Users,
@@ -16,6 +16,81 @@ import {
 } from "../../../exceptions/AppError";
 
 class FinesService {
+  private getBusinessDateJakarta(): string {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Jakarta",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    })
+      .formatToParts(new Date())
+      .reduce<Record<string, string>>((acc, part) => {
+        if (part.type !== "literal") {
+          acc[part.type] = part.value;
+        }
+        return acc;
+      }, {});
+
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  private async syncOverdueFines(): Promise<void> {
+    const todayDate = this.getBusinessDateJakarta();
+
+    const overdueLoans = await db
+      .select({
+        loanId: loans.id,
+        dueDate: loans.dueDate
+      })
+      .from(loans)
+      .where(
+        and(
+          isNull(loans.deletedAt),
+          lt(loans.dueDate, todayDate),
+          sql`${loans.status} IN ('approved', 'extended')`
+        )
+      );
+
+    for (const loan of overdueLoans) {
+      if (!loan.dueDate) continue;
+
+      const dueDateObj = new Date(`${loan.dueDate}T00:00:00+07:00`);
+      dueDateObj.setHours(0, 0, 0, 0);
+
+      const todayMidnight = new Date(`${todayDate}T00:00:00+07:00`);
+      todayMidnight.setHours(0, 0, 0, 0);
+
+      const diffMs = todayMidnight.getTime() - dueDateObj.getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 0) continue;
+
+      const fineAmount = diffDays * 500;
+
+      const existingFine = await db
+        .select({ id: fines.id, status: fines.status })
+        .from(fines)
+        .where(and(eq(fines.loanId, loan.loanId), isNull(fines.deletedAt)))
+        .limit(1);
+
+      if (existingFine.length > 0) {
+        if (existingFine[0].status === "unpaid") {
+          await db
+            .update(fines)
+            .set({ amount: fineAmount.toString(), updatedAt: new Date() })
+            .where(eq(fines.id, existingFine[0].id));
+        }
+        continue;
+      }
+
+      await db.insert(fines).values({
+        loanId: loan.loanId,
+        amount: fineAmount.toString(),
+        status: "unpaid"
+      });
+    }
+  }
+
   async getPaidFinesWithNonReturnedLoans(
     filters: {
       limit?: number;
@@ -116,6 +191,12 @@ class FinesService {
     } = {}
   ) {
     try {
+      try {
+        await this.syncOverdueFines();
+      } catch (syncError) {
+        console.error("FinesService.syncOverdueFines Error:", syncError);
+      }
+
       const { status, loanId, memberId, limit = 10, offset = 0 } = filters;
 
       const conditions: SQL[] = [isNull(fines.deletedAt)];
