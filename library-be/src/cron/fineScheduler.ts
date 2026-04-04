@@ -27,6 +27,24 @@ function getBusinessDateJakarta(): string {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
+function getDateKeyJakarta(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  })
+    .formatToParts(date)
+    .reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== "literal") {
+        acc[part.type] = part.value;
+      }
+      return acc;
+    }, {});
+
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 async function checkAndUpdateFines(): Promise<void> {
   console.log("[Scheduler] ⏳ Menjalankan pengecekan denda otomatis...");
 
@@ -81,6 +99,10 @@ async function checkAndUpdateFines(): Promise<void> {
         .limit(1);
 
       if (existingFine.length > 0) {
+        if (existingFine[0].status === "paid") {
+          continue;
+        }
+
         // Update denda yang ada jika masih belum dibayar
         if (existingFine[0].status === "unpaid") {
           await db
@@ -100,14 +122,43 @@ async function checkAndUpdateFines(): Promise<void> {
         });
       }
 
-      // Kirim notifikasi email ke peminjam
-      if (loan.userEmail && loan.userName && loan.bookTitle) {
+      // Kirim notifikasi maksimal 1x per hari (zona waktu Jakarta)
+      const fineForNotification = await db
+        .select({
+          id: fines.id,
+          status: fines.status,
+          lastNotifiedAt: fines.lastNotifiedAt
+        })
+        .from(fines)
+        .where(and(eq(fines.loanId, loan.loanId), isNull(fines.deletedAt)))
+        .limit(1);
+
+      const targetFine = fineForNotification[0];
+      const alreadyNotifiedToday =
+        !!targetFine?.lastNotifiedAt &&
+        getDateKeyJakarta(targetFine.lastNotifiedAt) === todayDate;
+
+      if (
+        targetFine?.status === "unpaid" &&
+        !alreadyNotifiedToday &&
+        loan.userEmail &&
+        loan.userName &&
+        loan.bookTitle
+      ) {
         await notificationService.sendFinesNotification(
           loan.userEmail,
           loan.userName,
           totalDenda,
           loan.bookTitle
         );
+
+        await db
+          .update(fines)
+          .set({
+            lastNotifiedAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(fines.id, targetFine.id));
       }
     }
 
