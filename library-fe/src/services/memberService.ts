@@ -7,6 +7,12 @@ export interface MemberProfile {
   nimNidn: string | null;
   faculty: string | null;
   phone: string | null;
+  cardStatus: "not_requested" | "pending" | "active" | "rejected" | "expired";
+  cardNumber: string | null;
+  cardRequestedAt: string | null;
+  cardApprovedAt: string | null;
+  cardRejectedAt: string | null;
+  cardRejectedReason: string | null;
   createdAt: string;
   updatedAt: string;
   user?: {
@@ -54,6 +60,24 @@ class MemberService {
       throw new Error(result.message || "Gagal memperbarui profil");
     }
     return result.data;
+  }
+
+  async requestMyMemberCard(): Promise<MemberProfile> {
+    const response = await fetch(
+      `${this.baseUrl}/api/members/me/card/request`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || "Gagal mengajukan kartu member");
+    }
+
+    return this.getMyProfile();
   }
 }
 

@@ -16,7 +16,14 @@ export const createCollectionSchema = z.object({
   publicationYear: z
     .string()
     .regex(/^\d{4}$/, "Tahun publikasi harus 4 digit angka (YYYY)"),
-  isbn: z.string().max(20).optional(),
+  isbn: z
+    .string()
+    .max(25)
+    .regex(
+      /^[0-9Xx\-\s]*$/,
+      "ISBN hanya boleh berisi angka, X, dan penghubung (-)"
+    )
+    .optional(),
 
   // Enum type sesuai database
   type: z.enum(["physical_book", "ebook", "journal", "thesis"]),
@@ -26,7 +33,7 @@ export const createCollectionSchema = z.object({
   description: z.string().optional(),
 
   // Stock/Quantity of the collection
-  stock: z.preprocess(strToNum, z.number().int().min(0).default(0)).optional(),
+  stock: z.preprocess(strToNum, z.number().int().min(0).default(0)).optional()
 });
 
 // Schema update (semua field optional)

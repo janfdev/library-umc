@@ -10,20 +10,13 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/utils/auth-client";
-import Notification from "@/components/ui/toast";
 import { useToast } from "@/hooks/useToast";
 import { useUsersManagement } from "@/hooks/dashboard/useUsersManagement";
 import { usersManagementService } from "@/services/dashboard/usersManagementService";
 
 export default function UsersSection() {
   const { data: session } = authClient.useSession();
-  const {
-    notifications,
-    success,
-    error: showErrorToast,
-    warning,
-    removeToast
-  } = useToast();
+  const { success, error: showErrorToast, warning } = useToast();
 
   const {
     users,
@@ -38,6 +31,7 @@ export default function UsersSection() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [banSavingId, setBanSavingId] = useState<string | null>(null);
   const [syncSavingId, setSyncSavingId] = useState<string | null>(null);
+  const [issueSavingId, setIssueSavingId] = useState<string | null>(null);
   const [showOnlyUnsynced, setShowOnlyUnsynced] = useState(false);
   const [roleDraft, setRoleDraft] = useState<Record<string, string>>({});
 
@@ -72,6 +66,36 @@ export default function UsersSection() {
     if (role === "super_admin") return "bg-red-50 text-red-700 border-red-200";
     if (role === "staff") return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-slate-50 text-slate-600 border-slate-200";
+  };
+
+  const cardStatusLabel = (status?: string | null) => {
+    switch (status) {
+      case "active":
+        return "Aktif";
+      case "pending":
+        return "Menunggu";
+      case "rejected":
+        return "Ditolak";
+      case "expired":
+        return "Kedaluwarsa";
+      default:
+        return "Belum Ajukan";
+    }
+  };
+
+  const cardStatusClass = (status?: string | null) => {
+    switch (status) {
+      case "active":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "pending":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "rejected":
+        return "bg-rose-50 text-rose-700 border-rose-200";
+      case "expired":
+        return "bg-orange-50 text-orange-700 border-orange-200";
+      default:
+        return "bg-slate-50 text-slate-600 border-slate-200";
+    }
   };
 
   const handleUpdateRole = async (user: (typeof users)[number]) => {
@@ -162,6 +186,26 @@ export default function UsersSection() {
       showErrorToast("Sync Member Gagal", message);
     } finally {
       setSyncSavingId(null);
+    }
+  };
+
+  const handleIssueCard = async (user: (typeof users)[number]) => {
+    setIssueSavingId(user.id);
+    setPageError(null);
+    try {
+      await usersManagementService.issueMemberCard(user.id);
+      await refetch();
+      success(
+        "Kartu Diterbitkan",
+        `Kartu member untuk ${user.name} berhasil diterbitkan.`
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Gagal menerbitkan kartu member";
+      setPageError(message);
+      showErrorToast("Issue Kartu Gagal", message);
+    } finally {
+      setIssueSavingId(null);
     }
   };
 
@@ -281,6 +325,9 @@ export default function UsersSection() {
                     Status
                   </th>
                   <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    Kartu
+                  </th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                     Terdaftar
                   </th>
                   <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">
@@ -337,6 +384,25 @@ export default function UsersSection() {
                           Aktif
                         </span>
                       )}
+                    </td>
+                    <td className="px-6 py-4 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border ${cardStatusClass(user.cardStatus)}`}
+                        >
+                          {cardStatusLabel(user.cardStatus)}
+                        </span>
+                        {user.cardNumber ? (
+                          <span className="text-[11px] font-mono font-bold text-slate-500">
+                            {user.cardNumber}
+                          </span>
+                        ) : null}
+                      </div>
+                      {user.cardRejectedReason ? (
+                        <p className="max-w-[220px] text-[11px] text-rose-600">
+                          {user.cardRejectedReason}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-slate-500">
                       {user.createdAt
@@ -412,9 +478,23 @@ export default function UsersSection() {
                               : "Sync Member"}
                           </button>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200">
-                            Sudah Sync
-                          </span>
+                          <>
+                            <span className="inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                              Sudah Sync
+                            </span>
+                            {user.cardStatus !== "active" ? (
+                              <button
+                                onClick={() => void handleIssueCard(user)}
+                                disabled={issueSavingId === user.id}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-[#B91C1C] text-white hover:bg-[#991b1b] disabled:bg-slate-200 disabled:text-slate-400"
+                              >
+                                <ShieldCheck size={12} />
+                                {issueSavingId === user.id
+                                  ? "Menerbitkan..."
+                                  : "Terbitkan Kartu"}
+                              </button>
+                            ) : null}
+                          </>
                         )}
                       </div>
                     </td>
@@ -424,14 +504,6 @@ export default function UsersSection() {
             </table>
           </div>
         )}
-      </div>
-
-      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80 pointer-events-none">
-        {notifications.map((t) => (
-          <div key={t.id} className="pointer-events-auto">
-            <Notification {...t} onClose={() => removeToast(t.id)} />
-          </div>
-        ))}
       </div>
     </div>
   );

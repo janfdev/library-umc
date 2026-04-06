@@ -89,6 +89,13 @@ router.patch(
   memberController.approveMemberCard
 );
 
+router.post(
+  "/members/:id/card/issue",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  memberController.issueMemberCard
+);
+
 router.patch(
   "/members/:id/card/reject",
   isAuthenticated,

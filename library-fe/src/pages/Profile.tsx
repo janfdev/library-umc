@@ -12,7 +12,6 @@ import fineService from "@/services/fineService";
 import RiwayatPeminjaman from "@/components/RiwayatPeminjaman";
 import FinesList from "@/components/FinesList";
 import MemberCard from "@/components/MemberCard";
-import Notification from "@/components/ui/toast";
 import { useToast } from "@/hooks/useToast";
 import { Settings, Mail } from "lucide-react";
 
@@ -23,9 +22,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("peminjaman-aktif");
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [cardActionLoading, setCardActionLoading] = useState(false);
   const [activeLoanCount, setActiveLoanCount] = useState(0);
   const [unpaidFineCount, setUnpaidFineCount] = useState(0);
-  const { notifications, success, error, removeToast } = useToast();
+  const { success, error } = useToast();
   const currentUserId = session?.user?.id;
 
   const [formData, setFormData] = useState<UpdateProfilePayload>({
@@ -121,6 +121,24 @@ const Profile = () => {
     }
   };
 
+  const handleRequestCard = async () => {
+    try {
+      setCardActionLoading(true);
+      const updatedProfile = await memberService.requestMyMemberCard();
+      setProfile(updatedProfile);
+      success(
+        "Pengajuan Berhasil",
+        "Pengajuan kartu member berhasil dikirim ke admin",
+        3000
+      );
+    } catch (err) {
+      console.error("Request card error:", err);
+      error("Gagal", "Gagal mengajukan kartu member", 5000);
+    } finally {
+      setCardActionLoading(false);
+    }
+  };
+
   if (sessionLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -156,17 +174,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-
-      {/* Toast Container */}
-      <div className="fixed top-24 right-4 z-[9999] flex flex-col gap-2 w-80">
-        {notifications.map((toast) => (
-          <Notification
-            key={toast.id}
-            {...toast}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
 
       <main className="w-full mx-auto md:px-8 px-4 pt-10 pb-16">
         {/* Banner with Wavy Pattern placeholder */}
@@ -248,7 +255,11 @@ const Profile = () => {
           {activeTab === "tagihan-denda" && <FinesList />}
           {activeTab === "kartu-member" && (
             <div className="flex justify-center">
-              <MemberCard profile={profile} />
+              <MemberCard
+                profile={profile}
+                requestLoading={cardActionLoading}
+                onRequestCard={handleRequestCard}
+              />
             </div>
           )}
           {activeTab === "edit-profil" && (

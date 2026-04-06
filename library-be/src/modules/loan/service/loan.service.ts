@@ -273,7 +273,7 @@ export class LoanService {
         where: and(eq(loans.id, loanId), isNull(loans.deletedAt))
       });
 
-      if (!loan || loan.status !== "approved") {
+      if (!loan || !["approved", "extended"].includes(loan.status)) {
         throw new Error(
           "Buku ini tidak dalam status dipinjam atau data tidak ditemukan"
         );

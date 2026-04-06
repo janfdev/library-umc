@@ -360,6 +360,7 @@ export const fines = pgTable("fines", {
     .references(() => loans.id), // Reference UUID
   amount: numeric("amount", { precision: 12, scale: 2 }),
   status: finesStatusEnum("status").notNull(),
+  lastNotifiedAt: timestamp("last_notified_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at")

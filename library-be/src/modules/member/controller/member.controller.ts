@@ -186,6 +186,50 @@ export class MemberController {
     }
   }
 
+  async issueMemberCard(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = approveCardSchema.safeParse(req.body ?? {});
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+
+      const userId = String(req.params.id || "");
+      if (!userId) {
+        return sendError(res, "User ID tidak valid", 400);
+      }
+
+      const memberResult = await memberService.getMemberByUserId(userId);
+      if (!memberResult.success || !memberResult.data?.id) {
+        return sendError(res, "Member belum tersinkronisasi", 404);
+      }
+
+      const result = await memberService.approveMemberCard(
+        memberResult.data.id,
+        validation.data.cardNumber
+      );
+      if (!result.success) {
+        return sendError(
+          res,
+          result.message ?? "Gagal menerbitkan kartu member",
+          400
+        );
+      }
+
+      await auditService.createLog({
+        userId: req.user?.id,
+        action: "create",
+        entity: "Users",
+        entityId: memberResult.data.id,
+        ipAddress: req.ip,
+        detail: "issue_member_card"
+      });
+
+      sendSuccess(res, "Kartu member berhasil diterbitkan", result.data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async rejectMemberCard(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = rejectCardSchema.safeParse(req.body);

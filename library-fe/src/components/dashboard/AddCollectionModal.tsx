@@ -3,7 +3,6 @@ import { X, Upload } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { API_BASE_URL } from "@/utils/api-config";
 import Modal from "@/components/ui/modal";
-import Notification from "@/components/ui/toast";
 import { useToast } from "@/hooks/useToast";
 
 interface Category {
@@ -35,11 +34,31 @@ interface Collection {
   image?: string;
 }
 
+const formatIsbnInput = (value: string) => {
+  const cleaned = value
+    .toUpperCase()
+    .replace(/[^0-9X]/g, "")
+    .slice(0, 13);
+  if (!cleaned) return "";
+
+  const groups = cleaned.length <= 10 ? [1, 3, 5, 1] : [3, 1, 5, 3, 1];
+  const parts: string[] = [];
+  let cursor = 0;
+
+  for (const groupSize of groups) {
+    if (cursor >= cleaned.length) break;
+    parts.push(cleaned.slice(cursor, cursor + groupSize));
+    cursor += groupSize;
+  }
+
+  return parts.join("-");
+};
+
 export default function AddCollectionModal({
   isOpen,
   onClose,
   onRefresh,
-  collection,
+  collection
 }: AddCollectionModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,10 +72,10 @@ export default function AddCollectionModal({
     type: "physical_book",
     categoryId: "",
     stock: "",
-    image: null as File | null,
+    image: null as File | null
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const { notifications, success, error, removeToast } = useToast();
+  const { success, error } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -75,7 +94,7 @@ export default function AddCollectionModal({
             ""
           ).toString(),
           stock: (collection.stock ?? 0).toString(),
-          image: null,
+          image: null
         });
         setImagePreview(collection.image || null);
       } else {
@@ -88,7 +107,7 @@ export default function AddCollectionModal({
           type: "physical_book",
           categoryId: "",
           stock: "",
-          image: null,
+          image: null
         });
         setImagePreview(null);
       }
@@ -132,7 +151,7 @@ export default function AddCollectionModal({
       if (!formData.title || !formData.author || !formData.categoryId) {
         error(
           "Form Tidak Lengkap",
-          "Judul, Pengarang, dan Kategori wajib diisi.",
+          "Judul, Pengarang, dan Kategori wajib diisi."
         );
         setLoading(false);
         return;
@@ -160,7 +179,7 @@ export default function AddCollectionModal({
       const res = await fetch(url, {
         method: collection ? "PATCH" : "POST",
         credentials: "include",
-        body: data,
+        body: data
       });
 
       const responseData = await res.json(); // Renamed 'data' to 'responseData' to avoid conflict
@@ -170,7 +189,7 @@ export default function AddCollectionModal({
           "Berhasil",
           collection
             ? "Data koleksi berhasil diperbarui."
-            : "Data koleksi berhasil ditambahkan ke sistem.",
+            : "Data koleksi berhasil ditambahkan ke sistem."
         );
         onRefresh();
         onClose();
@@ -184,13 +203,13 @@ export default function AddCollectionModal({
           type: "physical_book",
           categoryId: "",
           stock: "",
-          image: null,
+          image: null
         });
         setImagePreview(null);
       } else {
         error(
           "Gagal Simpan",
-          responseData.message || "Gagal menambahkan koleksi.",
+          responseData.message || "Gagal menambahkan koleksi."
         );
       }
     } catch (err) {
@@ -277,9 +296,13 @@ export default function AddCollectionModal({
             <input
               type="text"
               value={formData.isbn}
-              onChange={(e) =>
-                setFormData({ ...formData, isbn: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({
+                  ...formData,
+                  isbn: formatIsbnInput(e.target.value)
+                });
+              }}
+              placeholder="978-1-23456-789-0"
               className={inputClass}
             />
           </div>
@@ -327,7 +350,7 @@ export default function AddCollectionModal({
               "relative border-2 border-dashed rounded-[20px] transition-all duration-300 overflow-hidden",
               imagePreview
                 ? "border-red-200 bg-red-50/10 h-48"
-                : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200 h-32",
+                : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200 h-32"
             )}
           >
             {imagePreview ? (
@@ -382,15 +405,6 @@ export default function AddCollectionModal({
           </button>
         </div>
       </form>
-
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80 pointer-events-none">
-        {notifications.map((t) => (
-          <div key={t.id} className="pointer-events-auto">
-            <Notification {...t} onClose={() => removeToast(t.id)} />
-          </div>
-        ))}
-      </div>
     </Modal>
   );
 }
