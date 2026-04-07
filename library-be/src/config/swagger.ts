@@ -13,7 +13,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: "https://api-library-be.leapcell.app/api",
+      url: "https://be-library-umc-842800936285.asia-southeast1.run.app/api",
       description: "Production Server",
     },
     {
