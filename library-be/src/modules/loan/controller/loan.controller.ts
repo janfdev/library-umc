@@ -140,7 +140,11 @@ export class LoanController {
 
       const memberId = await loanService.getMemberIdByUserId(req.user.id);
       if (!memberId) {
-        return sendError(res, "Profil member tidak ditemukan", 400);
+        return sendSuccess(
+          res,
+          "Profil member tidak ditemukan, riwayat peminjaman kosong",
+          []
+        );
       }
 
       const result = await loanService.getAllLoans({ memberId, limit: 100 });

@@ -13,9 +13,8 @@ import Profile from "../pages/Profile";
 import Eresource from "../pages/EResoucePage";
 import MyLoans from "../pages/MyLoansPage";
 import NotFound from "../pages/NotFound";
-
-// Components
 import ProtectedRoute from "../components/ProtectedRoute";
+import TentangPage from "../pages/TentangPage";
 
 const AppRoutes = () => {
   return (
@@ -27,6 +26,7 @@ const AppRoutes = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/e-resource" element={<Eresource />} />
       <Route path="/my-loans" element={<MyLoans />} />
+      <Route path="/tentang" element={<TentangPage />} />
 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
