@@ -28,7 +28,7 @@ interface UseBookListReturn {
 // ==========================================
 
 export function useBookList(
-  currentUser?: CurrentUser | null,
+  currentUser?: CurrentUser | null
 ): UseBookListReturn {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [userReservations, setUserReservations] = useState<Reservation[]>([]);
@@ -39,7 +39,20 @@ export function useBookList(
     const response = await fetch(`${API_BASE_URL}/api/collections`);
 
     if (!response.ok) {
-      throw new Error(`Gagal mengambil koleksi (HTTP ${response.status})`);
+      let apiMessage = "";
+      try {
+        const errJson = await response.json();
+        apiMessage =
+          typeof errJson?.message === "string" ? errJson.message : "";
+      } catch {
+        apiMessage = "";
+      }
+
+      throw new Error(
+        apiMessage
+          ? `Gagal mengambil koleksi: ${apiMessage} (HTTP ${response.status})`
+          : `Gagal mengambil koleksi (HTTP ${response.status})`
+      );
     }
 
     const json = await response.json();
@@ -54,7 +67,7 @@ export function useBookList(
   const fetchMyReservations = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/reservations/my`, {
-        credentials: "include", // kirim cookie session better-auth
+        credentials: "include" // kirim cookie session better-auth
       });
 
       if (!response.ok) return;
@@ -101,6 +114,6 @@ export function useBookList(
     userReservations,
     loading,
     error,
-    refetch: fetchAll,
+    refetch: fetchAll
   };
 }

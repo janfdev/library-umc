@@ -1,7 +1,13 @@
 import { db } from "../../../db";
 import { collections, categories, items, locations } from "../../../db/schema";
 import { uploadToCloudinary } from "../../../utils/upload";
-import { eq, ne, or, ilike, and, isNull, sql } from "drizzle-orm";
+import { eq, ne, or, ilike, and, isNull, sql, inArray } from "drizzle-orm";
+import ExcelJS from "exceljs";
+import { Readable } from "stream";
+import {
+  importCollectionRowSchema,
+  type ImportCollectionRow
+} from "../validation/collection.validation";
 
 type CollectionData = {
   coverImageUrl?: string;
@@ -16,7 +22,433 @@ type CollectionData = {
   stock?: number;
 };
 
+type ImportRowError = {
+  row: number;
+  errors: string[];
+};
+
+type NormalizedImportRow = ImportCollectionRow & { rowNumber: number };
+
+const IMPORT_HEADERS = [
+  "Title",
+  "ISBN",
+  "Author",
+  "Publisher",
+  "PublicationYear",
+  "Type",
+  "CategoryId",
+  "Description",
+  "Stock"
+] as const;
+
+const REQUIRED_IMPORT_HEADERS = [
+  "title",
+  "author",
+  "publisher",
+  "publicationyear",
+  "type",
+  "categoryid"
+] as const;
+
+const IMPORT_HEADER_ALIAS: Record<string, string[]> = {
+  title: ["title", "judul"],
+  isbn: ["isbn"],
+  author: ["author", "penulis"],
+  publisher: ["publisher", "penerbit"],
+  publicationyear: [
+    "publicationyear",
+    "publication_year",
+    "tahunpublikasi",
+    "tahun"
+  ],
+  type: ["type", "jenis"],
+  categoryid: ["categoryid", "category_id", "kategoriid", "category"],
+  description: ["description", "deskripsi"],
+  stock: ["stock", "jumlah", "quantity"]
+};
+
 export class CollectionService {
+  private normalizeHeader(value: unknown) {
+    return String(value ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  }
+
+  private getCellString(value: unknown): string {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    if (value instanceof Date) {
+      return String(value.getFullYear());
+    }
+
+    if (typeof value === "object") {
+      if ("text" in value && typeof value.text === "string") {
+        return value.text.trim();
+      }
+      if ("result" in value && value.result !== undefined) {
+        return String(value.result).trim();
+      }
+      if (
+        "richText" in value &&
+        Array.isArray(value.richText) &&
+        value.richText.length > 0
+      ) {
+        return value.richText
+          .map((item: { text?: string }) => item.text ?? "")
+          .join("")
+          .trim();
+      }
+    }
+
+    return String(value).trim();
+  }
+
+  private getHeaderMap(worksheet: ExcelJS.Worksheet) {
+    const headerRow = worksheet.getRow(1);
+    const indexMap: Record<string, number> = {};
+
+    for (let col = 1; col <= headerRow.cellCount; col++) {
+      const normalized = this.normalizeHeader(headerRow.getCell(col).value);
+      if (!normalized) {
+        continue;
+      }
+
+      for (const [canonical, aliases] of Object.entries(IMPORT_HEADER_ALIAS)) {
+        if (aliases.includes(normalized) && indexMap[canonical] === undefined) {
+          indexMap[canonical] = col;
+        }
+      }
+    }
+
+    const missingRequiredHeaders = REQUIRED_IMPORT_HEADERS.filter(
+      (header) => indexMap[header] === undefined
+    );
+
+    return { indexMap, missingRequiredHeaders };
+  }
+
+  private readWorkbookFromUpload(file: Express.Multer.File) {
+    const workbook = new ExcelJS.Workbook();
+    const ext = file.originalname.toLowerCase();
+    const isCsv =
+      file.mimetype === "text/csv" ||
+      file.mimetype === "application/csv" ||
+      ext.endsWith(".csv");
+    const isXlsx =
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel" ||
+      ext.endsWith(".xlsx");
+
+    if (!isCsv && !isXlsx) {
+      throw new Error(
+        "Format file tidak didukung. Gunakan file .csv atau .xlsx"
+      );
+    }
+
+    if (isCsv) {
+      return workbook.csv
+        .read(Readable.from(file.buffer.toString("utf-8")))
+        .then(() => workbook);
+    }
+
+    return workbook.xlsx.read(Readable.from(file.buffer)).then(() => workbook);
+  }
+
+  private parseImportRows(
+    worksheet: ExcelJS.Worksheet,
+    indexMap: Record<string, number>
+  ) {
+    const errors: ImportRowError[] = [];
+    const validRows: NormalizedImportRow[] = [];
+    const readCell = (row: ExcelJS.Row, key: string) => {
+      const index = indexMap[key];
+      if (!index) {
+        return "";
+      }
+      return this.getCellString(row.getCell(index).value);
+    };
+
+    for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+      const row = worksheet.getRow(rowNumber);
+
+      const raw = {
+        title: readCell(row, "title"),
+        isbn: readCell(row, "isbn"),
+        author: readCell(row, "author"),
+        publisher: readCell(row, "publisher"),
+        publicationYear: readCell(row, "publicationyear"),
+        type: readCell(row, "type"),
+        categoryId: readCell(row, "categoryid"),
+        description: readCell(row, "description"),
+        stock: readCell(row, "stock")
+      };
+
+      const isEmptyRow = Object.values(raw).every((value) => value === "");
+      if (isEmptyRow) {
+        continue;
+      }
+
+      const parsed = importCollectionRowSchema.safeParse(raw);
+      if (!parsed.success) {
+        errors.push({
+          row: rowNumber,
+          errors: parsed.error.issues.map((issue) => issue.message)
+        });
+        continue;
+      }
+
+      validRows.push({
+        ...parsed.data,
+        rowNumber
+      });
+    }
+
+    return { errors, validRows };
+  }
+
+  async getCollectionImportTemplateBuffer() {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Collections Template");
+
+    worksheet.addRow([...IMPORT_HEADERS]);
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.columns = [
+      { key: "title", width: 30 },
+      { key: "isbn", width: 20 },
+      { key: "author", width: 24 },
+      { key: "publisher", width: 24 },
+      { key: "publicationYear", width: 16 },
+      { key: "type", width: 16 },
+      { key: "categoryId", width: 14 },
+      { key: "description", width: 38 },
+      { key: "stock", width: 10 }
+    ];
+
+    const output = await workbook.xlsx.writeBuffer();
+    return Buffer.from(output as ArrayBuffer);
+  }
+
+  async importCollectionsFromFile(file: Express.Multer.File) {
+    try {
+      const workbook = await this.readWorkbookFromUpload(file);
+      const worksheet = workbook.worksheets[0];
+
+      if (!worksheet) {
+        return {
+          success: false,
+          message: "File tidak memiliki sheet yang bisa dibaca",
+          data: {
+            insertedCount: 0,
+            totalRows: 0,
+            errors: [{ row: 1, errors: ["Worksheet tidak ditemukan"] }]
+          }
+        };
+      }
+
+      const { indexMap, missingRequiredHeaders } = this.getHeaderMap(worksheet);
+      if (missingRequiredHeaders.length > 0) {
+        return {
+          success: false,
+          message: "Format header tidak valid",
+          data: {
+            insertedCount: 0,
+            totalRows: 0,
+            errors: [
+              {
+                row: 1,
+                errors: [
+                  `Header wajib tidak lengkap: ${missingRequiredHeaders.join(", ")}`
+                ]
+              }
+            ]
+          }
+        };
+      }
+
+      const { errors, validRows } = this.parseImportRows(worksheet, indexMap);
+      const totalRows = validRows.length + errors.length;
+
+      if (validRows.length === 0) {
+        return {
+          success: false,
+          message: "Tidak ada data valid untuk diimport",
+          data: {
+            insertedCount: 0,
+            totalRows,
+            errors:
+              errors.length > 0
+                ? errors
+                : [{ row: 2, errors: ["Data kosong atau tidak valid"] }]
+          }
+        };
+      }
+
+      const isbnRowsMap = new Map<string, number[]>();
+      for (const row of validRows) {
+        if (!row.isbn) {
+          continue;
+        }
+        const key = row.isbn.trim();
+        const rows = isbnRowsMap.get(key) ?? [];
+        rows.push(row.rowNumber);
+        isbnRowsMap.set(key, rows);
+      }
+
+      for (const [isbn, rows] of isbnRowsMap.entries()) {
+        if (rows.length > 1) {
+          rows.forEach((rowNumber) => {
+            errors.push({
+              row: rowNumber,
+              errors: [`ISBN duplikat dalam file import: ${isbn}`]
+            });
+          });
+        }
+      }
+
+      const uniqueIsbn = [...isbnRowsMap.keys()];
+      if (uniqueIsbn.length > 0) {
+        const existingCollections = await db
+          .select({ isbn: collections.isbn })
+          .from(collections)
+          .where(
+            and(
+              inArray(collections.isbn, uniqueIsbn),
+              isNull(collections.deletedAt)
+            )
+          );
+
+        const existingSet = new Set(
+          existingCollections
+            .map((row) => row.isbn)
+            .filter((value): value is string => Boolean(value))
+        );
+
+        if (existingSet.size > 0) {
+          for (const row of validRows) {
+            if (row.isbn && existingSet.has(row.isbn.trim())) {
+              errors.push({
+                row: row.rowNumber,
+                errors: [`ISBN sudah ada di database: ${row.isbn}`]
+              });
+            }
+          }
+        }
+      }
+
+      const categoryIds = [...new Set(validRows.map((row) => row.categoryId))];
+      const existingCategories =
+        categoryIds.length > 0
+          ? await db
+              .select({ id: categories.id })
+              .from(categories)
+              .where(inArray(categories.id, categoryIds))
+          : [];
+      const categorySet = new Set(
+        existingCategories.map((category) => category.id)
+      );
+
+      for (const row of validRows) {
+        if (!categorySet.has(row.categoryId)) {
+          errors.push({
+            row: row.rowNumber,
+            errors: [`CategoryId tidak ditemukan: ${row.categoryId}`]
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        const dedupedErrors = Array.from(
+          new Map(
+            errors.map((entry) => [
+              `${entry.row}-${entry.errors.join("|")}`,
+              entry
+            ])
+          ).values()
+        ).sort((a, b) => a.row - b.row);
+
+        return {
+          success: false,
+          message: "Import dibatalkan karena ada data tidak valid",
+          data: {
+            insertedCount: 0,
+            totalRows,
+            errors: dedupedErrors
+          }
+        };
+      }
+
+      const inserted = await db.transaction(async (tx) => {
+        const insertedRows: string[] = [];
+
+        for (const row of validRows) {
+          const normalizedType = row.type;
+          const targetStock =
+            normalizedType === "physical_book" ? Number(row.stock ?? 0) : 0;
+
+          const [newCollection] = await tx
+            .insert(collections)
+            .values({
+              title: row.title,
+              isbn: row.isbn?.trim() || null,
+              author: row.author,
+              publisher: row.publisher,
+              publicationYear: row.publicationYear,
+              type: normalizedType,
+              categoryId: row.categoryId,
+              description: row.description,
+              image: null,
+              stock: 0
+            })
+            .onConflictDoNothing()
+            .returning({ id: collections.id });
+
+          if (!newCollection) {
+            continue;
+          }
+
+          insertedRows.push(newCollection.id);
+          await this.syncItemsWithStock(
+            tx,
+            newCollection.id,
+            Math.max(0, targetStock)
+          );
+        }
+
+        return insertedRows.length;
+      });
+
+      return {
+        success: true,
+        message: "Import koleksi berhasil",
+        data: {
+          insertedCount: inserted,
+          totalRows,
+          errors: []
+        }
+      };
+    } catch (err) {
+      console.error("[CollectionService] Error importing collections:", err);
+      return {
+        success: false,
+        message: "Gagal memproses file import",
+        data: {
+          insertedCount: 0,
+          totalRows: 0,
+          errors: [
+            {
+              row: 0,
+              errors: [err instanceof Error ? err.message : "Unknown error"]
+            }
+          ]
+        }
+      };
+    }
+  }
+
   private async syncCollectionAvailableStock(tx: any, collectionId: string) {
     const [availableCount] = await tx
       .select({ count: sql<number>`count(*)` })

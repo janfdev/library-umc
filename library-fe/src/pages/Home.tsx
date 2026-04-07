@@ -6,10 +6,6 @@ import Background from "@/assets/bg1.jpeg";
 import DialogUnauthorized from "@/components/DialogUnauthorized";
 import Footer from "@/components/Footer";
 import BookList from "@/components/BookList";
-import { authClient } from "@/utils/auth-client";
-import LecturerRecommendationModal from "@/components/LecturerRecommendationModal";
-import { BookMarked } from "lucide-react";
-import type { AuthUser } from "@/types/auth";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -17,11 +13,6 @@ export default function Home() {
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("all");
-
-  const { data: session } = authClient.useSession();
-  const user = session?.user as AuthUser | undefined;
-  const isLecturer = user?.role === "lecturer" || user?.role === "super_admin";
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Handle search and redirect to Katalog page
   const handleSearch = () => {
@@ -77,7 +68,7 @@ export default function Home() {
               <div className="flex flex-col space-y-3 sm:space-y-4">
                 {/* Input Search & Dropdown */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
-                  <div className="relative flex-grow">
+                  <div className="relative grow">
                     <input
                       type="text"
                       value={searchQuery}
@@ -123,31 +114,11 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Floating Button for Lecturer Recommendation */}
-          {isLecturer && (
-            <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 z-30">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="group flex items-center gap-2 sm:gap-3 bg-white hover:bg-red-600 text-red-600 hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 border-4 border-red-600/10"
-              >
-                <BookMarked className="group-hover:rotate-12 transition-transform" />
-                <span className="font-bold text-xs sm:text-sm tracking-tight uppercase">
-                  Usul Koleksi Baru
-                </span>
-              </button>
-            </div>
-          )}
-
-          <LecturerRecommendationModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-          />
         </div>
       </div>
 
       {/* Pintasan */}
-      <div className="w-full p-4 sm:p-6 lg:p-[40px]">
+      <div className="w-full p-4 sm:p-6 lg:p-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 px-2 sm:px-4 lg:px-16 text-gray-900">
           {/* Card 1 */}
           <a
@@ -165,7 +136,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-book-open-text text-red-700 sm:w-[80px] sm:h-[80px]"
+                className="lucide lucide-book-open-text text-red-700 sm:h-20"
               >
                 <path d="M12 7v14" />
                 <path d="M16 12h2" />
@@ -199,7 +170,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-file-minus text-red-700 sm:w-[80px] sm:h-[80px]"
+                className="lucide lucide-file-minus text-red-700 sm:w-20 sm:h-20"
               >
                 <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
                 <path d="M14 2v5a1 1 0 0 0 1 1h5" />
@@ -230,7 +201,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-map-pinned-icon lucide-map-pinned text-red-700 sm:w-[80px] sm:h-[80px]"
+                className="lucide lucide-map-pinned-icon lucide-map-pinned text-red-700 sm:w-20 sm:h-20"
               >
                 <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0" />
                 <circle cx="12" cy="8" r="2" />
@@ -261,7 +232,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-book-plus-icon lucide-book-plus text-red-700 sm:w-[80px] sm:h-[80px]"
+                className="lucide lucide-book-plus-icon lucide-book-plus text-red-700 sm:w-20 sm:h-20"
               >
                 <path d="M12 7v6" />
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
@@ -279,7 +250,7 @@ export default function Home() {
       </div>
 
       {/* Daftar buku dan Ebook */}
-      <div className="p-4 sm:p-6 lg:p-[50px] flex justify-center">
+      <div className="p-4 sm:p-6 lg:p-12.5 flex justify-center">
         <BookList />
       </div>
 

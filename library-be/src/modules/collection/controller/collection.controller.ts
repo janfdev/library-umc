@@ -2,17 +2,65 @@ import { type NextFunction, type Request, type Response } from "express";
 import { CollectionService } from "../service/collection.service";
 import {
   createCollectionSchema,
-  updateCollectionSchema,
+  updateCollectionSchema
 } from "../validation/collection.validation";
 import {
   sendSuccess,
   sendError,
-  sendValidationError,
+  sendValidationError
 } from "../../../utils/api-utils";
 
 const collectionService = new CollectionService();
 
 export class CollectionController {
+  async downloadImportTemplate(
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const buffer =
+        await collectionService.getCollectionImportTemplateBuffer();
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="collections-import-template.xlsx"'
+      );
+
+      res.status(200).send(buffer);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async importCollections(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        return sendError(res, "File import wajib diunggah", 400);
+      }
+
+      const result = await collectionService.importCollectionsFromFile(
+        req.file
+      );
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.message ?? "Gagal import koleksi",
+          data: result.data
+        });
+      }
+
+      sendSuccess(res, "Import koleksi berhasil", result.data, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   /**
    * GET /collections — Ambil semua koleksi (dengan filter opsional)
    */
@@ -28,14 +76,14 @@ export class CollectionController {
           | "ebook"
           | "journal"
           | "thesis"
-          | undefined,
+          | undefined
       });
 
       if (!result.success) {
         return sendError(
           res,
           result.message ?? "Gagal mengambil data koleksi",
-          400,
+          400
         );
       }
 
@@ -51,7 +99,7 @@ export class CollectionController {
   async getCollectionById(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await collectionService.getCollectionById(
-        String(req.params.id),
+        String(req.params.id)
       );
 
       if (!result.success) {
@@ -76,7 +124,7 @@ export class CollectionController {
 
       const result = await collectionService.createCollection(
         validation.data,
-        req.file,
+        req.file
       );
 
       if (!result.success) {
@@ -102,14 +150,14 @@ export class CollectionController {
       const result = await collectionService.updateCollection(
         String(req.params.id),
         validation.data,
-        req.file,
+        req.file
       );
 
       if (!result.success) {
         return sendError(
           res,
           result.message ?? "Gagal memperbarui koleksi",
-          400,
+          400
         );
       }
 
@@ -125,7 +173,7 @@ export class CollectionController {
   async deleteCollection(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await collectionService.deleteCollection(
-        String(req.params.id),
+        String(req.params.id)
       );
 
       if (!result.success) {

@@ -161,7 +161,7 @@ const BookList = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow p-4 md:p-6">
+    <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div className="w-full md:w-auto">
@@ -169,7 +169,7 @@ const BookList = ({
             Koleksi Perpustakaan
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            {filteredByYear.length} hasil ditemukan
+            {filteredByYear.length} Buku
           </p>
           {currentUser && (
             <p className="text-xs text-purple-600 mt-1">
