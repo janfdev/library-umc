@@ -5,7 +5,7 @@ import {
   Calendar,
   Hash,
   Layers,
-  type LucideIcon,
+  type LucideIcon
 } from "lucide-react";
 import Modal from "@/components/ui/modal";
 
@@ -28,8 +28,8 @@ interface Collection {
 type DetailRowProps = {
   icon: LucideIcon;
   label: string;
-  value: string;
-  colorClass: string;
+  value?: string;
+  colorClass?: string;
 };
 
 interface ViewCollectionModalProps {
@@ -42,7 +42,7 @@ const DetailRow = ({
   icon: Icon,
   label,
   value,
-  colorClass = "text-slate-600",
+  colorClass = "text-slate-600"
 }: DetailRowProps) => (
   <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100/50">
     <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
@@ -62,7 +62,7 @@ const DetailRow = ({
 export default function ViewCollectionModal({
   isOpen,
   onClose,
-  collection,
+  collection
 }: ViewCollectionModalProps) {
   if (!collection) return null;
 
@@ -73,13 +73,13 @@ export default function ViewCollectionModal({
           bg: "bg-orange-50",
           text: "text-orange-500",
           label: "Dipinjam / Stok Habis",
-          iconColor: "text-orange-400",
+          iconColor: "text-orange-400"
         }
       : {
           bg: "bg-emerald-50",
           text: "text-emerald-600",
           label: "Tersedia",
-          iconColor: "text-emerald-400",
+          iconColor: "text-emerald-400"
         };
 
   return (
@@ -87,7 +87,7 @@ export default function ViewCollectionModal({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-1">
         {/* Left: Cover Image */}
         <div className="lg:col-span-4">
-          <div className="aspect-[3/4] rounded-[24px] overflow-hidden bg-slate-100 border border-slate-200 shadow-inner flex items-center justify-center relative group">
+          <div className="aspect-3/4 rounded-[24px] overflow-hidden bg-slate-100 border border-slate-200 shadow-inner flex items-center justify-center relative group">
             {collection.image ? (
               <img
                 src={collection.image}
