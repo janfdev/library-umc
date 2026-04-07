@@ -10,6 +10,22 @@ export interface AuthUser {
   role: "student" | "lecturer" | "super_admin" | "staff";
 }
 
+/**
+ * User yang digunakan oleh komponen frontend:
+ * bentuk sederhana dari session better-auth + field khusus perpustakaan.
+ * Gunakan ini saat passing `currentUser` sebagai prop komponen.
+ */
+export interface LibraryUser {
+  id: string;
+  /** ID member di tabel members (bisa beda dengan auth id) */
+  memberId?: string;
+  name: string;
+  email: string;
+  role: "admin" | "mahasiswa";
+  /** NIM mahasiswa jika ada */
+  nim?: string;
+}
+
 export interface AuthSession {
   user: AuthUser;
   session: {

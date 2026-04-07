@@ -21,7 +21,7 @@ export const createCollectionSchema = z.object({
     .max(25)
     .regex(
       /^[0-9Xx\-\s]*$/,
-      "ISBN hanya boleh berisi angka, X, dan penghubung (-)"
+      "ISBN hanya boleh berisi angka, X, dan penghubung (-)",
     )
     .optional(),
 
@@ -33,7 +33,7 @@ export const createCollectionSchema = z.object({
   description: z.string().optional(),
 
   // Stock/Quantity of the collection
-  stock: z.preprocess(strToNum, z.number().int().min(0).default(0)).optional()
+  stock: z.preprocess(strToNum, z.number().int().min(0).default(0)).optional(),
 });
 
 // Schema update (semua field optional)

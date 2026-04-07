@@ -1,15 +1,12 @@
-import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router";
-import { API_BASE_URL } from "@/utils/api-config";
+import { useParams, Link } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
 import ReservationList from "@/components/ReservationList";
-import loanService from "@/services/loanService";
-import reservationService, {
-  type Reservation,
-} from "@/services/reservationService";
 import { authClient } from "@/utils/auth-client";
-import { useToast } from "@/hooks/useToast";
+import { useKatalogDetail } from "@/hooks/useKatalogDetail";
+import { useKatalogActions } from "@/hooks/useKatalogActions";
+import type { LibraryUser } from "@/types";
+import { PerspectiveBook } from "@/components/perspective-book";
 import {
   Share2,
   Bookmark,
@@ -20,76 +17,16 @@ import {
   Bell,
   CheckCircle,
   Clock,
+  BookOpen,
 } from "lucide-react";
-
-// ✅ Interface Collection (item di schema backend)
-interface Collection {
-  id: string;
-  title: string;
-  author: string;
-  publisher: string;
-  publicationYear: number;
-  isbn?: string;
-  type: string;
-  categoryId: number;
-  description?: string;
-  image?: string;
-  createdAt: string;
-  updatedAt: string;
-  category?: {
-    id: number;
-    name: string;
-    description?: string;
-  };
-  items?: {
-    id: string;
-    status: string;
-  }[];
-  stock?: number;
-}
-
-// ✅ Interface User
-interface User {
-  id: string;
-  memberId?: string;
-  name: string;
-  email: string;
-  role: "admin" | "mahasiswa";
-  nim?: string;
-}
-
-// ✅ Interface Loan sesuai schema backend
-// Field: id, memberId, itemId, loanDate, dueDate, returnDate, status, approvedBy, createdAt, updatedAt
-interface LoanRequest {
-  id: string;
-  status:
-    | "pending"
-    | "approved"
-    | "extended"
-    | "rejected"
-    | "active"
-    | "returned"
-    | "overdue";
-  itemId: string; // ✅ bukan collectionId
-  memberId: string;
-  loanDate?: string; // ✅ bukan startDate
-  dueDate?: string; // ✅ bukan endDate
-  returnDate?: string;
-  approvedBy?: string;
-  createdAt?: string;
-  member?: Record<string, unknown>;
-  item?: Record<string, unknown>;
-}
+import { generateColorFromSeed } from "@/utils/format";
 
 const KatalogDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
-  // ✅ Ambil session dari authClient
   const { data: session, isPending: sessionLoading } = authClient.useSession();
 
-  // ✅ Bangun currentUser dari session nyata
-  const currentUser: User | null = session?.user
+  const currentUser: LibraryUser | null = session?.user
     ? {
         id: session.user.id,
         memberId:
@@ -103,380 +40,48 @@ const KatalogDetail = () => {
       }
     : null;
 
-  const toast = useToast();
+  const {
+    collection,
+    userLoans,
+    pendingRequests,
+    userReservation,
+    loading,
+    error,
+    similarBooks,
+    setUserReservation,
+    setPendingRequests,
+  } = useKatalogDetail(id, currentUser, sessionLoading);
 
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [userLoans, setUserLoans] = useState<LoanRequest[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<LoanRequest[]>([]);
-  const [userReservation, setUserReservation] = useState<Reservation | null>(
-    null,
-  );
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [showReservationList, setShowReservationList] = useState(false);
-  const [borrowLoading, setBorrowLoading] = useState(false);
-  const [showLoanForm, setShowLoanForm] = useState(false);
-
-  // Form field disesuaikan dengan schema: loanDate & dueDate
-  const defaultLoanDate = new Date().toISOString().split("T")[0];
-  const defaultDueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-
-  const [loanFormData, setLoanFormData] = useState({
-    loanDate: defaultLoanDate,
-    dueDate: defaultDueDate,
-    notes: "",
+  const {
+    showReservationList,
+    setShowReservationList,
+    borrowLoading,
+    showLoanForm,
+    setShowLoanForm,
+    loanFormData,
+    setLoanFormData,
+    getBookStatus,
+    isUserBorrowing,
+    isUserPending,
+    isUserReserved,
+    handleInputChange,
+    handleBorrow,
+    handleSubmitLoan,
+    handleCheckLoans,
+  } = useKatalogActions({
+    collection,
+    currentUser,
+    userLoans,
+    pendingRequests,
+    userReservation,
+    setUserReservation,
+    setPendingRequests,
   });
-
-  const [similarBooks, setSimilarBooks] = useState([
-    {
-      id: "1",
-      title: "Bulan",
-      author: "Tere Liye",
-      image: null,
-      color: "bg-slate-800",
-    },
-    {
-      id: "2",
-      title: "Matahari",
-      author: "Tere Liye",
-      image: null,
-      color: "bg-red-900",
-    },
-    {
-      id: "3",
-      title: "Bintang",
-      author: "Tere Liye",
-      image: null,
-      color: "bg-indigo-900",
-    },
-    {
-      id: "4",
-      title: "Ceros dan Batozar",
-      author: "Tere Liye",
-      image: null,
-      color: "bg-purple-900",
-    },
-  ]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // 1. Fetch detail koleksi/item
-        const collectionResponse = await fetch(
-          `${API_BASE_URL}/api/collections/${id}`,
-        );
-        if (!collectionResponse.ok)
-          throw new Error(`HTTP error! status: ${collectionResponse.status}`);
-        const collectionJson = await collectionResponse.json();
-
-        if (collectionJson.success && collectionJson.data) {
-          setCollection(collectionJson.data);
-
-          // 2. Jika user login, ambil histori pinjaman user (endpoint member)
-          const memberId = currentUser?.memberId;
-          if (memberId) {
-            try {
-              const myLoans = await loanService.getMyLoanHistory();
-              const loansForCollection = myLoans.filter(
-                (loan: any) => loan?.item?.collection?.id === id,
-              ) as LoanRequest[];
-
-              setPendingRequests(
-                loansForCollection.filter((loan) => loan.status === "pending"),
-              );
-
-              setUserLoans(
-                loansForCollection.filter(
-                  (loan) =>
-                    loan.status === "approved" || loan.status === "extended",
-                ),
-              );
-            } catch (err) {
-              console.error("Error fetching member loans:", err);
-              setPendingRequests([]);
-              setUserLoans([]);
-            }
-
-            // Fetch user reservation untuk koleksi ini
-            try {
-              const reservations = await reservationService.getMyReservations();
-              const activeRes = reservations.find(
-                (r) => r.collectionId === id && r.status === "waiting",
-              );
-              setUserReservation(activeRes || null);
-            } catch (err) {
-              console.error("Error fetching reservation:", err);
-            }
-          }
-
-          // 3. Fetch similar books
-          if (collectionJson.data.categoryId) {
-            fetchSimilarBooks(collectionJson.data.categoryId);
-          }
-        } else {
-          throw new Error(collectionJson.message || "Data tidak ditemukan");
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Gagal memuat detail buku",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchSimilarBooks = async (categoryId: number) => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/collections?categoryId=${categoryId}&limit=4`,
-        );
-        const data = await response.json();
-        if (data.success) {
-          setSimilarBooks(data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching similar books:", error);
-      }
-    };
-
-    // ✅ Tunggu session selesai sebelum fetch
-    if (id && !sessionLoading) fetchData();
-    window.scrollTo(0, 0);
-  }, [id, sessionLoading, currentUser?.memberId]);
-
-  // Helper: Cek status buku
-  const getBookStatus = (): "available" | "borrowed" | "reserved" | "empty" => {
-    // Prioritas 1: gunakan item fisik jika memang ada datanya
-    if (collection?.items && collection.items.length > 0) {
-      const availableItems = collection.items.filter(
-        (i) => i.status === "available",
-      );
-      return availableItems.length > 0 ? "available" : "empty";
-    }
-
-    // Prioritas 2: fallback ke stock agregat jika item fisik belum disediakan
-    if (typeof collection?.stock === "number") {
-      return collection.stock > 0 ? "available" : "empty";
-    }
-
-    return "available";
-  };
-
-  const isUserBorrowing = (): boolean => userLoans.length > 0;
-  const isUserPending = (): boolean => pendingRequests.length > 0;
-  const isUserReserved = (): boolean => !!userReservation;
-
-  // Handle input change
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-
-    if (name === "loanDate") {
-      const selectedDate = new Date(value);
-      // Hitung 3 hari ke depan secara otomatis
-      const calculatedDueDate = new Date(
-        selectedDate.getTime() + 3 * 24 * 60 * 60 * 1000,
-      )
-        .toISOString()
-        .split("T")[0];
-      setLoanFormData({
-        ...loanFormData,
-        loanDate: value,
-        dueDate: calculatedDueDate,
-      });
-    } else {
-      setLoanFormData({ ...loanFormData, [name]: value });
-    }
-  };
-
-  // Handle klik tombol pinjam
-  const handleBorrow = () => {
-    if (!currentUser) {
-      toast.warning("Auth", "Silakan login terlebih dahulu untuk meminjam");
-      return;
-    }
-    if (isUserBorrowing()) {
-      toast.warning("Info Pinjaman", "Anda sedang meminjam buku ini");
-      return;
-    }
-    if (isUserPending()) {
-      toast.warning(
-        "Info Pinjaman",
-        "Anda sudah mengajukan peminjaman untuk buku ini",
-      );
-      return;
-    }
-    if (getBookStatus() === "empty" || getBookStatus() === "borrowed") {
-      if (
-        confirm("Buku sedang tidak tersedia. Ingin masuk antrian reservasi?")
-      ) {
-        handleReserve();
-      }
-      return;
-    }
-    setShowLoanForm(true);
-  };
-
-  const handleReserve = async () => {
-    if (!currentUser || !collection?.id) return;
-
-    setBorrowLoading(true);
-    const collectionId = collection.id;
-    const loadingId = toast.loading(
-      "Memproses",
-      "Mendaftarkan ke antrian reservasi...",
-    );
-    try {
-      await reservationService.createReservation(collectionId);
-      toast.removeToast(loadingId);
-      toast.success(
-        "Berhasil",
-        "Anda telah masuk dalam antrian reservasi. Kami akan memberitahu Anda via email jika buku sudah tersedia.",
-      );
-      setShowReservationList(true);
-
-      // Update local status
-      setUserReservation({
-        id: "new", // Temporary ID
-        memberId: currentUser.memberId || "",
-        collectionId: collectionId,
-        status: "waiting",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-    } catch (error) {
-      toast.removeToast(loadingId);
-      toast.error(
-        "Gagal",
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat membuat reservasi",
-      );
-    } finally {
-      setBorrowLoading(false);
-    }
-  };
-
-  // Submit form peminjaman
-  const handleSubmitLoan = async () => {
-    // ✅ Validasi lengkap sebelum kirim request
-    if (!currentUser) {
-      toast.error("Auth", "Anda harus login terlebih dahulu");
-      navigate("/login");
-      return;
-    }
-
-    if (!currentUser.memberId) {
-      toast.error(
-        "Akses Ditolak",
-        "ID member tidak ditemukan. Silakan login ulang.",
-      );
-      return;
-    }
-
-    if (!collection?.id) {
-      toast.error("Error", "Data buku tidak ditemukan");
-      return;
-    }
-
-    if (!loanFormData.loanDate || !loanFormData.dueDate) {
-      toast.warning(
-        "Form Belum Lengkap",
-        "Pilih tanggal peminjaman dan pengembalian",
-      );
-      return;
-    }
-
-    // Validasi tanggal
-    const start = new Date(loanFormData.loanDate);
-    const end = new Date(loanFormData.dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (start < today) {
-      toast.warning(
-        "Tanggal Tidak Valid",
-        "Tanggal peminjaman tidak boleh kurang dari hari ini",
-      );
-      return;
-    }
-
-    if (end <= start) {
-      toast.warning(
-        "Tanggal Tidak Valid",
-        "Tanggal pengembalian harus setelah tanggal peminjaman",
-      );
-      return;
-    }
-
-    const diffDays = Math.ceil(
-      (end.getTime() - start.getTime()) / (1000 * 3600 * 24),
-    );
-    if (diffDays > 14) {
-      toast.warning("Melewati Batas", "Maksimal peminjaman 14 hari");
-      return;
-    }
-
-    setBorrowLoading(true);
-    const loadingId = toast.loading("Memproses", "Mengajukan peminjaman...");
-    try {
-      // ✅ Kirim dengan field sesuai schema backend
-      const loan = await loanService.requestLoan({
-        memberId: currentUser.memberId, // ✅ ID dari session nyata
-        collectionId: collection.id, // ✅ gunakan collectionId, bukan itemId spesifik
-        loanDate: loanFormData.loanDate,
-        dueDate: loanFormData.dueDate,
-        notes: loanFormData.notes,
-      });
-
-      toast.removeToast(loadingId);
-      toast.success(
-        "Berhasil",
-        "Permintaan peminjaman berhasil dikirim! Menunggu persetujuan petugas.",
-      );
-
-      setPendingRequests((prev) => [...prev, loan as unknown as LoanRequest]);
-      setShowLoanForm(false);
-
-      // Reset form dates
-      setLoanFormData({
-        loanDate: defaultLoanDate,
-        dueDate: defaultDueDate,
-        notes: "",
-      });
-    } catch (error) {
-      toast.removeToast(loadingId);
-      toast.error(
-        "Gagal",
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat mengajukan peminjaman",
-      );
-    } finally {
-      setBorrowLoading(false);
-    }
-  };
-
-  const handleCheckLoans = () => {
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
-    navigate("/my-loans");
-  };
 
   const bookStatus = getBookStatus();
   const isBorrowing = isUserBorrowing();
   const isPending = isUserPending();
 
-  // ✅ Loading saat session atau data sedang dimuat
   if (loading || sessionLoading)
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -505,7 +110,6 @@ const KatalogDetail = () => {
                 <p className="text-sm text-slate-600">{collection?.author}</p>
               </div>
 
-              {/* ✅ Tanggal Peminjaman — field: loanDate */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Tanggal Peminjaman
@@ -840,36 +444,42 @@ const KatalogDetail = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="flex flex-wrap gap-6">
             {similarBooks.map((book) => (
               <Link
                 key={book.id}
                 to={`/katalog/${book.id}`}
-                className="group bg-white p-4 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300"
+                className="group flex flex-col items-center gap-2"
               >
-                <div
-                  className={`aspect-3/4 rounded-2xl ${book.color} mb-4 overflow-hidden shadow-md group-hover:shadow-lg transition-all`}
+                <PerspectiveBook
+                  size="sm"
+                  className={generateColorFromSeed(book.id)}
                 >
-                  {book.image ? (
-                    <img
-                      src={book.image}
-                      alt={book.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center p-4 text-center">
-                      <span className="text-white font-bold text-xs uppercase opacity-80 leading-tight">
-                        {book.title}
+                  <div className="flex flex-col h-full gap-1.5">
+                    <p className="font-semibold capitalize leading-4 text-white text-xs line-clamp-3">
+                      {book.title}
+                    </p>
+                    <div className="mt-auto flex flex-col gap-1">
+                      <span className="text-white/70 text-[10px] leading-tight line-clamp-1">
+                        {book.author}
                       </span>
+                      <div className="flex items-center gap-1">
+                        <BookOpen className="size-3 text-white/70" />
+                        <span className="text-white/60 text-[9px]">
+                          {book.publicationYear ?? ""}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                </PerspectiveBook>
+                <div className="text-center w-[150px]">
+                  <p className="text-xs font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-red-700 transition-colors">
+                    {book.title}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                    {book.author}
+                  </p>
                 </div>
-                <h4 className="font-bold text-slate-900 text-sm mb-1 truncate group-hover:text-red-700 transition-colors">
-                  {book.title}
-                </h4>
-                <p className="text-xs text-slate-400 font-medium">
-                  {book.author}
-                </p>
               </Link>
             ))}
           </div>

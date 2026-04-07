@@ -1,24 +1,4 @@
-// src/types/dashboard.ts
-// Shared TypeScript interfaces for the dashboard module
-
-export interface Collection {
-  id: string;
-  title: string;
-  author: string;
-  publisher: string;
-  publicationYear: string;
-  isbn?: string;
-  type: "physical_book" | "ebook" | "journal" | "thesis";
-  description?: string;
-  image: string | null;
-  category: {
-    id: number;
-    name: string;
-  };
-  categoryId?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type { Collection } from "./collection";
 
 export interface Category {
   id: number;
