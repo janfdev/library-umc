@@ -1,4 +1,0 @@
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/project-6452d4b7-a536-4d6b-aa2/library-be', '.']
-    dir: 'library-be' # Ganti direktori sebelum build
