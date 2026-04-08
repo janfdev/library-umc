@@ -6,12 +6,12 @@ import {
   Wallet,
   Loader,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { formatRupiah, calcLateDays } from "@/utils/format";
+
 interface UnpaidFine {
   id: string;
   amount: number;
@@ -43,7 +43,7 @@ interface PaidFine {
 // ─── Toast Component ──────────────────────────────────────────────────────
 function InlineToast({
   message,
-  type
+  type,
 }: {
   message: string;
   type: "success" | "error";
@@ -89,16 +89,16 @@ export default function FinesSection() {
     try {
       const [unpaidRes, paidRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=100`, {
-          credentials: "include"
+          credentials: "include",
         }),
         fetch(`${API_BASE_URL}/api/fines?status=paid&limit=100`, {
-          credentials: "include"
-        })
+          credentials: "include",
+        }),
       ]);
 
       const [unpaidData, paidData] = await Promise.all([
         unpaidRes.json(),
-        paidRes.json()
+        paidRes.json(),
       ]);
 
       if (unpaidData.success && Array.isArray(unpaidData.data)) {
@@ -130,8 +130,8 @@ export default function FinesSection() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({})
-          }
+            body: JSON.stringify({}),
+          },
         );
 
         const returnData = await returnRes.json();
@@ -139,7 +139,7 @@ export default function FinesSection() {
           showToast(
             returnData.message ||
               "Gagal memproses pengembalian buku sebelum bayar denda.",
-            "error"
+            "error",
           );
           return;
         }
@@ -149,7 +149,7 @@ export default function FinesSection() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ paymentMethod: "cash" })
+        body: JSON.stringify({ paymentMethod: "cash" }),
       });
       const data = await response.json();
 
@@ -169,14 +169,14 @@ export default function FinesSection() {
 
   // ─── Filter & Pagination ─────────────────────────────────────────────────
   const filterFines = <
-    T extends { loan: { member: { user: { name: string } } } }
+    T extends { loan: { member: { user: { name: string } } } },
   >(
-    list: T[]
+    list: T[],
   ) =>
     list.filter((item) =>
       item.loan.member.user.name
         .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+        .includes(searchTerm.toLowerCase()),
     );
 
   const filteredUnpaid = filterFines(unpaidFines);
@@ -185,7 +185,7 @@ export default function FinesSection() {
   const totalPages = Math.max(1, Math.ceil(activeList.length / itemsPerPage));
   const paginatedList = activeList.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // Reset page when tab or search changes
@@ -332,7 +332,7 @@ export default function FinesSection() {
                     const computedLateDays = calcLateDays(fine.loan.dueDate);
                     const amountBasedDays = Math.max(
                       0,
-                      Math.round((Number(fine.amount) || 0) / 500)
+                      Math.round((Number(fine.amount) || 0) / 500),
                     );
                     const lateDays =
                       fine.loan.status === "returned"
@@ -420,8 +420,8 @@ export default function FinesSection() {
                             {
                               day: "numeric",
                               month: "short",
-                              year: "numeric"
-                            }
+                              year: "numeric",
+                            },
                           )}
                         </p>
                       </td>
@@ -461,7 +461,7 @@ export default function FinesSection() {
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(
                 (p) =>
-                  p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1
+                  p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1,
               )
               .map((p, idx, arr) => {
                 const showDot =

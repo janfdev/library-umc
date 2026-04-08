@@ -7,71 +7,21 @@ import {
   User,
   ChevronDown,
   LayoutDashboard,
-  BookOpen,
+  BookOpen
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
-
-// Interface untuk user dari JWT
-interface JwtUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  image?: string;
-  token?: string;
-}
+import type { AuthUser } from "@/types/auth";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [jwtUser, setJwtUser] = useState<JwtUser | null>(null);
 
-  // Ambil session dari SSO
+  // Ambil session dari Better Auth
   const { data: session } = authClient.useSession();
 
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Load user dari JWT token di localStorage
-  useEffect(() => {
-    const loadJwtUser = () => {
-      const token = localStorage.getItem("access_token");
-      if (token) {
-        // Coba decode token atau ambil dari localStorage
-        // Biasanya backend mengirim data user saat login
-        const userData = localStorage.getItem("user_data");
-        if (userData) {
-          try {
-            setJwtUser(JSON.parse(userData));
-          } catch (e) {
-            console.error("Failed to parse user data", e);
-          }
-        } else {
-          // Jika tidak ada user_data, set minimal
-          setJwtUser({
-            id: "",
-            name: "User",
-            email: "",
-            role: "member",
-            token: token,
-          });
-        }
-      } else {
-        setJwtUser(null);
-      }
-    };
-
-    loadJwtUser();
-
-    // Listen untuk perubahan localStorage
-    const handleStorageChange = () => {
-      loadJwtUser();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -104,7 +54,7 @@ const Navbar = () => {
     { name: "Beranda", href: "/" },
     { name: "Katalog", href: "/katalog" },
     { name: "E-Resource", href: "/e-resource" },
-    { name: "Tentang", href: "/tentang" },
+    { name: "Tentang", href: "/tentang" }
   ];
 
   // Cek apakah link aktif
@@ -113,16 +63,10 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    // Logout dari SSO jika ada session
     if (session) {
       await authClient.signOut();
     }
 
-    // Hapus data JWT dari localStorage
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user_data");
-
-    setJwtUser(null);
     setIsDropdownOpen(false);
     navigate("/login");
   };
@@ -146,20 +90,41 @@ const Navbar = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Tentukan user aktif (prioritas: SSO > JWT)
-  const activeUser = session?.user || jwtUser;
+  const sessionUser = session?.user as AuthUser | undefined;
+  const activeUser = sessionUser;
   const isLoggedIn = !!activeUser;
 
-  // Tentukan role
-  const isSuperAdmin =
-    (session?.user as any)?.role === "super_admin" ||
-    jwtUser?.role === "super_admin";
+  const activeRole = sessionUser?.role ?? "student";
+  const isSuperAdmin = activeRole === "super_admin";
+
+  const roleAppearance = {
+    super_admin: {
+      label: "Super Admin",
+      className: "bg-purple-100 text-purple-700"
+    },
+    staff: {
+      label: "Staff",
+      className: "bg-amber-100 text-amber-700"
+    },
+    lecturer: {
+      label: "Lecturer",
+      className: "bg-emerald-100 text-emerald-700"
+    },
+    student: {
+      label: "Mahasiswa",
+      className: "bg-blue-100 text-blue-700"
+    }
+  } as const;
+
+  const currentRoleAppearance =
+    roleAppearance[activeRole as keyof typeof roleAppearance] ??
+    roleAppearance.student;
 
   // Nama yang ditampilkan
-  const displayName = activeUser?.name || (jwtUser ? "User" : "");
+  const displayName = activeUser?.name || "";
 
   // Email yang ditampilkan
-  const displayEmail = activeUser?.email || jwtUser?.email || "";
+  const displayEmail = activeUser?.email || "";
 
   return (
     <>
@@ -253,13 +218,9 @@ const Navbar = () => {
                       {displayEmail || "Email tidak tersedia"}
                     </p>
                     <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-full mt-1 inline-block ${
-                        isSuperAdmin
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
+                      className={`text-[10px] font-bold px-2 py-1 rounded-full mt-1 inline-block ${currentRoleAppearance.className}`}
                     >
-                      {isSuperAdmin ? "Super Admin" : "Member"}
+                      {currentRoleAppearance.label}
                     </span>
                   </div>
 
@@ -471,6 +432,11 @@ const Navbar = () => {
                     <p className="text-xs text-gray-500 truncate">
                       {displayEmail || "Email tidak tersedia"}
                     </p>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${currentRoleAppearance.className}`}
+                    >
+                      {currentRoleAppearance.label}
+                    </span>
                   </div>
                 </div>
 

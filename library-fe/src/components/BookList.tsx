@@ -1,52 +1,17 @@
-// src/components/BookList.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
-import { API_BASE_URL } from "../utils/api-config";
-
-interface Collection {
-  id: string;
-  title: string;
-  author: string;
-  publisher: string;
-  publicationYear: number;
-  isbn?: string;
-  type: string;
-  categoryId: number;
-  description?: string;
-  image?: string;
-  createdAt: string;
-  updatedAt: string;
-  category?: {
-    id: number;
-    name: string;
-    description?: string;
-  };
-}
-
-interface Reservation {
-  id: string;
-  memberId: string;
-  collectionId: string;
-  status: "waiting" | "fulfilled" | "canceled";
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface User {
-  id: string;
-  memberId?: string;
-  name: string;
-  email: string;
-  role: "admin" | "mahasiswa";
-  nim?: string;
-}
+import { PerspectiveBook } from "./perspective-book";
+import { BookOpen } from "lucide-react";
+import { useBookList } from "../hooks/useBookList";
+import type { Collection, LibraryUser } from "../types";
+import { generateColorFromSeed } from "@/utils/format";
 
 interface BookListProps {
   searchQuery?: string;
   searchType?: string;
   availabilityFilter?: string[];
   yearRange?: { start: string; end: string };
-  currentUser?: User | null;
+  currentUser?: LibraryUser | null;
 }
 
 const BookList = ({
@@ -54,83 +19,27 @@ const BookList = ({
   searchType = "all",
   availabilityFilter = [],
   yearRange = { start: "", end: "" },
-  currentUser = null
+  currentUser = null,
 }: BookListProps) => {
   const navigate = useNavigate();
 
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [userReservations, setUserReservations] = useState<Reservation[]>([]);
+  // ✅ Semua fetching dipindahkan ke custom hook
+  const { collections, userReservations, loading, error } = useBookList(
+    currentUser ?? null,
+  );
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // 1. Fetch semua koleksi buku (public endpoint)
-        const collectionsResponse = await fetch(
-          `${API_BASE_URL}/api/collections`
-        );
-
-        if (!collectionsResponse.ok) {
-          throw new Error(`HTTP error! status: ${collectionsResponse.status}`);
-        }
-
-        const collectionsJson = await collectionsResponse.json();
-
-        if (collectionsJson.success && Array.isArray(collectionsJson.data)) {
-          setCollections(collectionsJson.data);
-          console.log("Data collections:", collectionsJson.data);
-        } else {
-          throw new Error("Invalid API response structure");
-        }
-
-        // 2. Jika user login, fetch reservasi milik user sendiri
-        if (currentUser) {
-          await fetchMyReservations();
-        }
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError(err instanceof Error ? err.message : "Gagal mengambil data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Fetch reservasi user via /reservations/my (requires login, no role restriction)
-    const fetchMyReservations = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/reservations/my`, {
-          credentials: "include" // kirim cookie session better-auth
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && Array.isArray(data.data)) {
-            setUserReservations(data.data);
-            console.log("Reservasi saya:", data.data);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching my reservations:", error);
-      }
-    };
-
-    fetchData();
-  }, [currentUser]);
 
   // Helper: Cek apakah user sedang meminjam buku ini
   const isUserBorrowing = (collectionId: string): boolean => {
     return userReservations.some(
       (res) =>
         res.collectionId === collectionId &&
-        (res.status === "fulfilled" || res.status === "waiting")
+        (res.status === "fulfilled" || res.status === "waiting"),
     );
   };
 
   // Helper: Dapatkan status buku (hanya berdasarkan reservasi user sendiri)
-  const getBookStatus = (): string => {
+  const getBookStatusReservation = (): string => {
     return "available";
   };
 
@@ -171,7 +80,7 @@ const BookList = ({
   const filteredByAvailability =
     availabilityFilter.length > 0
       ? filteredBySearch.filter(() => {
-          const bookStatus = getBookStatus();
+          const bookStatus = getBookStatusReservation();
           return availabilityFilter.includes(bookStatus);
         })
       : filteredBySearch;
@@ -184,14 +93,14 @@ const BookList = ({
     const start = yearRange.start ? parseInt(yearRange.start) : 0;
     const end = yearRange.end ? parseInt(yearRange.end) : 9999;
 
-    return year >= start && year <= end;
+    return Number(year) >= Number(start) && Number(year) <= Number(end);
   });
 
   // Helper: Status label
   const getStatusLabel = (collection: Collection) => {
     if (currentUser && isUserBorrowing(collection.id)) {
       const reservation = userReservations.find(
-        (r) => r.collectionId === collection.id
+        (r) => r.collectionId === collection.id,
       );
       if (reservation?.status === "waiting") {
         return "Menunggu Konfirmasi";
@@ -206,7 +115,7 @@ const BookList = ({
   const getStatusBadge = (collection: Collection) => {
     if (currentUser && isUserBorrowing(collection.id)) {
       const reservation = userReservations.find(
-        (r) => r.collectionId === collection.id
+        (r) => r.collectionId === collection.id,
       );
       if (reservation?.status === "waiting") {
         return "px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium";
@@ -215,11 +124,6 @@ const BookList = ({
       }
     }
     return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
-  };
-
-  // Helper: Cover color fallback
-  const getCoverColor = (type: string) => {
-    return type === "physical_book" ? "bg-purple-500" : "bg-blue-500";
   };
 
   // Navigasi ke detail
@@ -257,15 +161,15 @@ const BookList = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow p-4 md:p-6">
+    <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-4 md:p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div className="w-full md:w-auto">
           <h2 className="text-lg md:text-xl font-bold text-gray-900">
             Koleksi Perpustakaan
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            {filteredByYear.length} hasil ditemukan
+            {filteredByYear.length} Buku
           </p>
           {currentUser && (
             <p className="text-xs text-purple-600 mt-1">
@@ -313,10 +217,10 @@ const BookList = ({
         ))}
       </div>
 
-      {/* Book List */}
-      <div className="space-y-3 sm:space-y-4">
+      {/* Book Grid — PerspectiveBook */}
+      <div className="flex flex-wrap gap-6 justify-start">
         {filteredByYear.length === 0 ? (
-          <div className="text-center py-8 sm:py-12 text-gray-500">
+          <div className="w-full text-center py-8 sm:py-12 text-gray-500">
             <div className="text-3xl sm:text-4xl mb-4">🔍</div>
             <p className="text-lg font-semibold mb-2">
               Tidak ada hasil ditemukan
@@ -330,69 +234,41 @@ const BookList = ({
             <div
               key={collection.id}
               onClick={() => handleBookClick(collection.id)}
-              className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-white hover:shadow-md cursor-pointer transition-all duration-200 border border-gray-200 hover:border-red-200"
+              className="flex flex-col items-center gap-2 cursor-pointer group"
             >
-              {/* Cover Image */}
-              <div className="w-12 h-16 sm:w-16 sm:h-24 rounded-lg mr-3 sm:mr-4 flex-shrink-0 overflow-hidden">
-                {collection.image ? (
-                  <img
-                    src={collection.image}
-                    alt={collection.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      const parent = e.currentTarget.parentElement;
-                      if (parent) {
-                        const div = document.createElement("div");
-                        div.className = `${getCoverColor(collection.type)} w-full h-full flex items-center justify-center`;
-                        div.innerHTML = `<span class="text-white text-xs font-medium">${collection.type === "ebook" ? "E-Book" : "Buku"}</span>`;
-                        parent.appendChild(div);
-                      }
-                    }}
-                  />
-                ) : (
-                  <div
-                    className={`w-full h-full ${getCoverColor(collection.type)} flex items-center justify-center`}
-                  >
-                    <span className="text-white text-xs font-medium">
-                      {collection.type === "ebook" ? "E-Book" : "Buku"}
+              <PerspectiveBook
+                size="sm"
+                className={generateColorFromSeed(collection.id)}
+              >
+                <div className="flex flex-col h-full gap-1.5">
+                  <p className="font-semibold capitalize leading-4 text-white text-xs line-clamp-3">
+                    {collection.title}
+                  </p>
+                  <div className="mt-auto flex flex-col gap-1">
+                    <span className="text-white/70 text-[10px] leading-tight line-clamp-1">
+                      {collection.author}
                     </span>
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="size-3 text-white/70" />
+                      <span className="text-white/60 text-[9px]">
+                        {collection.publicationYear ?? ""}
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Book Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base sm:text-lg text-gray-900 truncate">
-                  {collection.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
-                  {collection.author}
-                </p>
-                <div className="hidden sm:flex flex-wrap gap-2 mt-2">
-                  <span className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded">
-                    {collection.type === "physical_book"
-                      ? "Buku Fisik"
-                      : "E-Book"}
-                  </span>
-                  {collection.publicationYear && (
-                    <span className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded">
-                      {collection.publicationYear}
-                    </span>
-                  )}
-                  {collection.isbn && (
-                    <span className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded">
-                      ISBN: {collection.isbn}
-                    </span>
-                  )}
                 </div>
-              </div>
-
-              {/* Status */}
-              <div className="ml-2 sm:ml-4 flex-shrink-0">
-                <span className={getStatusBadge(collection)}>
-                  {getStatusLabel(collection)}
-                </span>
+              </PerspectiveBook>
+              {/* Info & status di bawah buku */}
+              <div className="text-center w-[150px]">
+                <div className="flex flex-wrap justify-center gap-1 mt-1">
+                  <span className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded">
+                    {collection.type === "physical_book" ? "Fisik" : "E-Book"}
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.5 text-[9px] rounded ${getStatusBadge(collection)}`}
+                  >
+                    {getStatusLabel(collection)}
+                  </span>
+                </div>
               </div>
             </div>
           ))

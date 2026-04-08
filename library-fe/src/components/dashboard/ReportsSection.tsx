@@ -7,16 +7,20 @@ import {
   ChevronDown,
   TrendingUp,
   DownloadCloud,
+  UploadCloud
 } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/useToast";
+import { analyzeReportCsv } from "@/utils/dashboardReportImport";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useRef } from "react";
 
 interface ReportsSectionProps {
   className?: string;
@@ -40,12 +44,14 @@ const dayLabels = [
   "Rabu",
   "Kamis",
   "Jum'at",
-  "Sabtu",
+  "Sabtu"
 ];
 
 export default function ReportsSection({
-  className = "",
+  className = ""
 }: ReportsSectionProps) {
+  const { success, error, info } = useToast();
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -55,11 +61,11 @@ export default function ReportsSection({
     successfulLoans: 0,
     totalPaidFines: 0,
     outstandingFines: 0,
-    visitsPastWeek: 0,
+    visitsPastWeek: 0
   });
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState<{ day: string; visits: number }[]>(
-    [],
+    []
   );
   const [popularBooks, setPopularBooks] = useState<PopularBookItem[]>([]);
 
@@ -72,22 +78,22 @@ export default function ReportsSection({
           loansRes,
           revenueSummaryRes,
           guestStatsRes,
-          popularBooksRes,
+          popularBooksRes
         ] = await Promise.all([
           fetch(`${API_BASE_URL}/api/guests`, { credentials: "include" }),
           fetch(`${API_BASE_URL}/api/loans?status=returned&limit=500`, {
-            credentials: "include",
+            credentials: "include"
           }),
           fetch(
             `${API_BASE_URL}/api/reports/fines/revenue?month=${selectedMonth}&year=${selectedYear}`,
-            { credentials: "include" },
+            { credentials: "include" }
           ),
           fetch(`${API_BASE_URL}/api/reports/guest-stats`, {
-            credentials: "include",
+            credentials: "include"
           }),
           fetch(`${API_BASE_URL}/api/reports/popular-books?limit=5`, {
-            credentials: "include",
-          }),
+            credentials: "include"
+          })
         ]);
 
         const [
@@ -95,13 +101,13 @@ export default function ReportsSection({
           loansData,
           revenueSummaryData,
           guestStatsData,
-          popularBooksData,
+          popularBooksData
         ] = await Promise.all([
           guestsRes.json(),
           loansRes.json(),
           revenueSummaryRes.json(),
           guestStatsRes.json(),
-          popularBooksRes.json(),
+          popularBooksRes.json()
         ]);
 
         let guestsCount = 0;
@@ -134,7 +140,7 @@ export default function ReportsSection({
             visitsPastWeek += count;
             return {
               day: dayLabels[d.getDay()],
-              visits: count,
+              visits: count
             };
           });
 
@@ -145,7 +151,7 @@ export default function ReportsSection({
               const d = new Date();
               d.setDate(d.getDate() - (6 - index));
               return { day: dayLabels[d.getDay()], visits: 0 };
-            }),
+            })
           );
         }
 
@@ -159,9 +165,9 @@ export default function ReportsSection({
               }) => ({
                 id: book.id,
                 title: book.title,
-                loanCount: Number(book.loanCount) || 0,
-              }),
-            ),
+                loanCount: Number(book.loanCount) || 0
+              })
+            )
           );
         } else {
           setPopularBooks([]);
@@ -170,7 +176,7 @@ export default function ReportsSection({
         if (revenueSummaryData.success && revenueSummaryData.data) {
           finesRevenue = Number(revenueSummaryData.data.totalFineRevenue || 0);
           outstandingFines = Number(
-            revenueSummaryData.data.outstandingFines || 0,
+            revenueSummaryData.data.outstandingFines || 0
           );
         }
 
@@ -179,7 +185,7 @@ export default function ReportsSection({
           successfulLoans: loansCount,
           totalPaidFines: finesRevenue,
           outstandingFines,
-          visitsPastWeek,
+          visitsPastWeek
         });
       } catch (error) {
         console.error("Gagal mengambil data reports:", error);
@@ -203,16 +209,90 @@ export default function ReportsSection({
     { value: 9, label: "September" },
     { value: 10, label: "Oktober" },
     { value: 11, label: "November" },
-    { value: 12, label: "Desember" },
+    { value: 12, label: "Desember" }
   ];
 
   const yearOptions = Array.from(
     { length: 5 },
-    (_, index) => now.getFullYear() - index,
+    (_, index) => now.getFullYear() - index
   );
 
   const selectedMonthLabel =
     monthOptions.find((month) => month.value === selectedMonth)?.label ?? "-";
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportReport = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      error(
+        "Format tidak didukung",
+        "Gunakan file laporan CSV dari menu export."
+      );
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const raw = await file.text();
+      const summary = analyzeReportCsv(raw);
+
+      if (!summary) {
+        error("Import gagal", "Isi file kosong atau format CSV tidak valid.");
+        event.target.value = "";
+        return;
+      }
+
+      setStats((previous) => ({
+        ...previous,
+        successfulLoans:
+          summary.successfulLoans > 0
+            ? summary.successfulLoans
+            : previous.successfulLoans,
+        totalPaidFines:
+          summary.totalPaidFines > 0
+            ? summary.totalPaidFines
+            : previous.totalPaidFines,
+        outstandingFines:
+          summary.outstandingFines > 0
+            ? summary.outstandingFines
+            : previous.outstandingFines
+      }));
+
+      if (summary.popularBooks.length > 0) {
+        setPopularBooks(
+          summary.popularBooks.map((book, index) => ({
+            id: `imported-${index}-${book.title}`,
+            title: book.title,
+            loanCount: book.loanCount
+          }))
+        );
+      }
+
+      success(
+        "Import laporan berhasil",
+        `Data dari ${file.name} sudah diterapkan ke dashboard.`
+      );
+      info(
+        "Mode data lokal aktif",
+        "Refresh halaman untuk kembali ke data realtime API."
+      );
+    } catch (importError) {
+      console.error("Gagal import laporan:", importError);
+      error("Import gagal", "Terjadi kesalahan saat membaca file laporan CSV.");
+    } finally {
+      event.target.value = "";
+    }
+  };
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -227,95 +307,113 @@ export default function ReportsSection({
           </p>
         </div>
 
-        {/* Export Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-900/20">
-              <DownloadCloud size={18} />
-              Export Laporan
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+        <div className="flex items-center gap-2">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleImportReport}
+          />
+          <button
+            type="button"
+            onClick={handleImportClick}
+            className="flex items-center gap-2 bg-white text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Format Laporan (PDF)
-            </div>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/loans/export?format=pdf`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
-            >
-              Laporan Peminjaman
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/fines/export?format=pdf`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
-            >
-              Laporan Denda
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/fines/export?format=pdf&status=paid&month=${selectedMonth}&year=${selectedYear}`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
-            >
-              Pendapatan Denda Bulanan
-            </DropdownMenuItem>
+            <UploadCloud size={18} />
+            Import Laporan
+          </button>
 
-            <div className="h-px bg-slate-100 my-1 mx-2" />
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-900/20">
+                <DownloadCloud size={18} />
+                Export Laporan
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+            >
+              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Format Laporan (PDF)
+              </div>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/loans/export?format=pdf`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+              >
+                Laporan Peminjaman
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/fines/export?format=pdf`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+              >
+                Laporan Denda
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/fines/export?format=pdf&status=paid&month=${selectedMonth}&year=${selectedYear}`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+              >
+                Pendapatan Denda Bulanan
+              </DropdownMenuItem>
 
-            <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Format Excel (CSV)
-            </div>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/loans/export?format=csv`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
-            >
-              Laporan Peminjaman
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/fines/export?format=csv`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
-            >
-              Laporan Denda
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/fines/export?format=csv&status=paid&month=${selectedMonth}&year=${selectedYear}`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
-            >
-              Pendapatan Denda Bulanan
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <div className="h-px bg-slate-100 my-1 mx-2" />
+
+              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Format Excel (CSV)
+              </div>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/loans/export?format=csv`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+              >
+                Laporan Peminjaman
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/fines/export?format=csv`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+              >
+                Laporan Denda
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/fines/export?format=csv&status=paid&month=${selectedMonth}&year=${selectedYear}`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+              >
+                Pendapatan Denda Bulanan
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -443,7 +541,7 @@ export default function ReportsSection({
                   contentStyle={{
                     borderRadius: "12px",
                     border: "none",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
                   }}
                 />
 

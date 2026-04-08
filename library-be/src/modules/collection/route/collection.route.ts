@@ -1,14 +1,56 @@
 import { Router } from "express";
 import {
   isAuthenticated,
-  requireRole,
+  requireRole
 } from "../../../middlewares/auth.middleware";
 import { upload } from "../../../utils/upload";
 import { CollectionController } from "../controller/collection.controller";
 import { publicApiLimiter } from "../../../middlewares/rateLimiter";
+import multer from "multer";
 
 const router = Router();
 const collectionController = new CollectionController();
+
+const importUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  },
+  fileFilter: (_req, file, cb) => {
+    const lowerName = file.originalname.toLowerCase();
+    const isCsv =
+      file.mimetype === "text/csv" ||
+      file.mimetype === "application/csv" ||
+      lowerName.endsWith(".csv");
+    const isXlsx =
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel" ||
+      lowerName.endsWith(".xlsx");
+
+    if (isCsv || isXlsx) {
+      cb(null, true);
+      return;
+    }
+
+    cb(new Error("Hanya file .csv atau .xlsx yang diperbolehkan"));
+  }
+});
+
+router.get(
+  "/collections/import/template",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  collectionController.downloadImportTemplate
+);
+
+router.post(
+  "/collections/import",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  importUpload.single("file"),
+  collectionController.importCollections
+);
 
 /**
  * @swagger
@@ -80,7 +122,7 @@ const collectionController = new CollectionController();
 router.get(
   "/collections",
   publicApiLimiter,
-  collectionController.getAllCollections,
+  collectionController.getAllCollections
 );
 
 /**
@@ -108,7 +150,7 @@ router.get(
 router.get(
   "/collections/:id",
   publicApiLimiter,
-  collectionController.getCollectionById,
+  collectionController.getCollectionById
 );
 
 /**
@@ -186,7 +228,7 @@ router.post(
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   upload.single("cover"),
-  collectionController.createCollection,
+  collectionController.createCollection
 );
 
 /**
@@ -249,7 +291,7 @@ router.patch(
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
   upload.single("cover"),
-  collectionController.updateCollection,
+  collectionController.updateCollection
 );
 
 /**
@@ -282,7 +324,7 @@ router.delete(
   "/collections/:id",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  collectionController.deleteCollection,
+  collectionController.deleteCollection
 );
 
 export const collectionRoutes = router;

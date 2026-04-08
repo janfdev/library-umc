@@ -58,7 +58,7 @@ app.get("/health", (req, res) => {
 // Error Middleware (MuST be at the end)
 app.use(errorMiddleware);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`SERVER RUNNING ON PORT ${PORT}`);
   initCronJobs();

@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const getPopularBooksQuerySchema = z.object({
-  limit: z.string().regex(/^\d+$/, "Limit harus berupa angka").optional(),
+  limit: z.string().regex(/^\d+$/, "Limit harus berupa angka").optional()
 });
 
 export const exportLoansQuerySchema = z.object({
@@ -11,16 +11,16 @@ export const exportLoansQuerySchema = z.object({
     .string()
     .regex(
       /^\d{4}-\d{2}-\d{2}$/,
-      "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)",
+      "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)"
     )
     .optional(),
   to: z
     .string()
     .regex(
       /^\d{4}-\d{2}-\d{2}$/,
-      "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)",
+      "Format tanggal harus YYYY-MM-DD (contoh: 2025-01-01)"
     )
-    .optional(),
+    .optional()
 });
 
 export const exportFinesQuerySchema = z.object({
@@ -33,7 +33,7 @@ export const exportFinesQuerySchema = z.object({
   year: z
     .string()
     .regex(/^\d{4}$/, "Tahun harus 4 digit")
-    .optional(),
+    .optional()
 });
 
 export const finesRevenueSummaryQuerySchema = z.object({
@@ -44,5 +44,13 @@ export const finesRevenueSummaryQuerySchema = z.object({
   year: z
     .string()
     .regex(/^\d{4}$/, "Tahun harus 4 digit")
-    .optional(),
+    .optional()
+});
+
+export const webTrafficQuerySchema = z.object({
+  days: z.string().regex(/^\d+$/, "days harus berupa angka").optional()
+});
+
+export const trackWebTrafficBodySchema = z.object({
+  path: z.string().min(1, "Path wajib diisi").max(255, "Path terlalu panjang")
 });

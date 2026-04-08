@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   isAuthenticated,
-  requireRole,
+  requireRole
 } from "../../../middlewares/auth.middleware";
 import { publicApiLimiter } from "../../../middlewares/rateLimiter";
 import reportController from "../controller/report.controller";
@@ -32,7 +32,7 @@ router.get(
   publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  reportController.getDashboardStats.bind(reportController),
+  reportController.getDashboardStats.bind(reportController)
 );
 
 /**
@@ -59,7 +59,7 @@ router.get(
   publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  reportController.getPopularBooks.bind(reportController),
+  reportController.getPopularBooks.bind(reportController)
 );
 
 /**
@@ -79,7 +79,7 @@ router.get(
   publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  reportController.getGuestStats.bind(reportController),
+  reportController.getGuestStats.bind(reportController)
 );
 
 /**
@@ -125,7 +125,7 @@ router.get(
   publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  reportController.exportLoans.bind(reportController),
+  reportController.exportLoans.bind(reportController)
 );
 
 /**
@@ -171,7 +171,7 @@ router.get(
   publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  reportController.exportFines.bind(reportController),
+  reportController.exportFines.bind(reportController)
 );
 
 /**
@@ -204,7 +204,63 @@ router.get(
   publicApiLimiter,
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  reportController.getFinesRevenueSummary.bind(reportController),
+  reportController.getFinesRevenueSummary.bind(reportController)
+);
+
+/**
+ * @swagger
+ * /reports/web-traffic:
+ *   get:
+ *     summary: Get web traffic summary aggregated by day
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 90
+ *           default: 30
+ *         description: Number of days to include in daily aggregation
+ *     responses:
+ *       200:
+ *         description: Aggregated web traffic metrics
+ */
+router.get(
+  "/reports/web-traffic",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  reportController.getWebTraffic.bind(reportController)
+);
+
+/**
+ * @swagger
+ * /reports/web-traffic/track:
+ *   post:
+ *     summary: Track web visit event
+ *     tags: [Reports]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [path]
+ *             properties:
+ *               path:
+ *                 type: string
+ *                 example: /katalog/123
+ *     responses:
+ *       201:
+ *         description: Traffic successfully tracked
+ */
+router.post(
+  "/reports/web-traffic/track",
+  publicApiLimiter,
+  reportController.trackWebTraffic.bind(reportController)
 );
 
 export const reportRoutes = router;
