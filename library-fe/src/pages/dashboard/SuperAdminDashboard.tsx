@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   BarChart3,
-  Bell,
   Book,
   BookOpen,
   Home,
@@ -415,11 +414,6 @@ export default function SuperAdminDashboard() {
           </button>
 
           <div className="ml-auto flex items-center gap-4 sm:gap-6">
-            <button className="relative rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600">
-              <Bell size={20} />
-              <span className="absolute right-1.5 top-1 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-            </button>
-
             <div className="flex items-center gap-3 border-l border-slate-100 pl-4 sm:pl-6">
               <div className="hidden text-right sm:block">
                 <p className="leading-tight text-sm font-bold text-slate-900">

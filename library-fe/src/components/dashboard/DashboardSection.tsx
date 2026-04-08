@@ -5,150 +5,154 @@ import {
   Wallet,
   User as UserIcon,
   DownloadCloud,
+  UploadCloud,
+  Globe,
+  Layers
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useRef, type ChangeEvent } from "react";
 import { API_BASE_URL } from "@/utils/api-config";
-import loanService, { type Loan } from "@/services/loanService";
+import { useToast } from "@/hooks/useToast";
+import { useDashboardOverview } from "@/hooks/dashboard/useDashboardOverview";
+import type { DashboardStats } from "@/services/dashboard/dashboardDataService";
+import { analyzeReportCsv } from "@/utils/dashboardReportImport";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
 interface DashboardSectionProps {
-  stats: {
-    totalCollections: number;
-    totalCategories: number;
-    totalGuests: number;
-    activeBorrowings?: number;
-    outstandingFines?: number;
-    totalFineRevenue?: number;
-  };
+  stats: DashboardStats;
 }
 
 export default function DashboardSection({ stats }: DashboardSectionProps) {
-  const [recentLoans, setRecentLoans] = useState<Loan[]>([]);
-  const [loanLoading, setLoanLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadRecentLoans = async () => {
-      setLoanLoading(true);
-      try {
-        const loans = await loanService.getAllLoans();
-        if (!isMounted) return;
-
-        const sorted = [...loans].sort((a, b) => {
-          const da = new Date(a.createdAt || a.loanDate || 0).getTime();
-          const db = new Date(b.createdAt || b.loanDate || 0).getTime();
-          return db - da;
-        });
-
-        setRecentLoans(sorted.slice(0, 5));
-      } catch {
-        if (isMounted) {
-          setRecentLoans([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoanLoading(false);
-        }
-      }
-    };
-
-    void loadRecentLoans();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const formattedRecentLoans = useMemo(
-    () =>
-      recentLoans.map((loan) => {
-        const memberName =
-          loan.memberName ||
-          (loan.member?.user as { name?: string } | undefined)?.name ||
-          "Member";
-        const bookTitle =
-          loan.collectionTitle || loan.item?.collection?.title || "Buku";
-        const createdAt = loan.createdAt || loan.loanDate;
-
-        return {
-          id: loan.id,
-          memberName,
-          bookTitle,
-          status: loan.status,
-          timeText: createdAt
-            ? new Date(createdAt).toLocaleString("id-ID", {
-                day: "2-digit",
-                month: "short",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "-",
-        };
-      }),
-    [recentLoans],
-  );
+  const { success, error, info } = useToast();
+  const importInputRef = useRef<HTMLInputElement | null>(null);
+  const {
+    displayStats,
+    loanLoading,
+    formattedRecentLoans,
+    applyImportedSummary
+  } = useDashboardOverview(stats);
 
   const statusMeta: Record<string, { label: string; className: string }> = {
     approved: {
       label: "Dipinjam",
-      className: "bg-[#fff7ed] text-[#ea580c]",
+      className: "bg-[#fff7ed] text-[#ea580c]"
     },
     pending: {
       label: "Menunggu",
-      className: "bg-[#eff6ff] text-[#2563eb]",
+      className: "bg-[#eff6ff] text-[#2563eb]"
     },
     returned: {
       label: "Dikembalikan",
-      className: "bg-[#ecfdf5] text-[#059669]",
+      className: "bg-[#ecfdf5] text-[#059669]"
     },
     rejected: {
       label: "Ditolak",
-      className: "bg-[#fef2f2] text-[#dc2626]",
-    },
+      className: "bg-[#fef2f2] text-[#dc2626]"
+    }
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportReport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      error(
+        "Format tidak didukung",
+        "Gunakan file laporan CSV dari menu export."
+      );
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const raw = await file.text();
+      const summary = analyzeReportCsv(raw);
+
+      if (!summary) {
+        error("Import gagal", "Isi file kosong atau format CSV tidak valid.");
+        event.target.value = "";
+        return;
+      }
+
+      applyImportedSummary(summary);
+
+      success(
+        "Import laporan berhasil",
+        `Data dari ${file.name} sudah diterapkan ke overview dashboard.`
+      );
+      info(
+        "Mode data lokal aktif",
+        "Refresh halaman untuk kembali ke data realtime API."
+      );
+    } catch (importErr) {
+      console.error("Gagal import laporan overview:", importErr);
+      error("Import gagal", "Terjadi kesalahan saat membaca file CSV.");
+    } finally {
+      event.target.value = "";
+    }
   };
 
   const statCards = [
     {
       label: "Total Koleksi",
-      value: stats.totalCollections,
+      value: displayStats.totalCollections,
       icon: <Book />,
       color: "text-blue-600",
-      bg: "bg-blue-50",
+      bg: "bg-blue-50"
     },
     {
       label: "Sedang Dipinjam",
-      value: stats.activeBorrowings ?? 0,
+      value: displayStats.activeBorrowings ?? 0,
       icon: <Clock />,
       color: "text-orange-600",
-      bg: "bg-orange-50",
+      bg: "bg-orange-50"
     },
     {
-      label: "Anggota Aktif",
-      value: stats.totalGuests,
+      label: "Kunjungan Fisik",
+      value: displayStats.totalGuests,
       icon: <Users />,
       color: "text-green-600",
-      bg: "bg-green-50",
+      bg: "bg-green-50"
+    },
+    {
+      label: "Kunjungan Web",
+      value: displayStats.webVisits,
+      icon: <Globe />,
+      color: "text-indigo-600",
+      bg: "bg-indigo-50"
+    },
+    {
+      label: "Kunjungan Gabungan",
+      value: displayStats.combinedVisits,
+      icon: <Layers />,
+      color: "text-purple-600",
+      bg: "bg-purple-50"
     },
     {
       label: "Tagihan Denda Aktif",
-      value: `Rp ${(stats.outstandingFines ?? 0).toLocaleString("id-ID")}`,
+      value: `Rp ${(displayStats.outstandingFines ?? 0).toLocaleString("id-ID")}`,
       icon: <Wallet />,
       color: "text-red-600",
-      bg: "bg-red-50",
+      bg: "bg-red-50"
     },
     {
       label: "Pendapatan Denda",
-      value: `Rp ${(stats.totalFineRevenue ?? 0).toLocaleString("id-ID")}`,
+      value: `Rp ${(displayStats.totalFineRevenue ?? 0).toLocaleString("id-ID")}`,
       icon: <Wallet />,
       color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
+      bg: "bg-emerald-50"
+    }
   ];
 
   return (
@@ -164,73 +168,92 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
           </p>
         </div>
 
-        {/* Export Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-900/20">
-              <DownloadCloud size={18} />
-              Export Laporan
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={handleImportReport}
+        />
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleImportClick}
+            className="flex items-center gap-2 bg-white text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Format Laporan (PDF)
-            </div>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/loans/export?format=pdf`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
-            >
-              Laporan Peminjaman
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/fines/export?format=pdf`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
-            >
-              Laporan Denda
-            </DropdownMenuItem>
+            <UploadCloud size={18} />
+            Import Laporan
+          </button>
 
-            <div className="h-px bg-slate-100 my-1 mx-2" />
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-900/20">
+                <DownloadCloud size={18} />
+                Export Laporan
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+            >
+              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Format Laporan (PDF)
+              </div>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/loans/export?format=pdf`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+              >
+                Laporan Peminjaman
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/fines/export?format=pdf`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+              >
+                Laporan Denda
+              </DropdownMenuItem>
 
-            <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Format Excel (CSV)
-            </div>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/loans/export?format=csv`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
-            >
-              Laporan Peminjaman
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                window.open(
-                  `${API_BASE_URL}/api/reports/fines/export?format=csv`,
-                  "_blank",
-                )
-              }
-              className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
-            >
-              Laporan Denda
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <div className="h-px bg-slate-100 my-1 mx-2" />
+
+              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Format Excel (CSV)
+              </div>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/loans/export?format=csv`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+              >
+                Laporan Peminjaman
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  window.open(
+                    `${API_BASE_URL}/api/reports/fines/export?format=csv`,
+                    "_blank"
+                  )
+                }
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+              >
+                Laporan Denda
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -282,7 +305,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
             formattedRecentLoans.map((loan) => {
               const meta = statusMeta[loan.status] || {
                 label: loan.status,
-                className: "bg-slate-100 text-slate-600",
+                className: "bg-slate-100 text-slate-600"
               };
 
               return (

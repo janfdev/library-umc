@@ -6,6 +6,8 @@ import {
   exportLoansQuerySchema,
   exportFinesQuerySchema,
   finesRevenueSummaryQuerySchema,
+  webTrafficQuerySchema,
+  trackWebTrafficBodySchema
 } from "../validation/report.validation";
 import { sendValidationError } from "../../../utils/api-utils";
 
@@ -23,7 +25,7 @@ class ReportController {
       "September",
       "Oktober",
       "November",
-      "Desember",
+      "Desember"
     ];
     return monthNames[month - 1] ?? String(month);
   }
@@ -77,7 +79,7 @@ class ReportController {
       const { data } = await reportService.getLoanReport({
         status,
         from,
-        to,
+        to
       });
 
       const rows = data.map((loan) => ({
@@ -90,7 +92,7 @@ class ReportController {
           ? new Date((loan as any).createdAt).toLocaleDateString("id-ID")
           : "-",
         dueDate: (loan as any).dueDate ?? "-",
-        returnDate: (loan as any).returnDate ?? "-",
+        returnDate: (loan as any).returnDate ?? "-"
       }));
 
       if (format === "pdf") {
@@ -100,12 +102,12 @@ class ReportController {
           status: r.status,
           borrowDate: r.borrowDate,
           dueDate: r.dueDate,
-          returnDate: r.returnDate || null,
+          returnDate: r.returnDate || null
         }));
         return reportService.exportLoansToPDF(
           res,
           pdfRows,
-          "Laporan Peminjaman Buku",
+          "Laporan Peminjaman Buku"
         );
       }
 
@@ -118,7 +120,7 @@ class ReportController {
         { key: "status", header: "Status" },
         { key: "borrowDate", header: "Tgl Pinjam" },
         { key: "dueDate", header: "Tgl Jatuh Tempo" },
-        { key: "returnDate", header: "Tgl Kembali" },
+        { key: "returnDate", header: "Tgl Kembali" }
       ]);
     } catch (error) {
       next(error);
@@ -150,7 +152,7 @@ class ReportController {
       const { data } = await reportService.getFinesReportForAudit({
         status,
         month: numericMonth,
-        year: numericYear,
+        year: numericYear
       });
 
       const rows = data.map((fine) => ({
@@ -164,7 +166,7 @@ class ReportController {
           : "-",
         paidAt: (fine as any).paidAt
           ? new Date((fine as any).paidAt).toLocaleDateString("id-ID")
-          : "-",
+          : "-"
       }));
 
       if (format === "pdf") {
@@ -173,7 +175,7 @@ class ReportController {
           bookTitle: r.bookTitle,
           status: r.status,
           paidAt: r.paidAt !== "-" ? r.paidAt : r.createdAt,
-          amount: r.amount,
+          amount: r.amount
         }));
         return reportService.exportFinesToPDF(
           res,
@@ -181,7 +183,7 @@ class ReportController {
           isMonthlyRevenueExport
             ? `Laporan Pendapatan Denda Bulanan ${monthLabel} ${numericYear}`
             : "Laporan Denda Peminjaman",
-          finesReportName,
+          finesReportName
         );
       }
 
@@ -192,7 +194,7 @@ class ReportController {
         { key: "amount", header: "Jumlah Denda" },
         { key: "status", header: "Status Denda" },
         { key: "createdAt", header: "Tgl Denda Dibuat" },
-        { key: "paidAt", header: "Tgl Pembayaran" },
+        { key: "paidAt", header: "Tgl Pembayaran" }
       ]);
     } catch (error) {
       next(error);
@@ -203,7 +205,7 @@ class ReportController {
   async getFinesRevenueSummary(
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ) {
     try {
       const validation = finesRevenueSummaryQuerySchema.safeParse(req.query);
@@ -214,10 +216,53 @@ class ReportController {
       const { month, year } = validation.data;
       const result = await reportService.getFinesRevenueSummary({
         month: month ? Number(month) : undefined,
-        year: year ? Number(year) : undefined,
+        year: year ? Number(year) : undefined
       });
 
       res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /reports/web-traffic?days=30
+  async getWebTraffic(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = webTrafficQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+
+      const days = validation.data.days ? Number(validation.data.days) : 30;
+      const result = await reportService.getWebTrafficSummary(days);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // POST /reports/web-traffic/track
+  async trackWebTraffic(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = trackWebTrafficBodySchema.safeParse(req.body);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+
+      const forwarded = req.headers["x-forwarded-for"];
+      const forwardedIp = Array.isArray(forwarded)
+        ? forwarded[0]
+        : forwarded?.split(",")[0]?.trim();
+      const ipAddress = forwardedIp || req.ip || null;
+      const userAgent = req.headers["user-agent"] || null;
+
+      await reportService.trackWebTraffic({
+        path: validation.data.path,
+        ipAddress,
+        userAgent
+      });
+
+      res.status(201).json({ success: true, message: "Traffic tracked" });
     } catch (error) {
       next(error);
     }

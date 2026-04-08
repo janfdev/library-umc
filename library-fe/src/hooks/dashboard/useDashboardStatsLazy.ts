@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   dashboardDataService,
-  type DashboardStats,
+  type DashboardStats
 } from "@/services/dashboard/dashboardDataService";
 
 const DEFAULT_STATS: DashboardStats = {
   totalCollections: 0,
   totalCategories: 0,
   totalGuests: 0,
+  webVisits: 0,
+  combinedVisits: 0,
   activeBorrowings: 0,
   outstandingFines: 0,
-  totalFineRevenue: 0,
+  totalFineRevenue: 0
 };
 
 export function useDashboardStatsLazy(enabled: boolean) {
@@ -48,6 +50,6 @@ export function useDashboardStatsLazy(enabled: boolean) {
     loading,
     error,
     hasLoaded,
-    refetch,
+    refetch
   };
 }

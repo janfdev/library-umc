@@ -1,4 +1,9 @@
 import { sendEmail } from "../../../config/mailer";
+import {
+  buildEmailTemplate,
+  escapeHtml,
+  formatContent
+} from "../utils/emailTemplate";
 
 export class EmailService {
   /**
@@ -19,25 +24,17 @@ export class EmailService {
    * Template for Library Announcement
    */
   async sendAnnouncement(toList: string[], subject: string, content: string) {
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <div style="text-align: center; border-bottom: 2px solid #0056b3; padding-bottom: 10px; margin-bottom: 20px;">
-          <h2 style="color: #0056b3; margin: 0;">MUCILIB - PERPUS UMC</h2>
-        </div>
-        <div style="line-height: 1.6; color: #333;">
-          <h3 style="color: #444;">${subject}</h3>
-          <p>${content.replace(/\n/g, "<br>")}</p>
-        </div>
-        <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #888; text-align: center;">
-          <p>Ini adalah pesan otomatis dari sistem Perpustakaan UMC.</p>
-          <p>© ${new Date().getFullYear()} Universitas Muhammadiyah Cirebon</p>
-        </div>
-      </div>
-    `;
+    const html = buildEmailTemplate({
+      title: subject,
+      headline: "Announcement",
+      intro: "Pengumuman resmi dari perpustakaan.",
+      content: formatContent(content),
+      footerNote: "Ini adalah pesan otomatis dari sistem Perpustakaan UMC."
+    });
 
     // Send to multiple users (sequentially or Promise.all)
     const results = await Promise.all(
-      toList.map((email) => this.send(email, subject, html)),
+      toList.map((email) => this.send(email, subject, html))
     );
 
     return results;
@@ -49,15 +46,19 @@ export class EmailService {
   async sendSystemAlert(
     adminEmail: string,
     alertTitle: string,
-    details: string,
+    details: string
   ) {
-    const html = `
-      <div style="background-color: #fff5f5; border: 1px solid #c53030; padding: 15px; border-radius: 5px;">
-        <h3 style="color: #c53030; margin-top: 0;">⚠️ System Alert: ${alertTitle}</h3>
-        <p style="font-family: monospace; background: #eee; padding: 10px;">${details}</p>
-        <p style="font-size: 12px;">Waktu: ${new Date().toLocaleString()}</p>
-      </div>
-    `;
+    const html = buildEmailTemplate({
+      title: alertTitle,
+      headline: "System Alert",
+      intro: "Perhatian, ada notifikasi sistem yang perlu ditindaklanjuti.",
+      content: `
+        <div style="background:#f8fafc;border:1px solid #dbe4f0;border-radius:14px;padding:16px 18px;color:#1e293b;font-family:Arial,Helvetica,sans-serif;white-space:pre-wrap;word-break:break-word;">${escapeHtml(details)}</div>
+        <div style="margin-top:14px;color:#64748b;font-size:13px;">Waktu: ${escapeHtml(new Date().toLocaleString())}</div>
+      `,
+      footerNote: "Pesan ini dibuat untuk admin sistem perpustakaan.",
+      accent: "#b42318"
+    });
     return this.send(adminEmail, `[ALERT] ${alertTitle}`, html);
   }
 }

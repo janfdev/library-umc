@@ -9,6 +9,7 @@ import {
   guestLogs,
   reservations,
   Users,
+  webTraffic
 } from "../../../db/schema";
 import { eq, sql, and, desc, isNull } from "drizzle-orm";
 import PDFDocument from "pdfkit";
@@ -21,6 +22,127 @@ export class ReportService {
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const yyyy = String(now.getFullYear());
     return `${dd}-${mm}-${yyyy}`;
+  }
+
+  async trackWebTraffic(payload: {
+    path: string;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    userId?: string | null;
+  }) {
+    try {
+      await db.insert(webTraffic).values({
+        id: crypto.randomUUID(),
+        ipAddress: payload.ipAddress ?? null,
+        userAgent: payload.userAgent ?? null,
+        userId: payload.userId ?? null,
+        pageVisited: payload.path,
+        visitTimestamp: new Date()
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("[ReportService] trackWebTraffic error:", error);
+      throw error;
+    }
+  }
+
+  async getWebTrafficSummary(days = 30) {
+    try {
+      const safeDays = Math.max(1, Math.min(days, 90));
+      const startDate = new Date();
+      startDate.setHours(0, 0, 0, 0);
+      startDate.setDate(startDate.getDate() - (safeDays - 1));
+
+      const rows = await db.execute(sql<{
+        date: string;
+        page_views: string | number;
+        unique_visitors: string | number;
+        sessions: string | number;
+      }>`
+        SELECT
+          TO_CHAR(DATE(${webTraffic.visitTimestamp}), 'YYYY-MM-DD') AS date,
+          COUNT(*)::int AS page_views,
+          COUNT(DISTINCT COALESCE(${webTraffic.userId}, ${webTraffic.ipAddress}, 'unknown'))::int AS unique_visitors,
+          COUNT(DISTINCT CONCAT(
+            COALESCE(${webTraffic.userId}, ${webTraffic.ipAddress}, 'unknown'),
+            '|',
+            COALESCE(${webTraffic.userAgent}, 'unknown'),
+            '|',
+            TO_CHAR(DATE_TRUNC('hour', ${webTraffic.visitTimestamp}), 'YYYY-MM-DD HH24')
+          ))::int AS sessions
+        FROM ${webTraffic}
+        WHERE ${webTraffic.visitTimestamp} >= ${startDate}
+        GROUP BY DATE(${webTraffic.visitTimestamp})
+        ORDER BY DATE(${webTraffic.visitTimestamp}) ASC
+      `);
+
+      const aggregateMap = new Map(
+        rows.rows.map((row) => [
+          row.date,
+          {
+            pageViews: Number(row.page_views) || 0,
+            uniqueVisitors: Number(row.unique_visitors) || 0,
+            sessions: Number(row.sessions) || 0
+          }
+        ])
+      );
+
+      const daily = Array.from({ length: safeDays }, (_, index) => {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() - (safeDays - 1 - index));
+        const key = date.toISOString().slice(0, 10);
+        const stat = aggregateMap.get(key) ?? {
+          pageViews: 0,
+          uniqueVisitors: 0,
+          sessions: 0
+        };
+
+        return {
+          date: key,
+          pageViews: stat.pageViews,
+          uniqueVisitors: stat.uniqueVisitors,
+          sessions: stat.sessions
+        };
+      });
+
+      const summary = daily.reduce(
+        (acc, item, index) => {
+          acc.totalPageViews += item.pageViews;
+          acc.totalUniqueVisitors += item.uniqueVisitors;
+          acc.totalSessions += item.sessions;
+
+          if (index === daily.length - 1) {
+            acc.todayPageViews = item.pageViews;
+            acc.todayUniqueVisitors = item.uniqueVisitors;
+            acc.todaySessions = item.sessions;
+          }
+
+          return acc;
+        },
+        {
+          todayPageViews: 0,
+          todayUniqueVisitors: 0,
+          todaySessions: 0,
+          totalPageViews: 0,
+          totalUniqueVisitors: 0,
+          totalSessions: 0
+        }
+      );
+
+      return {
+        success: true,
+        data: {
+          days: safeDays,
+          daily,
+          summary
+        }
+      };
+    } catch (error) {
+      console.error("[ReportService] getWebTrafficSummary error:", error);
+      throw error;
+    }
   }
 
   private buildExportFilename(reportName: string, extension: "csv" | "pdf") {
@@ -53,8 +175,8 @@ export class ReportService {
         .where(
           and(
             eq(loans.status, "approved"),
-            sql`${loans.dueDate} < CURRENT_DATE`,
-          ),
+            sql`${loans.dueDate} < CURRENT_DATE`
+          )
         );
 
       const [totalMembers] = await db
@@ -72,8 +194,8 @@ export class ReportService {
         .where(
           and(
             eq(reservations.status, "waiting"),
-            isNull(reservations.deletedAt),
-          ),
+            isNull(reservations.deletedAt)
+          )
         );
 
       return {
@@ -85,8 +207,8 @@ export class ReportService {
           overdueLoans: Number(overdueLoans.count),
           totalMembers: Number(totalMembers.count),
           unpaidFinesTotal: Number(unpaidFines.total),
-          waitingReservations: Number(waitingReservations.count),
-        },
+          waitingReservations: Number(waitingReservations.count)
+        }
       };
     } catch (error) {
       console.error("[ReportService] getDashboardStats error:", error);
@@ -105,7 +227,7 @@ export class ReportService {
           title: collections.title,
           author: collections.author,
           image: collections.image,
-          loanCount: sql<number>`count(${loans.id})`,
+          loanCount: sql<number>`count(${loans.id})`
         })
         .from(collections)
         .innerJoin(items, eq(items.collectionId, collections.id))
@@ -130,7 +252,7 @@ export class ReportService {
       const result = await db
         .select({
           date: sql<string>`DATE(${guestLogs.visitDate})`,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)`
         })
         .from(guestLogs)
         .where(sql`${guestLogs.visitDate} >= CURRENT_DATE - INTERVAL '7 days'`)
@@ -148,7 +270,7 @@ export class ReportService {
    * Get detailed loan report (for export)
    */
   async getLoanReport(
-    filters: { status?: string; from?: string; to?: string } = {},
+    filters: { status?: string; from?: string; to?: string } = {}
   ) {
     try {
       const conditions = [];
@@ -160,7 +282,7 @@ export class ReportService {
       }
       if (filters.to) {
         conditions.push(
-          sql`${loans.createdAt} <= ${filters.to}::date + INTERVAL '1 day'`,
+          sql`${loans.createdAt} <= ${filters.to}::date + INTERVAL '1 day'`
         );
       }
 
@@ -168,9 +290,9 @@ export class ReportService {
         where: conditions.length > 0 ? and(...conditions) : undefined,
         with: {
           member: { with: { user: true } },
-          item: { with: { collection: true } },
+          item: { with: { collection: true } }
         },
-        orderBy: [desc(loans.createdAt)],
+        orderBy: [desc(loans.createdAt)]
       });
 
       return { success: true, data: result };
@@ -199,7 +321,7 @@ export class ReportService {
           paidAt: transactions.paidAt,
           memberName: Users.name,
           memberEmail: Users.email,
-          bookTitle: collections.title,
+          bookTitle: collections.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
@@ -222,7 +344,7 @@ export class ReportService {
    * Get fines report (for export), with optional month/year filter for revenue audits.
    */
   async getFinesReportForAudit(
-    filters: { status?: string; month?: number; year?: number } = {},
+    filters: { status?: string; month?: number; year?: number } = {}
   ) {
     try {
       const conditions = [isNull(fines.deletedAt)];
@@ -237,13 +359,13 @@ export class ReportService {
 
       if (filters.year) {
         conditions.push(
-          sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${filters.year}`,
+          sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${filters.year}`
         );
       }
 
       if (filters.month) {
         conditions.push(
-          sql`EXTRACT(MONTH FROM ${transactions.paidAt})::int = ${filters.month}`,
+          sql`EXTRACT(MONTH FROM ${transactions.paidAt})::int = ${filters.month}`
         );
       }
 
@@ -256,7 +378,7 @@ export class ReportService {
           paidAt: transactions.paidAt,
           memberName: Users.name,
           memberEmail: Users.email,
-          bookTitle: collections.title,
+          bookTitle: collections.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
@@ -268,8 +390,8 @@ export class ReportService {
         .where(and(...conditions))
         .orderBy(
           desc(
-            sql`COALESCE(${transactions.paidAt}::timestamp, ${fines.createdAt})`,
-          ),
+            sql`COALESCE(${transactions.paidAt}::timestamp, ${fines.createdAt})`
+          )
         );
 
       return { success: true, data: result };
@@ -283,7 +405,7 @@ export class ReportService {
    * Get fine revenue summary for selected month and year.
    */
   async getFinesRevenueSummary(
-    filters: { month?: number; year?: number } = {},
+    filters: { month?: number; year?: number } = {}
   ) {
     try {
       const now = new Date();
@@ -292,7 +414,7 @@ export class ReportService {
 
       const [monthlyRevenue] = await db
         .select({
-          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`,
+          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`
         })
         .from(transactions)
         .innerJoin(fines, eq(transactions.fineId, fines.id))
@@ -301,13 +423,13 @@ export class ReportService {
             isNull(fines.deletedAt),
             eq(fines.status, "paid"),
             sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${selectedYear}`,
-            sql`EXTRACT(MONTH FROM ${transactions.paidAt})::int = ${selectedMonth}`,
-          ),
+            sql`EXTRACT(MONTH FROM ${transactions.paidAt})::int = ${selectedMonth}`
+          )
         );
 
       const [outstandingFines] = await db
         .select({
-          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`,
+          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`
         })
         .from(fines)
         .where(and(isNull(fines.deletedAt), eq(fines.status, "unpaid")));
@@ -315,7 +437,7 @@ export class ReportService {
       const yearlyRows = await db
         .select({
           month: sql<number>`EXTRACT(MONTH FROM ${transactions.paidAt})::int`,
-          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`,
+          total: sql<number>`COALESCE(SUM(${fines.amount}::numeric), 0)`
         })
         .from(transactions)
         .innerJoin(fines, eq(transactions.fineId, fines.id))
@@ -323,8 +445,8 @@ export class ReportService {
           and(
             isNull(fines.deletedAt),
             eq(fines.status, "paid"),
-            sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${selectedYear}`,
-          ),
+            sql`EXTRACT(YEAR FROM ${transactions.paidAt})::int = ${selectedYear}`
+          )
         )
         .groupBy(sql`EXTRACT(MONTH FROM ${transactions.paidAt})`)
         .orderBy(sql`EXTRACT(MONTH FROM ${transactions.paidAt})`);
@@ -334,7 +456,7 @@ export class ReportService {
         const found = yearlyRows.find((row) => Number(row.month) === month);
         return {
           month,
-          total: Number(found?.total ?? 0),
+          total: Number(found?.total ?? 0)
         };
       });
 
@@ -345,8 +467,8 @@ export class ReportService {
           year: selectedYear,
           totalFineRevenue: Number(monthlyRevenue?.total ?? 0),
           outstandingFines: Number(outstandingFines?.total ?? 0),
-          monthlyBreakdown,
-        },
+          monthlyBreakdown
+        }
       };
     } catch (error) {
       console.error("[ReportService] getFinesRevenueSummary error:", error);
@@ -365,12 +487,12 @@ export class ReportService {
     res: Response,
     filename: string,
     data: T[],
-    columns: { key: keyof T; header: string }[],
+    columns: { key: keyof T; header: string }[]
   ): void {
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${this.buildExportFilename(filename, "csv")}"`,
+      `attachment; filename="${this.buildExportFilename(filename, "csv")}"`
     );
 
     // BOM for Excel UTF-8 compatibility
@@ -406,12 +528,12 @@ export class ReportService {
       dueDate?: string;
       returnDate?: string | null;
     }>,
-    title = "Laporan Peminjaman Buku",
+    title = "Laporan Peminjaman Buku"
   ): void {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${this.buildExportFilename("Laporan Peminjaman", "pdf")}"`,
+      `attachment; filename="${this.buildExportFilename("Laporan Peminjaman", "pdf")}"`
     );
 
     const doc = new PDFDocument({ margin: 40, size: "A4" });
@@ -424,7 +546,7 @@ export class ReportService {
       .text("MUCILIB — Perpustakaan UMC", { align: "center" });
     doc.fontSize(13).font("Helvetica").text(title, { align: "center" });
     doc.fontSize(9).text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, {
-      align: "center",
+      align: "center"
     });
     doc.moveDown(1);
 
@@ -435,7 +557,7 @@ export class ReportService {
       "Judul Buku",
       "Status",
       "Tgl Pinjam",
-      "Tgl Kembali",
+      "Tgl Kembali"
     ];
     const startX = 40;
     let y = doc.y;
@@ -468,12 +590,12 @@ export class ReportService {
         row.bookTitle ?? "-",
         row.status ?? "-",
         row.borrowDate ?? "-",
-        row.returnDate ?? row.dueDate ?? "-",
+        row.returnDate ?? row.dueDate ?? "-"
       ];
       cols.forEach((val, i) => {
         doc.text(String(val).substring(0, 25), x, y + 3, {
           width: colWidths[i] - 4,
-          lineBreak: false,
+          lineBreak: false
         });
         x += colWidths[i];
       });
@@ -502,12 +624,12 @@ export class ReportService {
       amount?: string;
     }>,
     title = "Laporan Denda Peminjaman",
-    filenameBase = "Laporan Denda",
+    filenameBase = "Laporan Denda"
   ): void {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${this.buildExportFilename(filenameBase, "pdf")}"`,
+      `attachment; filename="${this.buildExportFilename(filenameBase, "pdf")}"`
     );
 
     const doc = new PDFDocument({ margin: 40, size: "A4" });
@@ -519,7 +641,7 @@ export class ReportService {
       .text("MUCILIB - Perpustakaan UMC", { align: "center" });
     doc.fontSize(13).font("Helvetica").text(title, { align: "center" });
     doc.fontSize(9).text(`Dicetak: ${new Date().toLocaleString("id-ID")}`, {
-      align: "center",
+      align: "center"
     });
     doc.moveDown(1);
 
@@ -556,13 +678,13 @@ export class ReportService {
         row.bookTitle ?? "-",
         row.status ?? "-",
         row.paidAt ?? "-",
-        row.amount ?? "-",
+        row.amount ?? "-"
       ];
 
       cols.forEach((val, i) => {
         doc.text(String(val).substring(0, 28), x, y + 3, {
           width: colWidths[i] - 4,
-          lineBreak: false,
+          lineBreak: false
         });
         x += colWidths[i];
       });

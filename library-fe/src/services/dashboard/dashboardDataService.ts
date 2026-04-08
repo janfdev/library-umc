@@ -4,9 +4,20 @@ export interface DashboardStats {
   totalCollections: number;
   totalCategories: number;
   totalGuests: number;
+  webVisits: number;
+  combinedVisits: number;
   activeBorrowings: number;
   outstandingFines: number;
   totalFineRevenue: number;
+}
+
+interface WebTrafficSummaryResponse {
+  success: boolean;
+  data?: {
+    summary?: {
+      todayPageViews?: number;
+    };
+  };
 }
 
 export interface CollectionItem {
@@ -54,7 +65,7 @@ const jsonOrThrow = async (res: Response) => {
 export const dashboardDataService = {
   async getCollections(): Promise<CollectionItem[]> {
     const res = await fetch(`${API_BASE_URL}/api/collections`, {
-      credentials: "include",
+      credentials: "include"
     });
     const data = await jsonOrThrow(res);
     return data.success && Array.isArray(data.data) ? data.data : [];
@@ -62,7 +73,7 @@ export const dashboardDataService = {
 
   async getCategories(): Promise<CategoryItem[]> {
     const res = await fetch(`${API_BASE_URL}/api/categories`, {
-      credentials: "include",
+      credentials: "include"
     });
     const data = await jsonOrThrow(res);
     return data.success && Array.isArray(data.data) ? data.data : [];
@@ -70,7 +81,7 @@ export const dashboardDataService = {
 
   async getGuests(): Promise<GuestLogItem[]> {
     const res = await fetch(`${API_BASE_URL}/api/guests`, {
-      credentials: "include",
+      credentials: "include"
     });
     const data = await jsonOrThrow(res);
     return data.success && Array.isArray(data.data) ? data.data : [];
@@ -84,24 +95,29 @@ export const dashboardDataService = {
       loansRes,
       unpaidFinesRes,
       paidFinesRes,
+      webTrafficRes
     ] = await Promise.all([
       this.getCollections(),
       this.getCategories(),
       this.getGuests().catch(() => []),
       fetch(`${API_BASE_URL}/api/loans?status=approved&limit=200`, {
-        credentials: "include",
+        credentials: "include"
       }),
       fetch(`${API_BASE_URL}/api/fines?status=unpaid&limit=200`, {
-        credentials: "include",
+        credentials: "include"
       }),
       fetch(`${API_BASE_URL}/api/fines?status=paid&limit=200`, {
-        credentials: "include",
+        credentials: "include"
       }),
+      fetch(`${API_BASE_URL}/api/reports/web-traffic?days=1`, {
+        credentials: "include"
+      })
     ]);
 
     let activeBorrowings = 0;
     let outstandingFines = 0;
     let totalFineRevenue = 0;
+    let webVisits = 0;
 
     try {
       const loansData = await loansRes.json();
@@ -118,7 +134,7 @@ export const dashboardDataService = {
         outstandingFines = unpaidFinesData.data.reduce(
           (sum: number, fine: { amount: number }) =>
             sum + (Number(fine.amount) || 0),
-          0,
+          0
         );
       }
     } catch {
@@ -131,27 +147,39 @@ export const dashboardDataService = {
         totalFineRevenue = paidFinesData.data.reduce(
           (sum: number, fine: { amount: number }) =>
             sum + (Number(fine.amount) || 0),
-          0,
+          0
         );
       }
     } catch {
       totalFineRevenue = 0;
     }
 
+    try {
+      const webTrafficData =
+        (await webTrafficRes.json()) as WebTrafficSummaryResponse;
+      if (webTrafficData.success) {
+        webVisits = Number(webTrafficData.data?.summary?.todayPageViews || 0);
+      }
+    } catch {
+      webVisits = 0;
+    }
+
     return {
       totalCollections: collections.length,
       totalCategories: categories.length,
       totalGuests: guests.length,
+      webVisits,
+      combinedVisits: guests.length + webVisits,
       activeBorrowings,
       outstandingFines,
-      totalFineRevenue,
+      totalFineRevenue
     };
   },
 
   async deleteCollection(id: string) {
     const res = await fetch(`${API_BASE_URL}/api/collections/${id}`, {
       method: "DELETE",
-      credentials: "include",
+      credentials: "include"
     });
     return jsonOrThrow(res);
   },
@@ -159,7 +187,7 @@ export const dashboardDataService = {
   async deleteCategory(id: number) {
     const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
       method: "DELETE",
-      credentials: "include",
+      credentials: "include"
     });
     return jsonOrThrow(res);
   },
@@ -167,8 +195,8 @@ export const dashboardDataService = {
   async deleteGuest(id: string) {
     const res = await fetch(`${API_BASE_URL}/api/guests/${id}`, {
       method: "DELETE",
-      credentials: "include",
+      credentials: "include"
     });
     return jsonOrThrow(res);
-  },
+  }
 };
