@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import nodemailer, { type SentMessageInfo } from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -54,17 +54,18 @@ export const sendEmail = async (
   subject: string,
   html: string,
   retryCount = 0
-): Promise<void> => {
+): Promise<SentMessageInfo> => {
   const MAX_RETRY = 1;
 
   try {
-    await transporter.sendMail({
+    const result = await transporter.sendMail({
       from: `"Perpustakaan UMC" <${GOOGLE_EMAIL}>`,
       to,
       subject,
       html,
     });
     console.log(`[Mailer] Email terkirim ke: ${to} | Subjek: "${subject}"`);
+    return result;
   } catch (error: any) {
     console.error(
       `[Mailer] Gagal kirim email ke ${to} (percobaan ${retryCount + 1}):`,
