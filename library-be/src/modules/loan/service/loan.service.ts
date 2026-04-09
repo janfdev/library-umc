@@ -206,14 +206,20 @@ export class LoanService {
       return loanData;
     });
 
-    // Kirim Email Notifikasi (Async - tidak menunggu email terkirim untuk return response)
+    // Kirim Email Notifikasi dan tangkap errornya jika gagal (untuk debugging)
     if (result.member.user.email) {
-      void notificationService.sendLoansNotification(
-        result.member.user.email,
-        result.member.user.name,
-        result.item.collection.title ?? "Buku",
-        result.dueDate
-      );
+      try {
+        await notificationService.sendLoansNotification(
+          result.member.user.email,
+          result.member.user.name,
+          result.item.collection.title ?? "Buku",
+          result.dueDate
+        );
+      } catch (error: any) {
+        return {
+          message: `Peminjaman berhasil, NAMUN EMAIL GAGAL DIKIRIM: ${error.message}`
+        };
+      }
     }
 
     return {
