@@ -6,7 +6,7 @@ import {
   BadRequestError,
   InternalServerError,
   NotFoundError,
-  UnauthorizedError
+  UnauthorizedError,
 } from "../../../exceptions/AppError";
 
 export interface CampusUserData {
@@ -52,7 +52,7 @@ export class AuthService {
       memberType,
       nimNidn: nimNidnValue || "-",
       faculty: campusUser.faculty || "-",
-      phone: campusUser.phone || null
+      phone: campusUser.phone || null,
     };
   }
 
@@ -69,7 +69,7 @@ export class AuthService {
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
-      this.CAMPUS_API_TIMEOUT
+      this.CAMPUS_API_TIMEOUT,
     );
 
     try {
@@ -77,7 +77,7 @@ export class AuthService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -123,7 +123,7 @@ export class AuthService {
 
     try {
       const existingMember = await db.query.members.findFirst({
-        where: eq(MemberTable.userId, userId)
+        where: eq(MemberTable.userId, userId),
       });
 
       if (existingMember) {
@@ -139,7 +139,7 @@ export class AuthService {
           memberType: memberPayload.memberType,
           nimNidn: memberPayload.nimNidn,
           faculty: memberPayload.faculty,
-          phone: memberPayload.phone
+          phone: memberPayload.phone,
         })
         .returning();
 
@@ -147,7 +147,7 @@ export class AuthService {
     } catch (error) {
       console.error(`[AuthService] Sync Member FAILED:`, error);
       throw new InternalServerError(
-        "Gagal sinkronisasi data member ke database"
+        "Gagal sinkronisasi data member ke database",
       );
     }
   }
@@ -158,7 +158,7 @@ export class AuthService {
     }
 
     const user = await db.query.Users.findFirst({
-      where: and(eq(UserTable.id, userId), isNull(UserTable.deletedAt))
+      where: and(eq(UserTable.id, userId), isNull(UserTable.deletedAt)),
     });
 
     if (!user) {
@@ -169,12 +169,12 @@ export class AuthService {
     const memberPayload = this.mapCampusRoleToMemberType(campusUser);
 
     const existingMember = await db.query.members.findFirst({
-      where: eq(MemberTable.userId, userId)
+      where: eq(MemberTable.userId, userId),
     });
 
     if (existingMember?.deletedAt === null) {
       throw new BadRequestError(
-        "User sudah tersinkronisasi. Sync manual hanya untuk user yang belum sinkron."
+        "User sudah tersinkronisasi. Sync manual hanya untuk user yang belum sinkron.",
       );
     }
 
@@ -187,7 +187,7 @@ export class AuthService {
           nimNidn: memberPayload.nimNidn,
           faculty: memberPayload.faculty,
           phone: memberPayload.phone,
-          deletedAt: null
+          deletedAt: null,
         })
         .returning();
 
@@ -195,7 +195,7 @@ export class AuthService {
         userId,
         email: user.email,
         mode: "created" as const,
-        member: newMember
+        member: newMember,
       };
     }
 
@@ -207,7 +207,7 @@ export class AuthService {
         faculty: memberPayload.faculty,
         phone: memberPayload.phone,
         updatedAt: new Date(),
-        deletedAt: null
+        deletedAt: null,
       })
       .where(eq(MemberTable.id, existingMember.id))
       .returning();
@@ -216,7 +216,7 @@ export class AuthService {
       userId,
       email: user.email,
       mode: "restored" as const,
-      member: updatedMember
+      member: updatedMember,
     };
   }
 
@@ -225,7 +225,7 @@ export class AuthService {
 
     const localUser = await db.query.Users.findFirst({
       where: eq(UserTable.email, email),
-      with: { member: true }
+      with: { member: true },
     });
 
     return { campusData: campusUser, localUser };
@@ -234,10 +234,10 @@ export class AuthService {
   async registerWithCredentials(
     name: string,
     email: string,
-    password: string
+    password: string,
   ): Promise<AuthResponseData> {
     const existingUser = await db.query.Users.findFirst({
-      where: eq(UserTable.email, email)
+      where: eq(UserTable.email, email),
     });
 
     if (existingUser) {
@@ -248,7 +248,7 @@ export class AuthService {
 
     try {
       const result = await auth.api.signUpEmail({
-        body: { name, email, password }
+        body: { name, email, password },
       });
 
       if (!result?.user) {
@@ -261,9 +261,9 @@ export class AuthService {
           name: result.user.name,
           email: result.user.email,
           role: result.user.role || "student",
-          createdAt: result.user.createdAt
+          createdAt: result.user.createdAt,
         },
-        token: result.token
+        token: result.token,
       };
     } catch (err: unknown) {
       if (err instanceof AppError) {
@@ -275,20 +275,20 @@ export class AuthService {
         throw new AppError("Email sudah terdaftar", 409);
       }
       throw new InternalServerError(
-        error.message || "Gagal melakukan registrasi"
+        error.message || "Gagal melakukan registrasi",
       );
     }
   }
 
   async loginWithCredentials(
     email: string,
-    password: string
+    password: string,
   ): Promise<AuthResponseData> {
     const { auth } = await import("../../../lib/auth");
 
     try {
       const result = await auth.api.signInEmail({
-        body: { email, password }
+        body: { email, password },
       });
 
       if (!result?.user) {
@@ -301,9 +301,9 @@ export class AuthService {
           name: result.user.name,
           email: result.user.email,
           role: result.user.role || "student",
-          image: result.user.image
+          image: result.user.image,
         },
-        token: result.token
+        token: result.token,
       };
     } catch (err: unknown) {
       if (err instanceof AppError) {
