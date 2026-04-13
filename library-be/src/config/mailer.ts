@@ -23,8 +23,6 @@ export const transporter = nodemailer.createTransport({
     user: GOOGLE_EMAIL,
     pass: GOOGLE_APP_PASSWORD,
   },
-  pool: true,          // Reuse koneksi antar pengiriman
-  maxConnections: 2,   // Batasi koneksi paralel agar tidak rate-limited
   socketTimeout: 30000,   // 30 detik timeout per socket
   greetingTimeout: 15000, // 15 detik tunggu greeting SMTP
   connectionTimeout: 15000, // 15 detik timeout koneksi awal
