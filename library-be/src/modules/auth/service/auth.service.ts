@@ -33,7 +33,7 @@ export interface AuthResponseData {
 }
 
 export class AuthService {
-  private readonly CAMPUS_API_TIMEOUT = 5000;
+  private readonly CAMPUS_API_TIMEOUT = 15000;
 
   private mapCampusRoleToMemberType(campusUser: CampusUserData) {
     let memberType: "student" | "lecturer" | "staff" | "super_admin" =
