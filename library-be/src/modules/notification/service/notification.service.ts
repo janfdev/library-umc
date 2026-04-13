@@ -10,6 +10,7 @@ export class NotificationService {
       await sendEmail(to, subject, html);
     } catch (error) {
       console.error("[NotificationService] Failed to send email:", error);
+      throw error;
     }
   }
 
@@ -50,6 +51,7 @@ export class NotificationService {
         "[NotificationService] Failed to send loan notification:",
         error
       );
+      throw error;
     }
   }
 
@@ -90,6 +92,7 @@ export class NotificationService {
         "[NotificationService] Failed to send fine notification:",
         error
       );
+      throw error;
     }
   }
 
@@ -128,6 +131,7 @@ export class NotificationService {
         "[NotificationService] Failed to send reservation notification:",
         error
       );
+      throw error;
     }
   }
 }
