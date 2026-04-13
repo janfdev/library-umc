@@ -82,20 +82,25 @@ export class AuthService {
 
       clearTimeout(timeoutId);
 
+      let responseData: any;
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        // Do nothing if response cannot be parsed
+      }
+
       if (!response.ok) {
+        if (response.status === 401 || response.status === 404) {
+          throw new NotFoundError(responseData?.message || "User tidak ditemukan di sistem kampus");
+        }
         throw new InternalServerError(`API Kampus error: ${response.status}`);
       }
 
-      const responseData = (await response.json()) as {
-        success: boolean;
-        data?: { user: CampusUserData };
-      };
-
-      if (!responseData.success || !responseData.data?.user) {
-        throw new NotFoundError("User tidak ditemukan di sistem kampus");
+      if (!responseData?.success || !responseData?.data?.user) {
+        throw new NotFoundError(responseData?.message || "User tidak ditemukan di sistem kampus");
       }
 
-      return responseData.data.user;
+      return responseData.data.user as CampusUserData;
     } catch (err: unknown) {
       clearTimeout(timeoutId);
 
@@ -165,7 +170,22 @@ export class AuthService {
       throw new NotFoundError("User tidak ditemukan");
     }
 
-    const campusUser = await this.getCampusUser(user.email);
+    let campusUser: CampusUserData;
+    try {
+      campusUser = await this.getCampusUser(user.email);
+    } catch (err: unknown) {
+      // Fallback data jika ternyata sistem kampus menolak/tidak menemukan data.
+      // Dibuatkan profil kosongan ke tabel `members` sebagai student dengan NIM strip (-).
+      campusUser = {
+        id: "fallback-" + user.id, 
+        name: user.name,
+        email: user.email,
+        role: "student", // default role 'student' (memberType: student)
+        nim: "-",
+        faculty: "-",
+        phone: undefined,
+      };
+    }
     const memberPayload = this.mapCampusRoleToMemberType(campusUser);
 
     const existingMember = await db.query.members.findFirst({
