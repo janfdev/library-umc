@@ -12,8 +12,8 @@ export class EmailService {
   async send(to: string, subject: string, html: string) {
     try {
       const result = await sendEmail(to, subject, html);
-      console.log(`[EmailService] Email sent to ${to}: ${result.messageId}`);
-      return { success: true, messageId: result.messageId };
+      console.log(`[EmailService] Email sent to ${to}: ${result.id}`);
+      return { success: true, messageId: result.id };
     } catch (error) {
       console.error("[EmailService] Failed to send email:", error);
       return { success: false, error: (error as Error).message };
@@ -26,13 +26,12 @@ export class EmailService {
   async sendAnnouncement(toList: string[], subject: string, content: string) {
     const html = buildEmailTemplate({
       title: subject,
-      headline: "Announcement",
+      headline: "Pengumuman",
       intro: "Pengumuman resmi dari perpustakaan.",
       content: formatContent(content),
       footerNote: "Ini adalah pesan otomatis dari sistem Perpustakaan UMC."
     });
 
-    // Send to multiple users (sequentially or Promise.all)
     const results = await Promise.all(
       toList.map((email) => this.send(email, subject, html))
     );
@@ -53,11 +52,20 @@ export class EmailService {
       headline: "System Alert",
       intro: "Perhatian, ada notifikasi sistem yang perlu ditindaklanjuti.",
       content: `
-        <div style="background:#f8fafc;border:1px solid #dbe4f0;border-radius:14px;padding:16px 18px;color:#1e293b;font-family:Arial,Helvetica,sans-serif;white-space:pre-wrap;word-break:break-word;">${escapeHtml(details)}</div>
-        <div style="margin-top:14px;color:#64748b;font-size:13px;">Waktu: ${escapeHtml(new Date().toLocaleString())}</div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+          style="border-collapse:collapse;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;">
+          <tr>
+            <td style="padding:14px 16px;font-size:13px;color:#374151;white-space:pre-wrap;word-break:break-word;">
+              ${escapeHtml(details)}
+            </td>
+          </tr>
+        </table>
+        <p style="margin:12px 0 0;font-size:12px;color:#9ca3af;">
+          Waktu: ${escapeHtml(new Date().toLocaleString("id-ID"))}
+        </p>
       `,
-      footerNote: "Pesan ini dibuat untuk admin sistem perpustakaan.",
-      accent: "#b42318"
+      footerNote: "Pesan ini dibuat khusus untuk admin sistem perpustakaan.",
+      accent: "#9b1c1c"
     });
     return this.send(adminEmail, `[ALERT] ${alertTitle}`, html);
   }
