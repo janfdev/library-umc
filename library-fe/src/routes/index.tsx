@@ -16,6 +16,7 @@ import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
 import TentangPage from "../pages/TentangPage";
 import WebTrafficTracker from "@/components/WebTrafficTracker";
+import AbsensiPage from "@/pages/Absensi";
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,7 @@ const AppRoutes = () => {
         <Route path="/e-resource" element={<Eresource />} />
         <Route path="/my-loans" element={<MyLoans />} />
         <Route path="/tentang" element={<TentangPage />} />
+        <Route path="/absensi" element={<AbsensiPage />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

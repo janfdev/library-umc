@@ -50,7 +50,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Penelitian ini mengembangkan model deteksi penyakit tanaman padi menggunakan Convolutional Neural Network (CNN) dengan akurasi mencapai 95.7% pada dataset citra daun padi.",
     date: "12 Januari 2026",
-    fileSize: "Bab 1",
+    fileSize: "2.4 MB",
     fileType: "Skripsi",
     downloads: 245,
     views: 1234,
@@ -69,7 +69,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Penelitian ini menganalisis sentimen masyarakat terhadap kebijakan pendidikan terbaru menggunakan metode klasifikasi Naive Bayes dengan tingkat akurasi 89.3%.",
     date: "15 Februari 2026",
-    fileSize: "Bab 2",
+    fileSize: "1.8 MB",
     fileType: "Jurnal",
     downloads: 189,
     views: 956,
@@ -88,7 +88,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Aplikasi e-learning dikembangkan menggunakan framework Flutter dengan fitur interaktif untuk memfasilitasi pembelajaran jarak jauh bagi siswa sekolah dasar.",
     date: "20 Maret 2026",
-    fileSize: "Bab 3",
+    fileSize: "3.1 MB",
     fileType: "Skripsi",
     downloads: 312,
     views: 1876,
@@ -107,7 +107,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Studi kuantitatif ini menginvestigasi dampak penggunaan media sosial terhadap prestasi akademik mahasiswa dengan sampel 300 responden dari 5 universitas.",
     date: "5 April 2026",
-    fileSize: "Bab 4",
+    fileSize: "2.1 MB",
     fileType: "Tesis",
     downloads: 156,
     views: 745,
@@ -126,7 +126,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Penelitian ini mengoptimalkan algoritma neural network untuk memprediksi pola cuaca dengan akurasi 92% menggunakan data historis 10 tahun terakhir.",
     date: "18 Mei 2025",
-    fileSize: "Bab 5",
+    fileSize: "2.7 MB",
     fileType: "Jurnal",
     downloads: 98,
     views: 432,
@@ -145,7 +145,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Sistem pendukung keputusan berbasis web dikembangkan untuk membantu calon mahasiswa memilih program studi sesuai minat dan bakat menggunakan metode AHP.",
     date: "22 Juni 2025",
-    fileSize: "Bab 6",
+    fileSize: "2.9 MB",
     fileType: "Skripsi",
     downloads: 201,
     views: 1023,
@@ -164,7 +164,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Penelitian membandingkan algoritma SVM, Random Forest, dan Neural Network untuk mendeteksi berita hoax dengan dataset 5000 berita berbahasa Indonesia.",
     date: "10 Juli 2025",
-    fileSize: "Bab 7",
+    fileSize: "2.2 MB",
     fileType: "Jurnal",
     downloads: 267,
     views: 1567,
@@ -183,7 +183,7 @@ const mockRepositoryData: RepositoryItem[] = [
     abstract:
       "Media pembelajaran berbasis AR dikembangkan untuk materi sistem tata surya dengan hasil uji kelayakan 88% dari ahli media dan 92% dari siswa.",
     date: "5 Agustus 2024",
-    fileSize: "Bab 8",
+    fileSize: "4.2 MB",
     fileType: "Tesis",
     downloads: 178,
     views: 890,
@@ -193,37 +193,22 @@ const mockRepositoryData: RepositoryItem[] = [
   },
 ];
 
-// Data untuk filter
-const categories = [
-  { name: "Semua Kategori", count: mockRepositoryData.length, color: "slate" },
-  {
-    name: "Skripsi",
-    count: mockRepositoryData.filter((item) => item.category === "Skripsi")
-      .length,
-    color: "blue",
-  },
-  {
-    name: "Tesis",
-    count: mockRepositoryData.filter((item) => item.category === "Tesis")
-      .length,
-    color: "green",
-  },
-  {
-    name: "Jurnal",
-    count: mockRepositoryData.filter((item) => item.category === "Jurnal")
-      .length,
-    color: "purple",
-  },
-  { name: "Disertasi", count: 0, color: "orange" },
+// Data untuk filter dropdown
+const categoryOptions = [
+  { value: "Semua Kategori", label: "Semua Kategori" },
+  { value: "Skripsi", label: "Skripsi" },
+  { value: "Tesis", label: "Tesis" },
+  { value: "Jurnal", label: "Jurnal" },
+  { value: "Disertasi", label: "Disertasi" },
 ];
 
-// const years = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
-
-const faculties = [
-  "Semua Fakultas",
-  "Fakultas Teknik",
-  "Fakultas Ilmu Komputer",
-  "Fakultas Keguruan",
+const facultyOptions = [
+  { value: "Semua Fakultas", label: "Semua Fakultas" },
+  { value: "Fakultas Teknik", label: "Fakultas Teknik" },
+  { value: "Fakultas Ilmu Komputer", label: "Fakultas Ilmu Komputer" },
+  { value: "Fakultas Keguruan", label: "Fakultas Keguruan" },
+  { value: "Fakultas Ekonomi", label: "Fakultas Ekonomi" },
+  { value: "Fakultas Hukum", label: "Fakultas Hukum" },
 ];
 
 export default function EResourcePage() {
@@ -236,9 +221,11 @@ export default function EResourcePage() {
   const [yearStart, setYearStart] = useState("");
   const [yearEnd, setYearEnd] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(6);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "downloads" | "views">("date");
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isFacultyDropdownOpen, setIsFacultyDropdownOpen] = useState(false);
 
   // Reset page when filters change
   useEffect(() => {
@@ -252,6 +239,36 @@ export default function EResourcePage() {
     searchType,
     sortBy,
   ]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.category-dropdown')) {
+        setIsCategoryDropdownOpen(false);
+      }
+      if (!target.closest('.faculty-dropdown')) {
+        setIsFacultyDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Hitung counts untuk setiap kategori
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    categoryOptions.forEach(opt => {
+      if (opt.value === "Semua Kategori") {
+        counts[opt.value] = mockRepositoryData.length;
+      } else {
+        counts[opt.value] = mockRepositoryData.filter(
+          (item) => item.category === opt.value
+        ).length;
+      }
+    });
+    return counts;
+  }, []);
 
   // Filter items berdasarkan kriteria
   const filteredItems = useMemo(() => {
@@ -338,45 +355,59 @@ export default function EResourcePage() {
     setSortBy("date");
   };
 
+  // Get category badge style
+  const getCategoryStyle = (category: string) => {
+    switch (category) {
+      case "Skripsi":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      case "Tesis":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "Jurnal":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-x-hidden">
       <Navbar />
 
       <main className="flex-1">
         {/* --- HERO SECTION --- */}
-        <section className="bg-[#B21818] pt-16 pb-32 px-4 relative">
+        <section className="bg-gradient-to-r from-red-700 to-red-800 pt-20 pb-28 px-4 relative">
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Repositori Digital
+              Repositori Digital UMC
             </h1>
-            <p className="text-white/80 text-sm md:text-base font-medium mb-12">
+            <p className="text-white/80 text-base md:text-lg font-medium mb-12">
               Akses karya ilmiah, skripsi, tesis, dan jurnal publikasi civitas
-              akademika UMC
+              akademika
             </p>
 
             {/* --- SEARCH BAR (Floating) --- */}
             <div className="absolute left-1/2 -bottom-8 -translate-x-1/2 w-full max-w-4xl px-4">
-              <div className="bg-white flex items-center rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-1.5 border border-slate-100">
+              <div className="bg-white flex items-center rounded-2xl shadow-lg p-1.5 border border-gray-100">
                 <div className="flex-1 flex items-center px-4">
-                  <Search className="text-slate-400 w-5 h-5 mr-3" />
+                  <Search className="text-gray-400 w-5 h-5 mr-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full py-3.5 text-slate-700 focus:outline-none font-medium text-sm"
+                    className="w-full py-3.5 text-gray-700 focus:outline-none font-medium text-base"
                     placeholder="Cari judul, penulis, atau kata kunci..."
                   />
                 </div>
 
                 {/* Search Type Dropdown */}
                 <div className="relative group">
-                  <button className="hidden md:flex items-center px-6 border-l border-slate-200 text-slate-500 text-sm gap-2 font-semibold hover:text-red-600 transition-colors">
+                  <button className="hidden md:flex items-center px-6 border-l border-gray-200 text-gray-500 text-sm gap-2 font-medium hover:text-red-600 transition-colors">
                     {searchType === "all" && "Semua"}
                     {searchType === "title" && "Judul"}
                     {searchType === "author" && "Penulis"}
                     <ChevronDown size={16} />
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                     {[
                       { value: "all", label: "Semua" },
                       { value: "title", label: "Judul" },
@@ -385,10 +416,10 @@ export default function EResourcePage() {
                       <button
                         key={type.value}
                         onClick={() => setSearchType(type.value as any)}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 ${
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
                           searchType === type.value
                             ? "text-red-600 font-medium"
-                            : "text-slate-600"
+                            : "text-gray-600"
                         }`}
                       >
                         {type.label}
@@ -397,7 +428,7 @@ export default function EResourcePage() {
                   </div>
                 </div>
 
-                <button className="bg-[#8E1B1B] text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-[#721414] transition-all ml-2">
+                <button className="bg-red-600 text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:bg-red-700 transition-all ml-2">
                   Cari
                 </button>
               </div>
@@ -406,163 +437,187 @@ export default function EResourcePage() {
         </section>
 
         {/* --- MAIN CONTENT AREA --- */}
-        <section className="max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-24">
+        <section className="max-w-7xl mx-auto px-4 md:px-6 pt-28 pb-20">
           {/* Mobile Filter Toggle */}
           <button
             onClick={() => setShowMobileFilter(!showMobileFilter)}
-            className="lg:hidden w-full mb-6 flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl"
+            className="lg:hidden w-full mb-6 flex items-center justify-between px-5 py-3 bg-white border border-gray-200 rounded-xl shadow-sm"
           >
-            <span className="font-medium text-slate-700">Filter Pencarian</span>
-            <Filter className="w-5 h-5 text-slate-400" />
+            <span className="font-medium text-gray-700">Filter Pencarian</span>
+            <Filter className="w-5 h-5 text-gray-400" />
           </button>
 
-          <div className="flex flex-col lg:flex-row gap-10">
-            {/* --- SIDEBAR FILTER --- */}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* --- SIDEBAR FILTER (Dropdown version) --- */}
             <aside
               className={`
-              lg:w-80 flex-shrink-0
+              lg:w-72 flex-shrink-0
               ${showMobileFilter ? "block" : "hidden lg:block"}
             `}
             >
-              <div className="sticky top-24 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <div className="sticky top-24 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold text-[#1E293B] text-xs tracking-wider uppercase flex items-center gap-2">
-                    <Filter size={14} />
-                    Filter Pencarian
+                  <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                    <Filter size={16} />
+                    Filter
                   </h3>
                   <button
                     onClick={resetFilters}
-                    className="text-[11px] font-bold text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
+                    className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
                   >
                     <RotateCcw size={12} />
-                    RESET
+                    Reset
                   </button>
                 </div>
 
-                {/* Kategori Filter */}
-                <div className="mb-8">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                {/* Kategori Dropdown Filter */}
+                <div className="mb-6 category-dropdown">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Kategori
-                  </h4>
-                  <div className="space-y-2">
-                    {categories.map((cat) => {
-                      const colorClasses = {
-                        slate: "bg-slate-50 text-slate-600 border-slate-200",
-                        blue: "bg-blue-50 text-blue-600 border-blue-200",
-                        green: "bg-green-50 text-green-600 border-green-200",
-                        purple:
-                          "bg-purple-50 text-purple-600 border-purple-200",
-                        orange:
-                          "bg-orange-50 text-orange-600 border-orange-200",
-                      };
-
-                      return (
-                        <button
-                          key={cat.name}
-                          onClick={() => setSelectedCategory(cat.name)}
-                          className={`w-full flex justify-between items-center p-3 rounded-xl transition-all ${
-                            selectedCategory === cat.name
-                              ? `${colorClasses[cat.color as keyof typeof colorClasses]} border`
-                              : "hover:bg-slate-50 text-slate-600"
-                          }`}
-                        >
-                          <span className="font-medium text-sm">
-                            {cat.name}
-                          </span>
-                          <span
-                            className={`text-[10px] px-2 py-1 rounded-md font-bold ${
-                              selectedCategory === cat.name
-                                ? colorClasses[
-                                    cat.color as keyof typeof colorClasses
-                                  ]
-                                : "bg-slate-50 text-slate-400 border border-slate-100"
+                  </label>
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm hover:border-red-300 transition-colors"
+                    >
+                      <span>{selectedCategory}</span>
+                      <ChevronDown size={16} className={`transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isCategoryDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-auto">
+                        {categoryOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              setSelectedCategory(option.value);
+                              setIsCategoryDropdownOpen(false);
+                            }}
+                            className={`w-full flex justify-between items-center px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                              selectedCategory === option.value ? 'bg-red-50 text-red-600' : 'text-gray-700'
                             }`}
                           >
-                            {cat.count}
-                          </span>
-                        </button>
-                      );
-                    })}
+                            <span>{option.label}</span>
+                            <span className="text-xs text-gray-400">{categoryCounts[option.value] || 0}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Fakultas Filter */}
-                <div className="mb-8">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                {/* Fakultas Dropdown Filter */}
+                <div className="mb-6 faculty-dropdown">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Fakultas
-                  </h4>
-                  <div className="space-y-2">
-                    {faculties.map((faculty) => (
-                      <button
-                        key={faculty}
-                        onClick={() => setSelectedFaculty(faculty)}
-                        className={`w-full text-left p-3 rounded-xl text-sm transition-all ${
-                          selectedFaculty === faculty
-                            ? "bg-red-50 text-red-600 border border-red-200"
-                            : "hover:bg-slate-50 text-slate-600"
-                        }`}
-                      >
-                        {faculty}
-                      </button>
-                    ))}
+                  </label>
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsFacultyDropdownOpen(!isFacultyDropdownOpen)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm hover:border-red-300 transition-colors"
+                    >
+                      <span>{selectedFaculty}</span>
+                      <ChevronDown size={16} className={`transition-transform ${isFacultyDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isFacultyDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-auto">
+                        {facultyOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              setSelectedFaculty(option.value);
+                              setIsFacultyDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                              selectedFaculty === option.value ? 'bg-red-50 text-red-600' : 'text-gray-700'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Tahun Terbit - Dengan warna berbeda */}
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                {/* Tahun Terbit */}
+                <div className="mb-6">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Tahun Terbit
-                  </h4>
+                  </label>
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="block text-[9px] text-slate-400 mb-1 ml-1">
-                        Dari
-                      </label>
                       <input
                         type="text"
                         value={yearStart}
                         onChange={(e) => setYearStart(e.target.value)}
-                        placeholder="2020"
-                        className="w-full bg-white text-black border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all placeholder:text-slate-300"
+                        placeholder="Dari"
+                        className="w-full bg-white text-gray-700 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all placeholder:text-gray-400"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-[9px] text-slate-400 mb-1 ml-1">
-                        Sampai
-                      </label>
                       <input
                         type="text"
                         value={yearEnd}
                         onChange={(e) => setYearEnd(e.target.value)}
-                        placeholder="2026"
-                        className="w-full bg-white text-black border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all placeholder:text-slate-300"
+                        placeholder="Sampai"
+                        className="w-full bg-white text-gray-700 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all placeholder:text-gray-400"
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* Active Filters Summary */}
+                {(searchQuery ||
+                  selectedCategory !== "Semua Kategori" ||
+                  selectedFaculty !== "Semua Fakultas" ||
+                  yearStart ||
+                  yearEnd) && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-1.5">
+                      {searchQuery && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs">
+                          "{searchQuery.slice(0, 15)}"
+                          <X size={10} className="cursor-pointer" onClick={() => setSearchQuery("")} />
+                        </span>
+                      )}
+                      {selectedCategory !== "Semua Kategori" && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs">
+                          {selectedCategory}
+                          <X size={10} className="cursor-pointer" onClick={() => setSelectedCategory("Semua Kategori")} />
+                        </span>
+                      )}
+                      {selectedFaculty !== "Semua Fakultas" && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-600 rounded-lg text-xs">
+                          {selectedFaculty}
+                          <X size={10} className="cursor-pointer" onClick={() => setSelectedFaculty("Semua Fakultas")} />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </aside>
 
             {/* --- RESULTS LIST --- */}
             <div className="flex-1">
               {/* Results Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-bold text-slate-900">
+                  <h2 className="text-xl font-bold text-gray-800">
                     Hasil Pencarian
                   </h2>
-                  <span className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1 rounded-full">
-                    {filteredItems.length} ditemukan
+                  <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">
+                    {filteredItems.length} dokumen
                   </span>
                 </div>
 
                 {/* Sorting */}
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-400 text-xs">Urutkan:</span>
+                  <span className="text-gray-400 text-xs">Urutkan:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600 focus:outline-none focus:border-red-500"
+                    className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 focus:outline-none focus:border-red-400"
                   >
                     <option value="date">Terbaru</option>
                     <option value="downloads">Terpopuler</option>
@@ -571,169 +626,94 @@ export default function EResourcePage() {
                 </div>
               </div>
 
-              {/* Active Filters */}
-              {(searchQuery ||
-                selectedCategory !== "Semua Kategori" ||
-                selectedFaculty !== "Semua Fakultas" ||
-                yearStart ||
-                yearEnd) && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {searchQuery && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
-                      Pencarian: "{searchQuery}"
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setSearchQuery("")}
-                      />
-                    </span>
-                  )}
-                  {selectedCategory !== "Semua Kategori" && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-medium">
-                      {selectedCategory}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedCategory("Semua Kategori")}
-                      />
-                    </span>
-                  )}
-                  {selectedFaculty !== "Semua Fakultas" && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs font-medium">
-                      {selectedFaculty}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedFaculty("Semua Fakultas")}
-                      />
-                    </span>
-                  )}
-                  {(yearStart || yearEnd) && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-medium">
-                      Tahun: {yearStart || "..."} - {yearEnd || "..."}
-                      <X
-                        size={12}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setYearStart("");
-                          setYearEnd("");
-                        }}
-                      />
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Results List */}
-              <div className="space-y-6">
+              {/* Results Grid - Card Layout yang lebih natural */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {paginatedItems.length === 0 ? (
-                  <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center">
-                    <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">
+                  <div className="col-span-full bg-white border border-gray-100 rounded-2xl p-12 text-center">
+                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">
                       Tidak ada hasil
                     </h3>
-                    <p className="text-slate-400 text-sm max-w-md mx-auto">
-                      Tidak ditemukan karya ilmiah yang sesuai dengan kriteria
-                      pencarian Anda. Coba gunakan kata kunci atau filter yang
-                      berbeda.
+                    <p className="text-gray-400 text-sm max-w-md mx-auto">
+                      Tidak ditemukan karya ilmiah yang sesuai dengan kriteria pencarian Anda.
                     </p>
                   </div>
                 ) : (
                   paginatedItems.map((item) => (
-                    <article
+                    <div
                       key={item.id}
-                      className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-lg transition-all"
+                      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
                     >
-                      <div className="flex gap-6">
-                        {/* Icon Container */}
-                        <div className="flex-shrink-0 hidden sm:block">
-                          <div className="w-14 h-14 bg-white border border-red-100 rounded-xl flex items-center justify-center shadow-sm">
-                            <FileText className="text-[#D32F2F] w-7 h-7" />
+                      {/* Card Header */}
+                      <div className="p-5 pb-3">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryStyle(item.category)}`}>
+                            {item.category}
+                          </span>
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <Eye size={14} />
+                            <span>{item.views}</span>
+                            <Download size={14} className="ml-1" />
+                            <span>{item.downloads}</span>
                           </div>
                         </div>
-
-                        {/* Content */}
-                        <div className="flex-1">
-                          {/* Category Badge */}
-                          <div className="mb-3">
-                            <span
-                              className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                item.category === "Skripsi"
-                                  ? "bg-blue-50 text-blue-600"
-                                  : item.category === "Tesis"
-                                    ? "bg-green-50 text-green-600"
-                                    : "bg-purple-50 text-purple-600"
-                              }`}
-                            >
-                              {item.category}
-                            </span>
+                        
+                        <h3 className="text-lg font-bold text-gray-800 leading-tight mb-2 line-clamp-2 hover:text-red-600 transition-colors">
+                          {item.title}
+                        </h3>
+                        
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 mb-3">
+                          <div className="flex items-center gap-1.5">
+                            <User size={14} />
+                            <span>{item.author}</span>
                           </div>
-
-                          <h3 className="text-lg md:text-xl font-bold text-[#0F172A] leading-tight mb-2 hover:text-red-600 transition-colors cursor-pointer">
-                            {item.title}
-                          </h3>
-
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs mb-4">
-                            <span className="flex items-center gap-1.5 text-slate-500">
-                              <User size={12} />
-                              <span className="font-medium">{item.author}</span>
-                              <span className="text-slate-300">
-                                ({item.authorId})
-                              </span>
-                            </span>
-                            <span className="flex items-center gap-1.5 text-slate-500">
-                              <BookOpen size={12} />
-                              <span>
-                                {item.faculty} - {item.department}
-                              </span>
-                            </span>
-                          </div>
-
-                          <p className="text-slate-400 text-xs md:text-sm italic mb-4 font-medium leading-relaxed border-l-3 border-red-200 pl-4">
-                            "{item.abstract}"
-                          </p>
-
-                          {/* Keywords */}
-                          <div className="flex flex-wrap gap-2 mb-6">
-                            {item.keywords.map((keyword, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-slate-50 text-slate-500 rounded-lg text-[9px] font-medium"
-                              >
-                                #{keyword}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Stats & Download */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-50">
-                            <div className="flex items-center gap-4">
-                              <button className="flex items-center gap-2 bg-[#FFF1F1] text-[#D32F2F] px-6 py-2.5 rounded-xl text-[11px] font-bold hover:bg-[#D32F2F] hover:text-white transition-all border border-red-50">
-                                <Download size={14} />
-                                Download PDF ({item.fileSize})
-                              </button>
-                              <div className="flex items-center gap-3 text-[9px] font-bold text-slate-400">
-                                <span className="flex items-center gap-1">
-                                  <Eye size={12} />
-                                  {item.views}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Download size={12} />
-                                  {item.downloads}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400">
-                              <Calendar size={12} className="text-slate-300" />
-                              <span>Diunggah:</span>
-                              <span className="text-slate-800">
-                                {item.date}
-                              </span>
-                            </div>
+                          <div className="flex items-center gap-1.5">
+                            <BookOpen size={14} />
+                            <span className="text-xs">{item.faculty}</span>
                           </div>
                         </div>
                       </div>
-                    </article>
+
+                      {/* Card Body - Abstract */}
+                      <div className="px-5 py-2">
+                        <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">
+                          {item.abstract}
+                        </p>
+                      </div>
+
+                      {/* Keywords */}
+                      <div className="px-5 py-3">
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.keywords.slice(0, 3).map((keyword, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md text-xs"
+                            >
+                              {keyword}
+                            </span>
+                          ))}
+                          {item.keywords.length > 3 && (
+                            <span className="px-2 py-0.5 text-gray-400 text-xs">
+                              +{item.keywords.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="px-5 py-4 border-t border-gray-100 mt-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <Calendar size={12} />
+                          <span>{item.date}</span>
+                          <span className="mx-1">•</span>
+                          <span>{item.fileSize}</span>
+                        </div>
+                        <button className="flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 hover:text-white transition-all">
+                          <Download size={14} />
+                          PDF
+                        </button>
+                      </div>
+                    </div>
                   ))
                 )}
               </div>
@@ -743,18 +723,15 @@ export default function EResourcePage() {
                 <div className="mt-10 flex justify-center">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(1, prev - 1))
-                      }
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <ChevronLeft size={16} />
                     </button>
 
                     {[...Array(totalPages)].map((_, i) => {
                       const page = i + 1;
-                      // Show limited pages with ellipsis
                       if (
                         page === 1 ||
                         page === totalPages ||
@@ -766,19 +743,16 @@ export default function EResourcePage() {
                             onClick={() => setCurrentPage(page)}
                             className={`w-10 h-10 rounded-xl font-medium text-sm transition-all ${
                               currentPage === page
-                                ? "bg-red-500 text-white"
-                                : "border border-slate-200 text-slate-600 hover:border-red-500"
+                                ? "bg-red-600 text-white shadow-sm"
+                                : "border border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-500"
                             }`}
                           >
                             {page}
                           </button>
                         );
-                      } else if (
-                        page === currentPage - 2 ||
-                        page === currentPage + 2
-                      ) {
+                      } else if (page === currentPage - 2 || page === currentPage + 2) {
                         return (
-                          <span key={page} className="text-slate-400">
+                          <span key={page} className="text-gray-400 px-1">
                             ...
                           </span>
                         );
@@ -787,11 +761,9 @@ export default function EResourcePage() {
                     })}
 
                     <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                      }
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
-                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <ChevronRight size={16} />
                     </button>
