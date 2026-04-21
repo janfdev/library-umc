@@ -1,21 +1,30 @@
-import { Book, Users, TrendingUp } from "lucide-react";
+import { Book, Users, TrendingUp, Layers } from "lucide-react";
 
 interface StatsCardsProps {
   totalCollections: number;
-  loanedCount: number; // Placeholder for now
+  totalItems: number;
+  loanedCount: number;
 }
 
 export default function StatsCards({
   totalCollections,
+  totalItems,
   loanedCount,
 }: StatsCardsProps) {
   const stats = [
     {
-      label: "Total Koleksi",
+      label: "Total Judul",
       value: totalCollections,
       icon: Book,
       color: "text-blue-600",
       bg: "bg-blue-50",
+    },
+    {
+      label: "Total Buku",
+      value: totalItems,
+      icon: Layers,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
     },
     {
       label: "Dipinjam",
@@ -27,7 +36,7 @@ export default function StatsCards({
     {
       label: "Tersedia",
       value:
-        totalCollections - loanedCount > 0 ? totalCollections - loanedCount : 0,
+        totalItems - loanedCount > 0 ? totalItems - loanedCount : 0,
       icon: TrendingUp,
       color: "text-green-600",
       bg: "bg-green-50",
@@ -35,11 +44,11 @@ export default function StatsCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, i) => (
         <div
           key={i}
-          className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+          className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
         >
           <div className="flex items-center justify-between">
             <div>

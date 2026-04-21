@@ -25,7 +25,7 @@ interface Collection {
     id: string;
     name: string;
   };
-  categoryId?: string;
+  categoryId?: string | number;
   isbn?: string;
   stock: number;
   image: string | null;
@@ -50,6 +50,8 @@ export default function CollectionsSection({
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState<any | null>(null);
   const [viewingCollection, setViewingCollection] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const openAddModal = () => {
     setEditingCollection(null);
@@ -69,8 +71,22 @@ export default function CollectionsSection({
   const filteredCollections = collections.filter(
     (item) =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.author.toLowerCase().includes(searchTerm.toLowerCase())
+      item.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.isbn && item.isbn.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Pagination Logic
+  const totalPages = Math.max(1, Math.ceil(filteredCollections.length / itemsPerPage));
+  const paginatedCollections = filteredCollections.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to first page when search changes
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -107,9 +123,9 @@ export default function CollectionsSection({
             <input
               type="text"
               placeholder="Cari Judul, ISBN..."
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-slate-400"
+              className="w-full pl-11 pr-4 py-2.5 text-black bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-slate-400"
               value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
         </div>
@@ -143,7 +159,7 @@ export default function CollectionsSection({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredCollections.length === 0 ? (
+              {paginatedCollections.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
@@ -156,7 +172,8 @@ export default function CollectionsSection({
                   </td>
                 </tr>
               ) : (
-                filteredCollections.map((collection, index) => {
+                paginatedCollections.map((collection, index) => {
+                  const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
                   const stockValue = Number(collection.stock) || 0;
                   const statusInfo =
                     stockValue === 0
@@ -178,7 +195,7 @@ export default function CollectionsSection({
                     >
                       <td className="px-6 py-4">
                         <span className="text-[13px] font-bold text-slate-500">
-                          {index + 1}
+                          {globalIndex}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -249,18 +266,46 @@ export default function CollectionsSection({
         </div>
 
         {/* Pagination Controls */}
-        <div className="p-6 border-t border-slate-50 flex items-center justify-end">
+        <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-400 font-medium">
+            Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredCollections.length)}–
+            {Math.min(currentPage * itemsPerPage, filteredCollections.length)} dari {filteredCollections.length} koleksi
+          </p>
           <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+            <button 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+            >
               <ChevronLeft size={16} /> Prev
             </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#B91C1C] text-white text-sm font-bold shadow-md shadow-red-900/20">
-              1
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 text-sm font-bold transition-colors">
-              2
-            </button>
-            <button className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .map((p, idx, arr) => {
+                const showDot = idx > 0 && arr[idx - 1] !== p - 1;
+                return (
+                  <div key={p} className="flex items-center">
+                    {showDot && <span className="px-2 text-slate-300">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(p)}
+                      className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                        currentPage === p
+                          ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  </div>
+                );
+              })}
+
+            <button 
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+            >
               Next <ChevronRight size={16} />
             </button>
           </div>
@@ -272,6 +317,7 @@ export default function CollectionsSection({
         onClose={() => setIsModalOpen(false)}
         onRefresh={onRefresh}
         collection={editingCollection}
+        allCollections={collections}
       />
 
       <ViewCollectionModal

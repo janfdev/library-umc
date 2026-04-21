@@ -175,6 +175,47 @@ export class GuestController {
   }
 
   /**
+   * POST /guests/direct - Create Guest Log directly (no Campus API lookup)
+   * Used by admin dropdown where member data is already available
+   */
+  async createGuestLogDirect(req: Request, res: Response) {
+    try {
+      const { name, email, identifier, faculty, major } = req.body;
+
+      if (!name || !email) {
+        res.status(400).json({
+          success: false,
+          message: "Name and email are required",
+          data: null,
+        });
+        return;
+      }
+
+      const result = await guestService.createGuestLogDirect({
+        name,
+        email,
+        identifier: identifier || "UNKNOWN",
+        faculty: faculty || "Not Specified",
+        major: major || "Not Specified",
+      });
+
+      if (!result.success) {
+        res.status(400).json(result);
+        return;
+      }
+
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("[GuestController] Error creating direct guest log:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        data: null,
+      });
+    }
+  }
+
+  /**
    * DELETE /guests/:id - Delete Guest Log
    */
   async deleteGuestLog(req: Request, res: Response) {

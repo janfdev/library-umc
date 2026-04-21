@@ -6,6 +6,7 @@ import {
 
 const DEFAULT_STATS: DashboardStats = {
   totalCollections: 0,
+  totalItems: 0,
   totalCategories: 0,
   totalGuests: 0,
   webVisits: 0,

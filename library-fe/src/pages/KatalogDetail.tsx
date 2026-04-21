@@ -7,6 +7,7 @@ import { useKatalogDetail } from "@/hooks/useKatalogDetail";
 import { useKatalogActions } from "@/hooks/useKatalogActions";
 import type { LibraryUser } from "@/types";
 import { PerspectiveBook } from "@/components/perspective-book";
+import { useToast } from "@/hooks/useToast";
 import {
   Share2,
   Bookmark,
@@ -23,6 +24,7 @@ import { generateColorFromSeed } from "@/utils/format";
 
 const KatalogDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { error: toastError } = useToast();
 
   const { data: session, isPending: sessionLoading } = authClient.useSession();
 
@@ -34,8 +36,9 @@ const KatalogDetail = () => {
         name: session.user.name ?? "",
         email: session.user.email ?? "",
         role:
-          (session.user as { role?: "admin" | "mahasiswa" }).role ??
-          "mahasiswa",
+          (session.user as any).role === "super_admin" || (session.user as any).role === "staff"
+            ? "admin"
+            : "mahasiswa",
         nim: (session.user as { nim?: string }).nim,
       }
     : null;
@@ -81,6 +84,15 @@ const KatalogDetail = () => {
   const bookStatus = getBookStatus();
   const isBorrowing = isUserBorrowing();
   const isPending = isUserPending();
+
+  // Override handleCheckLoans for admin
+  const onCheckStatusClick = () => {
+    if (currentUser?.role === "admin") {
+      toastError("Akses Terbatas", "Admin tidak dapat mengakses fitur status peminjaman member.");
+      return;
+    }
+    handleCheckLoans();
+  };
 
   if (loading || sessionLoading)
     return (
@@ -345,14 +357,7 @@ const KatalogDetail = () => {
               </div>
             </div>
 
-            <div className="mb-10 grow">
-              <h3 className="font-bold text-slate-900 mb-2 text-sm uppercase tracking-tight">
-                Sinopsis
-              </h3>
-              <p className="text-slate-600 leading-relaxed text-sm">
-                {collection?.description || "Deskripsi tidak tersedia."}
-              </p>
-            </div>
+            
 
             {/* Tombol Aksi */}
             <div className="flex gap-3 mt-auto">
@@ -391,7 +396,7 @@ const KatalogDetail = () => {
 
               {currentUser && (
                 <button
-                  onClick={handleCheckLoans}
+                  onClick={onCheckStatusClick}
                   className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
                 >
                   <Bell size={18} />

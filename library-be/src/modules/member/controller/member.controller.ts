@@ -268,4 +268,23 @@ export class MemberController {
       next(error);
     }
   }
+
+  async getAllMembers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = Number(req.query.limit || 200);
+      const result = await memberService.getAllMembers(limit);
+
+      if (!result.success) {
+        return sendError(
+          res,
+          result.message ?? "Gagal mengambil daftar anggota",
+          400
+        );
+      }
+
+      sendSuccess(res, "Daftar anggota berhasil diambil", result.data);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

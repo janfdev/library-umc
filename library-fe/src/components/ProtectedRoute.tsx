@@ -6,11 +6,13 @@ import { authClient } from "@/utils/auth-client";
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRole?: string;
+  excludeRole?: string[];
 }
 
 export default function ProtectedRoute({
   children,
-  requiredRole = "super_admin"
+  requiredRole,
+  excludeRole
 }: ProtectedRouteProps) {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
@@ -23,25 +25,32 @@ export default function ProtectedRoute({
         return;
       }
 
-      // Logged in but wrong role
+      // Logged in but role is excluded
       const userRole = (session.user as any).role;
+      if (excludeRole && excludeRole.includes(userRole)) {
+        navigate("/");
+        return;
+      }
+
+      // Logged in but required role not met
       if (requiredRole && userRole !== requiredRole) {
         navigate("/");
         return;
       }
     }
-  }, [session, isPending, navigate, requiredRole]);
+  }, [session, isPending, navigate, requiredRole, excludeRole]);
 
   // Avoid double loading UI; page-level skeleton handles content loading.
   if (isPending) {
     return null;
   }
 
-  // Not authorized
-  const userRole = session ? (session.user as any).role : null;
-  if (!session || (requiredRole && userRole !== requiredRole)) {
-    return null;
-  }
+  // Final check for rendering
+  if (!session) return null;
+  
+  const userRole = (session.user as any).role;
+  if (excludeRole && excludeRole.includes(userRole)) return null;
+  if (requiredRole && userRole !== requiredRole) return null;
 
   return <>{children}</>;
 }

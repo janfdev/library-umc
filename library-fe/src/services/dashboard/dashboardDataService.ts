@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/utils/api-config";
 
 export interface DashboardStats {
   totalCollections: number;
+  totalItems: number;
   totalCategories: number;
   totalGuests: number;
   webVisits: number;
@@ -166,6 +167,7 @@ export const dashboardDataService = {
 
     return {
       totalCollections: collections.length,
+      totalItems: collections.reduce((sum, item) => sum + (Number(item.stock) || 0), 0),
       totalCategories: categories.length,
       totalGuests: guests.length,
       webVisits,
@@ -196,6 +198,22 @@ export const dashboardDataService = {
     const res = await fetch(`${API_BASE_URL}/api/guests/${id}`, {
       method: "DELETE",
       credentials: "include"
+    });
+    return jsonOrThrow(res);
+  },
+
+  async recordVisit(payload: { name: string; email: string; identifier?: string; faculty?: string; major?: string }) {
+    const res = await fetch(`${API_BASE_URL}/api/guests/direct`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        identifier: payload.identifier || "UNKNOWN",
+        faculty: payload.faculty || "Not Specified",
+        major: payload.major || "Not Specified",
+      })
     });
     return jsonOrThrow(res);
   }

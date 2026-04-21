@@ -28,11 +28,6 @@ const LoginPage = () => {
     }
   };
 
-  // ─── Login Manual via better-auth (email + password) ─────────────────────────
-  // Menggunakan authClient.signIn.email() agar:
-  //   1. Cookie session (better-auth_token) di-set otomatis oleh browser
-  //   2. authClient.useSession() langsung tersedia di seluruh app
-  //   3. Konsisten dengan alur Google SSO — tidak perlu simpan token manual
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -77,7 +72,15 @@ const LoginPage = () => {
           `Selamat datang, ${data.user.name || data.user.email}! 🎉`,
           2500
         );
-        setTimeout(() => navigate("/katalog"), 1500);
+        
+        const role = (data.user as any).role;
+        setTimeout(() => {
+          if (role === "super_admin" || role === "staff") {
+            navigate("/dashboard/super-admin");
+          } else {
+            navigate("/");
+          }
+        }, 1500);
       }
     } catch (err) {
       removeToast(loadingId);

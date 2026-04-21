@@ -180,6 +180,56 @@ router.get(
 
 /**
  * @swagger
+ * /guests/direct:
+ *   post:
+ *     summary: Create guest log directly (no Campus API lookup)
+ *     description: Register a guest visit using provided member data directly. Used by admin dropdown where member data is already available.
+ *     tags: [Guests]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Guest name
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Guest email
+ *               identifier:
+ *                 type: string
+ *                 description: NIM/NIDN
+ *               faculty:
+ *                 type: string
+ *                 description: Faculty name
+ *               major:
+ *                 type: string
+ *                 description: Major/Prodi name
+ *     responses:
+ *       201:
+ *         description: Guest log created successfully
+ *       400:
+ *         description: Validation error or user already logged today
+ *       401:
+ *         description: Unauthorized
+ */
+router.post(
+  "/guests/direct",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  guestController.createGuestLogDirect,
+);
+
+/**
+ * @swagger
  * /guests:
  *   post:
  *     summary: Create guest log

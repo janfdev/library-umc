@@ -251,11 +251,16 @@ export class ReportService {
     try {
       const result = await db
         .select({
-          date: sql<string>`DATE(${guestLogs.visitDate})`,
-          count: sql<number>`count(*)`
+          date: sql<string>`TO_CHAR(DATE(${guestLogs.visitDate}), 'YYYY-MM-DD')`,
+          count: sql<number>`count(*)::int`
         })
         .from(guestLogs)
-        .where(sql`${guestLogs.visitDate} >= CURRENT_DATE - INTERVAL '7 days'`)
+        .where(
+          and(
+            sql`${guestLogs.visitDate} >= CURRENT_DATE - INTERVAL '7 days'`,
+            isNull(guestLogs.deletedAt)
+          )
+        )
         .groupBy(sql`DATE(${guestLogs.visitDate})`)
         .orderBy(sql`DATE(${guestLogs.visitDate})`);
 

@@ -141,5 +141,13 @@ export const usersManagementService = {
       }
     );
     return jsonOrThrow(res);
+  },
+
+  async getMembers(): Promise<any[]> {
+    const res = await fetch(`${API_BASE_URL}/api/members`, {
+      credentials: "include"
+    });
+    const data = await jsonOrThrow(res);
+    return data.success && Array.isArray(data.data) ? data.data : [];
   }
 };

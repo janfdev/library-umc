@@ -29,7 +29,14 @@ const AppRoutes = () => {
         <Route path="/katalog/:id" element={<DetailKatalog />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/e-resource" element={<Eresource />} />
-        <Route path="/my-loans" element={<MyLoans />} />
+        <Route 
+          path="/my-loans" 
+          element={
+            <ProtectedRoute excludeRole={["super_admin", "staff"]}>
+              <MyLoans />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/tentang" element={<TentangPage />} />
         <Route path="/absensi" element={<AbsensiPage />} />
 

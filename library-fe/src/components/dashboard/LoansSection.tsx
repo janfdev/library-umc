@@ -1,5 +1,5 @@
 // src/components/dashboard/LoansSection.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   Clock,
   CheckCircle,
@@ -11,7 +11,9 @@ import {
   ChevronDown,
   RefreshCw,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -63,9 +65,12 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
   // Modal reject: menggantikan prompt() native browser
   const [rejectModal, setRejectModal] = useState<{ loanId: string; reason: string } | null>(null);
   const toast = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchLoans();
+    setCurrentPage(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
@@ -232,6 +237,11 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     );
   };
 
+  const handleSearchChange = (val: string) => {
+    onSearchChange(val);
+    setCurrentPage(1);
+  };
+
   // Filter dengan pengecekan keamanan
   const filteredLoans = Array.isArray(loans) 
     ? loans.filter(loan => {
@@ -247,6 +257,13 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                borrowerNim.includes(searchTerm);
       })
     : [];
+
+  // Pagination Logic
+  const totalPages = Math.max(1, Math.ceil(filteredLoans.length / itemsPerPage));
+  const paginatedLoans = filteredLoans.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Hitung statistik dengan pengecekan keamanan
   const stats = {
@@ -289,7 +306,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 placeholder="Cari peminjaman..."
                 className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-[#F8FAFC] border-none rounded-xl text-[13px] font-medium text-slate-600 focus:ring-2 focus:ring-red-500/10 placeholder:text-slate-400"
                 value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
             
@@ -370,7 +387,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 <Skeleton key={i} className="h-[140px] w-full rounded-[20px]" />
               ))}
             </div>
-          ) : filteredLoans.length === 0 ? (
+          ) : paginatedLoans.length === 0 ? (
             <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center text-slate-400">
               <BookOpen className="w-12 h-12 mb-4 opacity-20" />
               <p className="text-[15px] font-bold text-slate-400">
@@ -381,7 +398,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredLoans.map((loan) => (
+              {paginatedLoans.map((loan) => (
                 <div 
                   key={loan.id} 
                   className="bg-[#F8FAFC] rounded-[20px] p-6 border border-slate-100 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
@@ -485,6 +502,54 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-6 md:px-8 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-400 font-medium">
+              Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredLoans.length)}–
+              {Math.min(currentPage * itemsPerPage, filteredLoans.length)} dari {filteredLoans.length} data
+            </p>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                <ChevronLeft size={16} /> Prev
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => {
+                  const showDot = idx > 0 && arr[idx - 1] !== p - 1;
+                  return (
+                    <Fragment key={p}>
+                      {showDot && <span className="px-2 text-slate-300">...</span>}
+                      <button
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                          currentPage === p
+                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </Fragment>
+                  );
+                })}
+
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Modal: Approve Loan ── */}

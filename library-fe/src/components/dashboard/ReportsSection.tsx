@@ -9,7 +9,7 @@ import {
   DownloadCloud,
   UploadCloud
 } from "lucide-react";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
@@ -133,9 +133,14 @@ export default function ReportsSection({
 
           const last7Days = Array.from({ length: 7 }, (_, index) => {
             const d = new Date();
-            d.setHours(0, 0, 0, 0);
             d.setDate(d.getDate() - (6 - index));
-            const key = d.toISOString().slice(0, 10);
+            
+            // Format to local YYYY-MM-DD to avoid timezone shifting
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            const key = `${yyyy}-${mm}-${dd}`;
+            
             const count = mapByDate.get(key) ?? 0;
             visitsPastWeek += count;
             return {
@@ -533,16 +538,20 @@ export default function ReportsSection({
             >
               <BarChart
                 data={chartData}
-                margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
+                margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
                 barSize={50}
               >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <Tooltip
                   cursor={{ fill: "transparent" }}
                   contentStyle={{
                     borderRadius: "12px",
                     border: "none",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                    fontSize: "13px",
+                    fontWeight: 600
                   }}
+                  formatter={(value: any) => [`${value} pengunjung`, "Kunjungan"]}
                 />
 
                 <XAxis
@@ -554,11 +563,21 @@ export default function ReportsSection({
                   height={40}
                 />
 
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 600 }}
+                  allowDecimals={false}
+                  domain={[0, (dataMax: number) => Math.max(dataMax, 5)]}
+                  width={35}
+                />
+
                 <Bar
                   dataKey="visits"
                   fill="#9a1b1b"
                   radius={[8, 8, 8, 8]}
                   background={{ fill: "#F1F5F9", radius: 8 }}
+                  name="Kunjungan"
                 />
               </BarChart>
             </ResponsiveContainer>

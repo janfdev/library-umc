@@ -1,14 +1,26 @@
 // src/pages/Home.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Background from "@/assets/bg1.jpeg";
 import DialogUnauthorized from "@/components/DialogUnauthorized";
 import Footer from "@/components/Footer";
 import BookList from "@/components/BookList";
+import { authClient } from "@/utils/auth-client";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
+
+  // Redirect admin to dashboard
+  useEffect(() => {
+    if (session?.user) {
+      const role = (session.user as any).role;
+      if (role === "super_admin" || role === "staff") {
+        navigate("/dashboard/super-admin");
+      }
+    }
+  }, [session, navigate]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");

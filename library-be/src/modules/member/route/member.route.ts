@@ -69,6 +69,13 @@ router.get(
   memberController.getMyMemberCard
 );
 
+router.get(
+  "/members",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  memberController.getAllMembers
+);
+
 router.post(
   "/members/me/card/request",
   isAuthenticated,

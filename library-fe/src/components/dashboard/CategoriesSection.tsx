@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import {
   Plus,
   Edit,
@@ -6,7 +6,9 @@ import {
   Tag,
   ArrowRight,
   Save,
-  Loader
+  Loader,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import Modal from "@/components/ui/modal";
 import { API_BASE_URL } from "@/utils/api-config";
@@ -30,6 +32,7 @@ interface CategoriesSectionProps {
 export default function CategoriesSection({
   categories,
   searchTerm,
+  onSearchChange,
   onDelete,
   onRefresh
 }: CategoriesSectionProps) {
@@ -39,9 +42,18 @@ export default function CategoriesSection({
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { success, error } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const filteredCategories = categories.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination Logic
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / itemsPerPage));
+  const paginatedCategories = filteredCategories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const openAddModal = () => {
@@ -57,6 +69,11 @@ export default function CategoriesSection({
       description: category.description || ""
     });
     setIsModalOpen(true);
+  };
+
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value);
+    setCurrentPage(1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,38 +118,44 @@ export default function CategoriesSection({
 
   return (
     <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-8 flex items-center justify-between border-b border-slate-50">
-        <h3 className="text-xl font-bold text-slate-900">Kategori Buku</h3>
-        <div className="flex items-center gap-4">
+      <div className="p-8 flex flex-col md:flex-row md:items-center justify-between border-b border-slate-50 gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-slate-900">Kategori Buku</h3>
+          <p className="text-sm text-slate-400 font-medium">Kelola kategori untuk klasifikasi koleksi.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative w-full md:w-64">
+             <input
+                type="text"
+                placeholder="Cari kategori..."
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 outline-none"
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+          </div>
           <button
             onClick={openAddModal}
-            className="bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-red-900/20 hover:bg-[#a01818] transition-all"
+            className="bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-red-900/20 hover:bg-[#a01818] transition-all shrink-0"
           >
-            <Plus size={16} /> Tambah Kategori
-          </button>
-          <button
-            onClick={onRefresh}
-            className="text-[#B91C1C] text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all"
-          >
-            Lihat Semua <ArrowRight size={16} />
+            <Plus size={16} /> Tambah
           </button>
         </div>
       </div>
 
       <div className="p-8">
-        {filteredCategories.length === 0 ? (
+        {paginatedCategories.length === 0 ? (
           <div className="text-center py-20 bg-slate-50/30 rounded-[24px] border border-dashed border-slate-200">
             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
               <Tag className="w-8 h-8 text-slate-300" />
             </div>
             <p className="font-bold text-slate-900">Belum Ada Kategori</p>
             <p className="text-sm text-slate-400 mt-1">
-              Mulai dengan menambahkan kategori buku baru.
+              {searchTerm ? "Tidak ada kategori yang sesuai dengan pencarian." : "Mulai dengan menambahkan kategori buku baru."}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCategories.map((category) => (
+            {paginatedCategories.map((category) => (
               <div
                 key={category.id}
                 className="group relative bg-white p-6 rounded-[24px] border border-slate-100 hover:border-red-100 hover:shadow-xl hover:shadow-red-900/5 transition-all duration-300 overflow-hidden"
@@ -185,6 +208,54 @@ export default function CategoriesSection({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-50">
+            <p className="text-xs text-slate-400 font-medium">
+              Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredCategories.length)}–
+              {Math.min(currentPage * itemsPerPage, filteredCategories.length)} dari {filteredCategories.length} kategori
+            </p>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                <ChevronLeft size={16} /> Prev
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => {
+                  const showDot = idx > 0 && arr[idx - 1] !== p - 1;
+                  return (
+                    <Fragment key={p}>
+                      {showDot && <span className="px-2 text-slate-300">...</span>}
+                      <button
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                          currentPage === p
+                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </Fragment>
+                  );
+                })}
+
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>

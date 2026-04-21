@@ -53,7 +53,7 @@ export const authLimiter = rateLimit({
 // 2. MODERATE - Public GET endpoints (books, categories, etc)
 export const publicApiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 menit
-  limit: 100, // maks 100 request per windowMs
+  limit: 300, // maks 100 request per windowMs
   message: {
     status: 429,
     message: "Terlalu banyak permintaan dari IP ini. Silakan coba lagi nanti.",
@@ -66,7 +66,7 @@ export const publicApiLimiter = rateLimit({
 // 3. GENERAL - All other API endpoints
 export const generalLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 menit
-  limit: 300, // maks 300 request per menit
+  limit: 500, // maks 300 request per menit
   message: {
     status: 429,
     message:

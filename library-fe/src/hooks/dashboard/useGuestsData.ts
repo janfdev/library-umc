@@ -3,19 +3,29 @@ import {
   dashboardDataService,
   type GuestLogItem,
 } from "@/services/dashboard/dashboardDataService";
+import { usersManagementService } from "@/services/dashboard/usersManagementService";
 
 export function useGuestsData(enabled: boolean) {
   const [guests, setGuests] = useState<GuestLogItem[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  const fetchGuests = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await dashboardDataService.getGuests();
-      setGuests(data);
+      // Fetch guests and members in parallel
+      const [guestsData, membersData] = await Promise.all([
+        dashboardDataService.getGuests(),
+        usersManagementService.getMembers().catch((err) => {
+          console.error("Failed to fetch members data:", err);
+          return []; // Return empty array if members fetch fails
+        })
+      ]);
+      setGuests(guestsData);
+      setMembers(membersData);
       setHasLoaded(true);
     } catch (err) {
       setError(
@@ -28,16 +38,17 @@ export function useGuestsData(enabled: boolean) {
 
   useEffect(() => {
     if (enabled && !hasLoaded && !loading) {
-      void fetchGuests();
+      void fetchData();
     }
-  }, [enabled, hasLoaded, loading, fetchGuests]);
+  }, [enabled, hasLoaded, loading, fetchData]);
 
   const refetch = useCallback(async () => {
-    await fetchGuests();
-  }, [fetchGuests]);
+    await fetchData();
+  }, [fetchData]);
 
   return {
     guests,
+    members,
     loading,
     error,
     hasLoaded,

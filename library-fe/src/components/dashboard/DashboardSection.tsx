@@ -105,11 +105,18 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
 
   const statCards = [
     {
-      label: "Total Koleksi",
+      label: "Total Judul",
       value: displayStats.totalCollections,
       icon: <Book />,
       color: "text-blue-600",
       bg: "bg-blue-50"
+    },
+    {
+      label: "Total Buku",
+      value: displayStats.totalItems || 0,
+      icon: <Layers />,
+      color: "text-purple-600",
+      bg: "bg-purple-50"
     },
     {
       label: "Sedang Dipinjam",
@@ -131,13 +138,6 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
       icon: <Globe />,
       color: "text-indigo-600",
       bg: "bg-indigo-50"
-    },
-    {
-      label: "Kunjungan Gabungan",
-      value: displayStats.combinedVisits,
-      icon: <Layers />,
-      color: "text-purple-600",
-      bg: "bg-purple-50"
     },
     {
       label: "Tagihan Denda Aktif",

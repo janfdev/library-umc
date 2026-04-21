@@ -418,6 +418,86 @@ export class GuestService {
   }
 
   /**
+   * Create Guest Log directly with provided data (no Campus API lookup)
+   * Used by admin dropdown where member data is already available
+   */
+  async createGuestLogDirect(data: {
+    name: string;
+    email: string;
+    identifier: string;
+    faculty: string;
+    major: string;
+  }): Promise<ServiceResponse<any>> {
+    try {
+      console.log("[GuestService] createGuestLogDirect called with:", data);
+
+      // Check if user already logged today (prevent duplicate)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existingLog = await db.query.guestLogs.findFirst({
+        where: and(
+          eq(guestLogs.email, data.email),
+          gte(guestLogs.visitDate, today),
+          isNull(guestLogs.deletedAt),
+        ),
+      });
+
+      if (existingLog) {
+        console.warn(
+          "[GuestService] User already checked in today:",
+          data.email,
+        );
+        return {
+          success: false,
+          message: "User already checked in today",
+          data: existingLog,
+        };
+      }
+
+      // Insert new guest log directly
+      const guestData = {
+        name: data.name,
+        email: data.email,
+        identifier: data.identifier,
+        faculty: data.faculty,
+        major: data.major,
+        visitDate: new Date(),
+      };
+
+      const [newLog] = await db
+        .insert(guestLogs)
+        .values(guestData)
+        .returning();
+
+      if (!newLog) {
+        return {
+          success: false,
+          message: "Failed to create guest log in database",
+          data: null,
+        };
+      }
+
+      console.log(
+        "[GuestService] Guest log created successfully (direct):",
+        newLog.id,
+      );
+      return {
+        success: true,
+        message: "Guest log created successfully",
+        data: newLog,
+      };
+    } catch (err) {
+      console.error("[GuestService] Error creating direct guest log:", err);
+      return {
+        success: false,
+        message: `Failed to create guest log: ${err instanceof Error ? err.message : "Unknown error"}`,
+        data: null,
+      };
+    }
+  }
+
+  /**
    * Get All Guest Logs (with Pagination)
    */
   async getAllGuestLogs(

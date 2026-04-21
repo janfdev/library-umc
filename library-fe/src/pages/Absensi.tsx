@@ -1,78 +1,35 @@
-import { useState, useEffect } from "react";
-import { 
-  User, 
-  BookOpen, 
+import { useState } from "react";
+import {
+  BookOpen,
   Send,
   Loader2,
   CheckCircle,
   AlertCircle,
   Mail,
-  CreditCard,
-  Building2,
-  GraduationCap,
-  FileText
+  Info
 } from "lucide-react";
-import { authClient } from "@/utils/auth-client";
+import { API_BASE_URL } from "@/utils/api-config";
 
 const Absensi = () => {
-  const [nama, setNama] = useState('');
   const [email, setEmail] = useState('');
-  const [nim, setNim] = useState(''); // TAMBAH: identifier/NIM
-  const [prodi, setProdi] = useState('');
-  const [fakultas, setFakultas] = useState(''); // TAMBAH: faculty
-  const [tujuan, setTujuan] = useState(''); // TAMBAH: purpose
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<{
     type: 'success' | 'error' | null;
     message: string;
+    guestName?: string;
   }>({ type: null, message: '' });
-  const [apiBaseUrl, setApiBaseUrl] = useState('http://localhost:4000');
-
-  const { data: session } = authClient.useSession();
-
-  // Ambil base URL dari environment variable
-  useEffect(() => {
-    const baseUrl = import.meta.env.VITE_BETTER_AUTH_URL || 'http://localhost:4000';
-    setApiBaseUrl(baseUrl);
-    console.log('API Base URL:', baseUrl);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validasi form lengkap
-    if (!nama.trim() || !email.trim() || !nim.trim() || !prodi.trim() || !fakultas.trim() || !tujuan.trim()) {
-      setStatus({
-        type: 'error',
-        message: 'Mohon lengkapi semua field (Nama, Email, NIM, Prodi, Fakultas, Tujuan)'
-      });
-      return;
-    }
+
+    const trimmedEmail = email.trim();
 
     // Validasi format email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
       setStatus({
         type: 'error',
-        message: 'Masukkan alamat email yang valid'
-      });
-      return;
-    }
-
-    // Validasi NIM (minimal 8 digit angka)
-    const nimRegex = /^[0-9]{8,}$/;
-    if (!nimRegex.test(nim)) {
-      setStatus({
-        type: 'error',
-        message: 'Masukkan NIM yang valid (minimal 8 digit angka)'
-      });
-      return;
-    }
-
-    if (!session) {
-      setStatus({
-        type: 'error',
-        message: 'Anda belum login. Silakan login sebagai admin terlebih dahulu.'
+        message: 'Masukkan alamat email yang valid (contoh: mahasiswa@umc.ac.id)'
       });
       return;
     }
@@ -81,153 +38,115 @@ const Absensi = () => {
     setStatus({ type: null, message: '' });
 
     try {
-      // Payload sesuai dokumentasi API
-      const payload = {
-        name: nama,
-        email: email,
-        identifier: nim,      // NIM
-        institution: "UMC",   // Default UMC
-        faculty: fakultas,    // Fakultas
-        major: prodi,         // Program Studi
-        purpose: tujuan       // Tujuan kunjungan
-      };
-
-      console.log('Mengirim ke:', `${apiBaseUrl}/api/guests`);
-      console.log('Payload:', payload);
-
-      const response = await fetch(`${apiBaseUrl}/api/guests`, {
+      const response = await fetch(`${API_BASE_URL}/api/guests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ email: trimmedEmail })
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
+        const guestName = data.data?.name || trimmedEmail;
         setStatus({
           type: 'success',
-          message: `Terima kasih ${nama}, kehadiran Anda telah dicatat!`
+          message: `Terima kasih, kehadiran Anda telah dicatat!`,
+          guestName
         });
-        
-        // Reset form
-        setNama('');
         setEmail('');
-        setNim('');
-        setProdi('');
-        setFakultas('');
-        setTujuan('');
-        
+
         setTimeout(() => {
           setStatus({ type: null, message: '' });
-        }, 3000);
+        }, 5000);
       } else if (response.status === 400) {
-        setStatus({
-          type: 'error',
-          message: data.message || data.error || 'Data tidak lengkap. Periksa kembali input Anda.'
-        });
+        // Could be "already checked in today" or validation error
+        const msg = data.message || 'Data tidak valid. Periksa kembali email Anda.';
+        if (msg.toLowerCase().includes('already')) {
+          setStatus({
+            type: 'error',
+            message: 'Anda sudah tercatat hadir hari ini. Sampai jumpa besok!'
+          });
+        } else {
+          setStatus({ type: 'error', message: msg });
+        }
       } else if (response.status === 401) {
         setStatus({
           type: 'error',
-          message: 'Sesi login habis. Silakan login kembali.'
+          message: 'Sesi tidak terotorisasi. Silakan hubungi petugas perpustakaan.'
+        });
+      } else if (response.status === 404) {
+        setStatus({
+          type: 'error',
+          message: 'Email tidak ditemukan di sistem kampus. Pastikan menggunakan email UMC yang terdaftar.'
         });
       } else {
-        throw new Error(data.message || data.error || 'Gagal mencatat kehadiran');
+        setStatus({
+          type: 'error',
+          message: data.message || 'Gagal mencatat kehadiran. Coba lagi.'
+        });
       }
     } catch (error) {
       console.error('Error:', error);
       setStatus({
         type: 'error',
-        message: 'Terjadi kesalahan. Silakan coba lagi.'
+        message: 'Terjadi kesalahan koneksi. Silakan coba lagi.'
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const programStudi = [
-    { value: '', label: 'Pilih Program Studi' },
-    { value: 'Teknik Informatika', label: 'Teknik Informatika' },
-    { value: 'Sistem Informasi', label: 'Sistem Informasi' },
-    { value: 'Pendidikan', label: 'Pendidikan' },
-    { value: 'Manajemen', label: 'Manajemen' },
-    { value: 'Hukum', label: 'Hukum' },
-  ];
-
-  const daftarFakultas = [
-    { value: '', label: 'Pilih Fakultas' },
-    { value: 'Fakultas Teknik', label: 'Fakultas Teknik' },
-    { value: 'Fakultas Ilmu Komputer', label: 'Fakultas Ilmu Komputer' },
-    { value: 'Fakultas Ekonomi', label: 'Fakultas Ekonomi' },
-    { value: 'Fakultas Hukum', label: 'Fakultas Hukum' },
-    { value: 'Fakultas Keguruan', label: 'Fakultas Keguruan dan Ilmu Pendidikan' },
-  ];
-
-  const daftarTujuan = [
-    { value: '', label: 'Pilih Tujuan Kunjungan' },
-    { value: 'Membaca Buku', label: 'Membaca Buku' },
-    { value: 'Meminjam Buku', label: 'Meminjam Buku' },
-    { value: 'Mengembalikan Buku', label: 'Mengembalikan Buku' },
-    { value: 'Studi Kelompok', label: 'Studi Kelompok' },
-    { value: 'Mencari Referensi', label: 'Mencari Referensi' },
-    { value: 'Mengerjakan Tugas', label: 'Mengerjakan Tugas' },
-    { value: 'Lainnya', label: 'Lainnya' },
-  ];
-
   return (
     <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center p-4">
-      <div className="max-w-[500px] w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden">
-        
+      <div className="max-w-[480px] w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden">
+
         {/* Header */}
-        <div className="bg-[#a31d1d] p-6 text-center text-white">
+        <div className="bg-[#a31d1d] p-8 text-center text-white">
           <div className="inline-block p-3 bg-white/20 rounded-full mb-3">
             <BookOpen size={36} strokeWidth={1.5} />
           </div>
           <h1 className="text-xl font-bold tracking-wide">Absensi Perpustakaan</h1>
-          <p className="text-xs opacity-80 font-light text-white">Silakan isi data kunjungan Anda</p>
+          <p className="text-xs opacity-80 font-light mt-1">Universitas Muhammadiyah Cirebon</p>
         </div>
 
         {/* Form */}
         <div className="p-6">
+
+          {/* Info Banner */}
+          <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5">
+            <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
+            <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
+              Masukkan email kampus Anda. Data NIM, fakultas, dan prodi akan diambil otomatis dari sistem.
+            </p>
+          </div>
+
+          {/* Status message */}
           {status.type && (
-            <div className={`mb-5 p-3 rounded-xl flex items-center gap-2 text-sm ${
-              status.type === 'success' 
-                ? 'bg-green-50 text-green-700 border border-green-200' 
+            <div className={`mb-5 p-4 rounded-xl flex items-start gap-2.5 text-sm ${
+              status.type === 'success'
+                ? 'bg-green-50 text-green-700 border border-green-200'
                 : 'bg-red-50 text-red-700 border border-red-200'
             }`}>
-              {status.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-              <span className="text-xs font-medium">{status.message}</span>
+              {status.type === 'success'
+                ? <CheckCircle size={18} className="shrink-0 mt-0.5" />
+                : <AlertCircle size={18} className="shrink-0 mt-0.5" />}
+              <div>
+                {status.type === 'success' && status.guestName && (
+                  <p className="font-bold text-[13px] mb-0.5">Halo, {status.guestName}! 👋</p>
+                )}
+                <span className="text-xs font-medium">{status.message}</span>
+              </div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nama */}
-            <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Nama Mahasiswa <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <User size={16} />
-                </div>
-                <input
-                  type="text"
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
-                  placeholder="Masukkan nama lengkap"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
             {/* Email */}
             <div>
               <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Email Mahasiswa <span className="text-red-500">*</span>
+                Email Kampus <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -238,121 +157,11 @@ const Absensi = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
-                  placeholder="Masukkan email (contoh: mahasiswa@umc.ac.id)"
+                  placeholder="contoh: mahasiswa@umc.ac.id"
                   required
                   disabled={isLoading}
+                  autoComplete="email"
                 />
-              </div>
-            </div>
-
-            {/* NIM / Identifier */}
-            <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                NIM / Nomor Induk <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <CreditCard size={16} />
-                </div>
-                <input
-                  type="text"
-                  value={nim}
-                  onChange={(e) => setNim(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
-                  placeholder="Masukkan NIM (contoh: 20220010001)"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            {/* Fakultas */}
-            <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Fakultas <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Building2 size={16} />
-                </div>
-                <select
-                  value={fakultas}
-                  onChange={(e) => setFakultas(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all appearance-none cursor-pointer"
-                  required
-                  disabled={isLoading}
-                >
-                  {daftarFakultas.map((f) => (
-                    <option key={f.value} value={f.value}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Program Studi */}
-            <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Program Studi <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <GraduationCap size={16} />
-                </div>
-                <select
-                  value={prodi}
-                  onChange={(e) => setProdi(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all appearance-none cursor-pointer"
-                  required
-                  disabled={isLoading}
-                >
-                  {programStudi.map((ps) => (
-                    <option key={ps.value} value={ps.value}>
-                      {ps.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Tujuan Kunjungan */}
-            <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Tujuan Kunjungan <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FileText size={16} />
-                </div>
-                <select
-                  value={tujuan}
-                  onChange={(e) => setTujuan(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all appearance-none cursor-pointer"
-                  required
-                  disabled={isLoading}
-                >
-                  {daftarTujuan.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
               </div>
             </div>
 
@@ -365,12 +174,12 @@ const Absensi = () => {
               {isLoading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Memproses...
+                  Mencatat kehadiran...
                 </>
               ) : (
                 <>
                   <Send size={16} />
-                  Kirim Kehadiran
+                  Catat Kehadiran
                 </>
               )}
             </button>

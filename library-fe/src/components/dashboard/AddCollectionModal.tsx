@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, Upload } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { X, Upload, AlertCircle } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { API_BASE_URL } from "@/utils/api-config";
 import Modal from "@/components/ui/modal";
@@ -15,6 +15,7 @@ interface AddCollectionModalProps {
   onClose: () => void;
   onRefresh: () => void;
   collection: Collection | null;
+  allCollections?: Collection[];
 }
 
 interface Collection {
@@ -29,9 +30,9 @@ interface Collection {
     id: string | number;
     name: string;
   };
-  categoryId: string | number;
+  categoryId?: string | number;
   stock: number;
-  image?: string;
+  image?: string | null;
 }
 
 const formatIsbnInput = (value: string) => {
@@ -58,7 +59,8 @@ export default function AddCollectionModal({
   isOpen,
   onClose,
   onRefresh,
-  collection
+  collection,
+  allCollections = []
 }: AddCollectionModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,7 +77,15 @@ export default function AddCollectionModal({
     image: null as File | null
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const { success, error } = useToast();
+  const { success, error, warning } = useToast();
+
+  // Check for duplicate title in real-time
+  const duplicateCollection = useMemo(() => {
+    if (!formData.title.trim() || collection) return null; // Don't check duplicates if editing
+    return allCollections.find(
+      (c) => c.title.toLowerCase() === formData.title.trim().toLowerCase()
+    );
+  }, [formData.title, allCollections, collection]);
 
   useEffect(() => {
     if (isOpen) {
@@ -124,7 +134,7 @@ export default function AddCollectionModal({
     } catch (error) {
       console.error("Failed to fetch categories", error);
     }
-  }; // Closing bracket for fetchCategories
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,6 +155,15 @@ export default function AddCollectionModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (duplicateCollection) {
+      warning(
+        "Judul Sudah Ada",
+        `Buku dengan judul "${formData.title}" sudah terdaftar. Silakan gunakan fitur Edit pada buku tersebut untuk menambah stok.`
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -182,7 +201,7 @@ export default function AddCollectionModal({
         body: data
       });
 
-      const responseData = await res.json(); // Renamed 'data' to 'responseData' to avoid conflict
+      const responseData = await res.json();
 
       if (responseData.success) {
         success(
@@ -245,8 +264,21 @@ export default function AddCollectionModal({
             onChange={(e) =>
               setFormData({ ...formData, title: e.target.value })
             }
-            className={inputClass}
+            className={cn(
+              inputClass,
+              duplicateCollection && "border-amber-400 focus:ring-amber-50 focus:border-amber-500"
+            )}
+            placeholder="Masukkan judul buku..."
           />
+          {duplicateCollection && (
+            <div className="mt-2 flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="text-[11px] text-amber-800 leading-relaxed">
+                <p className="font-bold">Judul sudah terdaftar!</p>
+                <p>Buku ini sudah ada di sistem dengan ID: <span className="font-mono">{duplicateCollection.id}</span>. Silakan edit buku lama untuk menambah stok, atau gunakan judul yang berbeda.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -260,6 +292,7 @@ export default function AddCollectionModal({
                 setFormData({ ...formData, author: e.target.value })
               }
               className={inputClass}
+              disabled={!!duplicateCollection}
             />
           </div>
           <div>
@@ -272,6 +305,7 @@ export default function AddCollectionModal({
                 setFormData({ ...formData, publisher: e.target.value })
               }
               className={inputClass}
+              disabled={!!duplicateCollection}
             />
           </div>
         </div>
@@ -289,6 +323,7 @@ export default function AddCollectionModal({
               className={inputClass}
               min="1000"
               max={new Date().getFullYear()}
+              disabled={!!duplicateCollection}
             />
           </div>
           <div>
@@ -304,6 +339,7 @@ export default function AddCollectionModal({
               }}
               placeholder="978-1-23456-789-0"
               className={inputClass}
+              disabled={!!duplicateCollection}
             />
           </div>
         </div>
@@ -318,6 +354,7 @@ export default function AddCollectionModal({
                 setFormData({ ...formData, categoryId: e.target.value })
               }
               className={inputClass}
+              disabled={!!duplicateCollection}
             >
               <option value="" disabled>
                 Pilih Kategori...
@@ -339,6 +376,7 @@ export default function AddCollectionModal({
               }
               className={inputClass}
               required
+              placeholder="0"
             />
           </div>
         </div>
@@ -350,7 +388,8 @@ export default function AddCollectionModal({
               "relative border-2 border-dashed rounded-[20px] transition-all duration-300 overflow-hidden",
               imagePreview
                 ? "border-red-200 bg-red-50/10 h-48"
-                : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200 h-32"
+                : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200 h-32",
+              duplicateCollection && "opacity-50 cursor-not-allowed"
             )}
           >
             {imagePreview ? (
@@ -360,21 +399,27 @@ export default function AddCollectionModal({
                   alt="Preview"
                   className="h-full object-contain rounded-lg shadow-sm"
                 />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-md transition-all active:scale-95"
-                >
-                  <X size={14} strokeWidth={3} />
-                </button>
+                {!duplicateCollection && (
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-md transition-all active:scale-95"
+                  >
+                    <X size={14} strokeWidth={3} />
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
+              <div className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center cursor-pointer",
+                duplicateCollection && "pointer-events-none"
+              )}>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  disabled={!!duplicateCollection}
                 />
                 <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 text-slate-400">
                   <Upload size={18} />
@@ -398,8 +443,8 @@ export default function AddCollectionModal({
           </button>
           <button
             type="submit"
-            disabled={loading}
-            className="px-6 py-3 bg-[#B91C1C] hover:bg-[#9a1b1b] text-white rounded-xl text-sm font-bold shadow-md shadow-red-900/20 transition-all disabled:opacity-50"
+            disabled={loading || (!!duplicateCollection && !collection)}
+            className="px-6 py-3 bg-[#B91C1C] hover:bg-[#9a1b1b] text-white rounded-xl text-sm font-bold shadow-md shadow-red-900/20 transition-all disabled:opacity-50 disabled:bg-slate-400"
           >
             {loading ? "Menyimpan..." : "Simpan Buku"}
           </button>

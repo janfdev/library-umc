@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { PerspectiveBook } from "./perspective-book";
 import { BookOpen } from "lucide-react";
@@ -28,6 +28,13 @@ const BookList = ({
     currentUser ?? null,
   );
   const [activeTab, setActiveTab] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab]);
 
   // Helper: Cek apakah user sedang meminjam buku ini
   const isUserBorrowing = (collectionId: string): boolean => {
@@ -96,6 +103,18 @@ const BookList = ({
     return Number(year) >= Number(start) && Number(year) <= Number(end);
   });
 
+  // Pagination Logic
+  const totalItems = filteredByYear.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredByYear.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Helper: Status label
   const getStatusLabel = (collection: Collection) => {
     if (currentUser && isUserBorrowing(collection.id)) {
@@ -133,7 +152,7 @@ const BookList = ({
 
   if (loading) {
     return (
-      <div className="w-[800px] bg-white rounded-xl shadow p-6">
+      <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700 mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat data koleksi...</p>
@@ -144,7 +163,7 @@ const BookList = ({
 
   if (error) {
     return (
-      <div className="w-[800px] bg-white rounded-xl shadow p-6">
+      <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
         <div className="text-center py-12">
           <div className="text-5xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
@@ -169,7 +188,7 @@ const BookList = ({
             Koleksi Perpustakaan
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            {filteredByYear.length} Buku
+            {totalItems} Buku
           </p>
           {currentUser && (
             <p className="text-xs text-purple-600 mt-1">
@@ -187,7 +206,10 @@ const BookList = ({
           {["Buku Fisik", "E-Book"].map((tab, index) => (
             <button
               key={index}
-              onClick={() => setActiveTab(index)}
+              onClick={() => {
+                setActiveTab(index);
+                setCurrentPage(1);
+              }}
               className={`px-6 py-3 text-sm font-medium ${
                 activeTab === index
                   ? "text-red-700 border-b-2 border-red-700"
@@ -201,11 +223,14 @@ const BookList = ({
       </div>
 
       {/* Mobile Tab Navigation */}
-      <div className="md:hidden flex border-b border-gray-200 mb-6">
+      <div className="md:hidden flex border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap">
         {["Buku Fisik", "E-Book"].map((tab, index) => (
           <button
             key={index}
-            onClick={() => setActiveTab(index)}
+            onClick={() => {
+              setActiveTab(index);
+              setCurrentPage(1);
+            }}
             className={`px-6 py-3 text-sm font-medium ${
               activeTab === index
                 ? "text-red-700 border-b-2 border-red-700"
@@ -218,9 +243,9 @@ const BookList = ({
       </div>
 
       {/* Book Grid — PerspectiveBook */}
-      <div className="flex flex-wrap gap-6 justify-start">
-        {filteredByYear.length === 0 ? (
-          <div className="w-full text-center py-8 sm:py-12 text-gray-500">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-6 justify-items-center">
+        {currentItems.length === 0 ? (
+          <div className="col-span-full text-center py-8 sm:py-12 text-gray-500">
             <div className="text-3xl sm:text-4xl mb-4">🔍</div>
             <p className="text-lg font-semibold mb-2">
               Tidak ada hasil ditemukan
@@ -230,7 +255,7 @@ const BookList = ({
             </p>
           </div>
         ) : (
-          filteredByYear.map((collection) => (
+          currentItems.map((collection) => (
             <div
               key={collection.id}
               onClick={() => handleBookClick(collection.id)}
@@ -258,7 +283,7 @@ const BookList = ({
                 </div>
               </PerspectiveBook>
               {/* Info & status di bawah buku */}
-              <div className="text-center w-[150px]">
+              <div className="text-center max-w-[120px] sm:max-w-[150px]">
                 <div className="flex flex-wrap justify-center gap-1 mt-1">
                   <span className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded">
                     {collection.type === "physical_book" ? "Fisik" : "E-Book"}
@@ -275,8 +300,59 @@ const BookList = ({
         )}
       </div>
 
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-10">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+          >
+            &lt;
+          </button>
+          
+          {[...Array(totalPages)].map((_, i) => {
+            const pageNum = i + 1;
+            // Hanya tampilkan beberapa halaman jika total halaman banyak
+            if (
+              totalPages > 7 &&
+              pageNum !== 1 &&
+              pageNum !== totalPages &&
+              Math.abs(pageNum - currentPage) > 2
+            ) {
+              if (Math.abs(pageNum - currentPage) === 3) {
+                return <span key={pageNum} className="px-1 text-gray-400">...</span>;
+              }
+              return null;
+            }
+            
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                  currentPage === pageNum
+                    ? "bg-[#9a1b1b] text-white shadow-md"
+                    : "hover:bg-gray-200 text-gray-700"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+          >
+            &gt;
+          </button>
+        </div>
+      )}
+
       {/* Keterangan status */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
+      <div className="mt-8 pt-6 border-t border-gray-200">
         <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-500">
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-green-500"></span>

@@ -233,6 +233,7 @@ export default function SuperAdminDashboard() {
 
   const {
     guests,
+    members,
     loading: guestsLoading,
     refetch: refetchGuests
   } = useGuestsData(activeMenu === "guests");
@@ -325,6 +326,7 @@ export default function SuperAdminDashboard() {
         return (
           <GuestsSection
             guests={guests}
+            members={members}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onDelete={handleDeleteGuest}

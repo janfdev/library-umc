@@ -362,6 +362,32 @@ export class MemberService {
     }
   }
 
+  async getAllMembers(limit = 200): Promise<ServiceResponse<any[]>> {
+    try {
+      const allMembers = await db.query.members.findMany({
+        where: isNull(members.deletedAt),
+        with: {
+          user: true
+        },
+        limit,
+        orderBy: (members, { desc }) => [desc(members.createdAt)]
+      });
+
+      return {
+        success: true,
+        message: "All members retrieved successfully",
+        data: allMembers
+      };
+    } catch (err) {
+      console.error("[MemberService] Error getting all members:", err);
+      return {
+        success: false,
+        message: "Failed to get all members",
+        data: null
+      };
+    }
+  }
+
   /**
    * Update member profile with validation
    */
