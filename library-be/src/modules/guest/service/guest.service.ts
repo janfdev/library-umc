@@ -30,7 +30,7 @@ export class GuestService {
         return {
           success: false,
           message: "BASE_URL_API_UMC is not configured in environment",
-          data: null,
+          data: null
         };
       }
 
@@ -39,7 +39,7 @@ export class GuestService {
         return {
           success: false,
           message: "Invalid email format",
-          data: null,
+          data: null
         };
       }
 
@@ -47,15 +47,15 @@ export class GuestService {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        this.CAMPUS_API_TIMEOUT,
+        this.CAMPUS_API_TIMEOUT
       );
 
       try {
         const response = await fetch(`${baseUrl}/users/${email}`, {
           signal: controller.signal,
           headers: {
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         });
 
         clearTimeout(timeoutId);
@@ -65,7 +65,7 @@ export class GuestService {
           return {
             success: false,
             message: `Campus API error: ${response.status} ${response.statusText}`,
-            data: null,
+            data: null
           };
         }
 
@@ -75,14 +75,14 @@ export class GuestService {
           return {
             success: false,
             message: "User not found in Campus API",
-            data: null,
+            data: null
           };
         }
 
         return {
           success: true,
           message: "User found in campus API",
-          data: data.data,
+          data: data.data
         };
       } catch (fetchErr: any) {
         clearTimeout(timeoutId);
@@ -91,7 +91,7 @@ export class GuestService {
           return {
             success: false,
             message: "Campus API request timeout",
-            data: null,
+            data: null
           };
         }
 
@@ -102,7 +102,50 @@ export class GuestService {
       return {
         success: false,
         message: "Failed to fetch user from campus API",
-        data: null,
+        data: null
+      };
+    }
+  }
+
+  // API Absensi
+  async createAbsensi(name: string, major: string) {
+    try {
+      // Validate required fields
+      if (!name || !major) {
+        return {
+          success: false,
+          message: "Name and major are required",
+          data: null
+        };
+      }
+
+      const absensi = {
+        name: name,
+        email: null,
+        identifier: `ABSENSI-${Date.now()}`,
+        faculty: null,
+        major: major,
+        visitDate: new Date()
+      };
+
+      const [newAbsensi] = await db
+        .insert(guestLogs)
+        .values(absensi)
+        .returning();
+
+      return {
+        success: true,
+        message: "Absensi created successfully",
+        data: {
+          newAbsensi
+        }
+      };
+    } catch (err) {
+      console.error("[GuestService] Error creating absensi:", err);
+      return {
+        success: false,
+        message: "Failed to create absensi",
+        data: null
       };
     }
   }
@@ -122,7 +165,7 @@ export class GuestService {
         return {
           success: false,
           message: "BASE_URL_API_UMC is not configured in environment",
-          data: null,
+          data: null
         };
       }
 
@@ -131,7 +174,7 @@ export class GuestService {
         return {
           success: false,
           message: "At least one search parameter is required",
-          data: null,
+          data: null
         };
       }
 
@@ -146,7 +189,7 @@ export class GuestService {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        this.CAMPUS_API_TIMEOUT,
+        this.CAMPUS_API_TIMEOUT
       );
 
       try {
@@ -155,9 +198,9 @@ export class GuestService {
           {
             signal: controller.signal,
             headers: {
-              "Content-Type": "application/json",
-            },
-          },
+              "Content-Type": "application/json"
+            }
+          }
         );
 
         clearTimeout(timeoutId);
@@ -167,7 +210,7 @@ export class GuestService {
           return {
             success: false,
             message: `Campus API error: ${response.status} ${response.statusText}`,
-            data: null,
+            data: null
           };
         }
 
@@ -176,7 +219,7 @@ export class GuestService {
         return {
           success: true,
           message: "Users found",
-          data: data.data || [],
+          data: data.data || []
         };
       } catch (fetchErr: any) {
         clearTimeout(timeoutId);
@@ -185,7 +228,7 @@ export class GuestService {
           return {
             success: false,
             message: "Campus API request timeout",
-            data: null,
+            data: null
           };
         }
 
@@ -194,12 +237,12 @@ export class GuestService {
     } catch (err) {
       console.error(
         "[GuestService] Error searching users from campus API:",
-        err,
+        err
       );
       return {
         success: false,
         message: "Failed to search users from Campus API",
-        data: null,
+        data: null
       };
     }
   }
@@ -214,7 +257,7 @@ export class GuestService {
         return {
           success: false,
           message: "BASE_URL_API_UMC is not configured in environment",
-          data: null,
+          data: null
         };
       }
 
@@ -222,15 +265,15 @@ export class GuestService {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        this.CAMPUS_API_TIMEOUT,
+        this.CAMPUS_API_TIMEOUT
       );
 
       try {
         const response = await fetch(`${baseUrl}/users`, {
           signal: controller.signal,
           headers: {
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         });
 
         clearTimeout(timeoutId);
@@ -240,7 +283,7 @@ export class GuestService {
           return {
             success: false,
             message: `Campus API error: ${response.status} ${response.statusText}`,
-            data: null,
+            data: null
           };
         }
 
@@ -249,7 +292,7 @@ export class GuestService {
         return {
           success: true,
           message: "Users fetched successfully",
-          data: data.data || [],
+          data: data.data || []
         };
       } catch (fetchErr: any) {
         clearTimeout(timeoutId);
@@ -258,7 +301,7 @@ export class GuestService {
           return {
             success: false,
             message: "Campus API request timeout",
-            data: null,
+            data: null
           };
         }
 
@@ -267,12 +310,12 @@ export class GuestService {
     } catch (err) {
       console.error(
         "[GuestService] Error fetching all users from campus API:",
-        err,
+        err
       );
       return {
         success: false,
         message: "Failed to fetch users from Campus API",
-        data: null,
+        data: null
       };
     }
   }
@@ -290,7 +333,7 @@ export class GuestService {
         return {
           success: false,
           message: "Invalid email format",
-          data: null,
+          data: null
         };
       }
 
@@ -302,12 +345,12 @@ export class GuestService {
       if (!campusUser.success) {
         console.error(
           "[GuestService] Campus API fetch failed:",
-          campusUser.message,
+          campusUser.message
         );
         return {
           success: false,
           message: `Campus API Error: ${campusUser.message}`,
-          data: null,
+          data: null
         };
       }
 
@@ -319,7 +362,7 @@ export class GuestService {
         return {
           success: false,
           message: "Campus API did not return user name",
-          data: null,
+          data: null
         };
       }
 
@@ -328,7 +371,7 @@ export class GuestService {
         return {
           success: false,
           message: "Campus API did not return user identifier (NIM/NIDN)",
-          data: null,
+          data: null
         };
       }
 
@@ -341,7 +384,7 @@ export class GuestService {
         faculty: campusUser.data.faculty || "Not Specified",
         major:
           campusUser.data.prodi || campusUser.data.major || "Not Specified",
-        visitDate: new Date(),
+        visitDate: new Date()
       };
 
       console.log("[GuestService] Prepared guest data:", guestData);
@@ -354,19 +397,19 @@ export class GuestService {
         where: and(
           eq(guestLogs.email, campusUser.data.email),
           gte(guestLogs.visitDate, today),
-          isNull(guestLogs.deletedAt),
-        ),
+          isNull(guestLogs.deletedAt)
+        )
       });
 
       if (existingLog) {
         console.warn(
           "[GuestService] User already checked in today:",
-          campusUser.data.email,
+          campusUser.data.email
         );
         return {
           success: false,
           message: "User already checked in today",
-          data: existingLog,
+          data: existingLog
         };
       }
 
@@ -381,30 +424,30 @@ export class GuestService {
 
         if (!newLog) {
           console.error(
-            "[GuestService] Failed to insert guest log - no data returned",
+            "[GuestService] Failed to insert guest log - no data returned"
           );
           return {
             success: false,
             message: "Failed to create guest log in database",
-            data: null,
+            data: null
           };
         }
 
         console.log(
           "[GuestService] Guest log created successfully:",
-          newLog.id,
+          newLog.id
         );
         return {
           success: true,
           message: "Guest log created successfully",
-          data: newLog,
+          data: newLog
         };
       } catch (dbError: any) {
         console.error("[GuestService] Database insert error:", dbError);
         return {
           success: false,
           message: `Database error: ${dbError.message || "Unknown database error"}`,
-          data: null,
+          data: null
         };
       }
     } catch (err) {
@@ -412,7 +455,7 @@ export class GuestService {
       return {
         success: false,
         message: `Failed to create guest log: ${err instanceof Error ? err.message : "Unknown error"}`,
-        data: null,
+        data: null
       };
     }
   }
@@ -439,19 +482,19 @@ export class GuestService {
         where: and(
           eq(guestLogs.email, data.email),
           gte(guestLogs.visitDate, today),
-          isNull(guestLogs.deletedAt),
-        ),
+          isNull(guestLogs.deletedAt)
+        )
       });
 
       if (existingLog) {
         console.warn(
           "[GuestService] User already checked in today:",
-          data.email,
+          data.email
         );
         return {
           success: false,
           message: "User already checked in today",
-          data: existingLog,
+          data: existingLog
         };
       }
 
@@ -462,37 +505,34 @@ export class GuestService {
         identifier: data.identifier,
         faculty: data.faculty,
         major: data.major,
-        visitDate: new Date(),
+        visitDate: new Date()
       };
 
-      const [newLog] = await db
-        .insert(guestLogs)
-        .values(guestData)
-        .returning();
+      const [newLog] = await db.insert(guestLogs).values(guestData).returning();
 
       if (!newLog) {
         return {
           success: false,
           message: "Failed to create guest log in database",
-          data: null,
+          data: null
         };
       }
 
       console.log(
         "[GuestService] Guest log created successfully (direct):",
-        newLog.id,
+        newLog.id
       );
       return {
         success: true,
         message: "Guest log created successfully",
-        data: newLog,
+        data: newLog
       };
     } catch (err) {
       console.error("[GuestService] Error creating direct guest log:", err);
       return {
         success: false,
         message: `Failed to create guest log: ${err instanceof Error ? err.message : "Unknown error"}`,
-        data: null,
+        data: null
       };
     }
   }
@@ -502,7 +542,7 @@ export class GuestService {
    */
   async getAllGuestLogs(
     limit = 100,
-    page = 1,
+    page = 1
   ): Promise<ServiceResponse<any[]>> {
     try {
       const offset = (page - 1) * limit;
@@ -527,15 +567,15 @@ export class GuestService {
           total: Number(countResult.count),
           page,
           limit,
-          totalPages: Math.ceil(Number(countResult.count) / limit),
-        },
+          totalPages: Math.ceil(Number(countResult.count) / limit)
+        }
       };
     } catch (err) {
       console.error("[GuestService] Error getting guest logs:", err);
       return {
         success: false,
         message: "Failed to get guest logs",
-        data: null,
+        data: null
       };
     }
   }
@@ -549,7 +589,7 @@ export class GuestService {
       const byFaculty = await db
         .select({
           faculty: guestLogs.faculty,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)`
         })
         .from(guestLogs)
         .where(isNull(guestLogs.deletedAt))
@@ -559,7 +599,7 @@ export class GuestService {
       const byMajor = await db
         .select({
           major: guestLogs.major,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)`
         })
         .from(guestLogs)
         .where(isNull(guestLogs.deletedAt))
@@ -570,15 +610,15 @@ export class GuestService {
         message: "Guest stats retrieved successfully",
         data: {
           byFaculty,
-          byMajor,
-        },
+          byMajor
+        }
       };
     } catch (err) {
       console.error("[GuestService] Error getting stats:", err);
       return {
         success: false,
         message: "Failed to get stats",
-        data: null,
+        data: null
       };
     }
   }
@@ -588,7 +628,7 @@ export class GuestService {
    */
   async editGuestLog(
     id: string,
-    data: DataGuest,
+    data: DataGuest
   ): Promise<ServiceResponse<any>> {
     try {
       // Validate ID
@@ -596,20 +636,20 @@ export class GuestService {
         return {
           success: false,
           message: "Guest log ID is required",
-          data: null,
+          data: null
         };
       }
 
       // Check if guest log exists
       const existingLog = await db.query.guestLogs.findFirst({
-        where: and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt)),
+        where: and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt))
       });
 
       if (!existingLog) {
         return {
           success: false,
           message: "Guest log not found",
-          data: null,
+          data: null
         };
       }
 
@@ -621,7 +661,7 @@ export class GuestService {
           email: data.email,
           identifier: data.identifier,
           faculty: data.faculty,
-          major: data.major,
+          major: data.major
         })
         .where(and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt)))
         .returning();
@@ -630,21 +670,21 @@ export class GuestService {
         return {
           success: false,
           message: "Failed to update guest log",
-          data: null,
+          data: null
         };
       }
 
       return {
         success: true,
         message: "Guest log updated successfully",
-        data: updateLog,
+        data: updateLog
       };
     } catch (err) {
       console.error("[GuestService] Error editing guest log:", err);
       return {
         success: false,
         message: "Failed to edit guest log",
-        data: null,
+        data: null
       };
     }
   }
@@ -659,20 +699,20 @@ export class GuestService {
         return {
           success: false,
           message: "Guest log ID is required",
-          data: null,
+          data: null
         };
       }
 
       // Check if guest log exists
       const existingLog = await db.query.guestLogs.findFirst({
-        where: and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt)),
+        where: and(eq(guestLogs.id, id), isNull(guestLogs.deletedAt))
       });
 
       if (!existingLog) {
         return {
           success: false,
           message: "Guest log not found",
-          data: null,
+          data: null
         };
       }
 
@@ -687,21 +727,21 @@ export class GuestService {
         return {
           success: false,
           message: "Failed to delete guest log",
-          data: null,
+          data: null
         };
       }
 
       return {
         success: true,
         message: "Guest log deleted successfully",
-        data: deleteLog,
+        data: deleteLog
       };
     } catch (err) {
       console.error("[GuestService] Error deleting guest log:", err);
       return {
         success: false,
         message: "Failed to delete guest log",
-        data: null,
+        data: null
       };
     }
   }
