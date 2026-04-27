@@ -5,94 +5,75 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  Mail,
-  Info
+  User,
+  Info,
+  Backpack
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 
 const Absensi = () => {
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState("");
+  const [prodi, setProdi] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<{
-    type: 'success' | 'error' | null;
+    type: "success" | "error" | null;
     message: string;
     guestName?: string;
-  }>({ type: null, message: '' });
+  }>({ type: null, message: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+    const trimmedProdi = prodi.trim();
 
-    // Validasi format email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmedEmail)) {
+    if (!trimmedName) {
       setStatus({
-        type: 'error',
-        message: 'Masukkan alamat email yang valid (contoh: mahasiswa@umc.ac.id)'
+        type: "error",
+        message: "Masukkan nama Anda terlebih dahulu."
       });
       return;
     }
 
     setIsLoading(true);
-    setStatus({ type: null, message: '' });
+    setStatus({ type: null, message: "" });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/guests`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/guest/absensi`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json"
         },
-        credentials: 'include',
-        body: JSON.stringify({ email: trimmedEmail })
+        credentials: "include",
+        body: JSON.stringify({ name: trimmedName, major: trimmedProdi })
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const guestName = data.data?.name || trimmedEmail;
+        const guestName = data.data?.newAbsensi?.name || trimmedName;
         setStatus({
-          type: 'success',
+          type: "success",
           message: `Terima kasih, kehadiran Anda telah dicatat!`,
           guestName
         });
-        setEmail('');
+        setName("");
+        setProdi("");
 
         setTimeout(() => {
-          setStatus({ type: null, message: '' });
+          setStatus({ type: null, message: "" });
         }, 5000);
-      } else if (response.status === 400) {
-        // Could be "already checked in today" or validation error
-        const msg = data.message || 'Data tidak valid. Periksa kembali email Anda.';
-        if (msg.toLowerCase().includes('already')) {
-          setStatus({
-            type: 'error',
-            message: 'Anda sudah tercatat hadir hari ini. Sampai jumpa besok!'
-          });
-        } else {
-          setStatus({ type: 'error', message: msg });
-        }
-      } else if (response.status === 401) {
-        setStatus({
-          type: 'error',
-          message: 'Sesi tidak terotorisasi. Silakan hubungi petugas perpustakaan.'
-        });
-      } else if (response.status === 404) {
-        setStatus({
-          type: 'error',
-          message: 'Email tidak ditemukan di sistem kampus. Pastikan menggunakan email UMC yang terdaftar.'
-        });
       } else {
         setStatus({
-          type: 'error',
-          message: data.message || 'Gagal mencatat kehadiran. Coba lagi.'
+          type: "error",
+          message: data.message || "Gagal mencatat kehadiran. Coba lagi."
         });
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       setStatus({
-        type: 'error',
-        message: 'Terjadi kesalahan koneksi. Silakan coba lagi.'
+        type: "error",
+        message: "Terjadi kesalahan koneksi. Silakan coba lagi."
       });
     } finally {
       setIsLoading(false);
@@ -101,41 +82,49 @@ const Absensi = () => {
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center p-4">
-      <div className="max-w-[480px] w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden">
-
+      <div className="max-w-120 w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-[#a31d1d] p-8 text-center text-white">
           <div className="inline-block p-3 bg-white/20 rounded-full mb-3">
             <BookOpen size={36} strokeWidth={1.5} />
           </div>
-          <h1 className="text-xl font-bold tracking-wide">Absensi Perpustakaan</h1>
-          <p className="text-xs opacity-80 font-light mt-1">Universitas Muhammadiyah Cirebon</p>
+          <h1 className="text-xl font-bold tracking-wide">
+            Absensi Perpustakaan
+          </h1>
+          <p className="text-xs opacity-80 font-light mt-1">
+            Universitas Muhammadiyah Cirebon
+          </p>
         </div>
 
         {/* Form */}
         <div className="p-6">
-
           {/* Info Banner */}
           <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5">
             <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
             <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
-              Masukkan email kampus Anda. Data NIM, fakultas, dan prodi akan diambil otomatis dari sistem.
+              Masukkan email dan nama anda
             </p>
           </div>
 
           {/* Status message */}
           {status.type && (
-            <div className={`mb-5 p-4 rounded-xl flex items-start gap-2.5 text-sm ${
-              status.type === 'success'
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}>
-              {status.type === 'success'
-                ? <CheckCircle size={18} className="shrink-0 mt-0.5" />
-                : <AlertCircle size={18} className="shrink-0 mt-0.5" />}
+            <div
+              className={`mb-5 p-4 rounded-xl flex items-start gap-2.5 text-sm ${
+                status.type === "success"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}
+            >
+              {status.type === "success" ? (
+                <CheckCircle size={18} className="shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle size={18} className="shrink-0 mt-0.5" />
+              )}
               <div>
-                {status.type === 'success' && status.guestName && (
-                  <p className="font-bold text-[13px] mb-0.5">Halo, {status.guestName}! 👋</p>
+                {status.type === "success" && status.guestName && (
+                  <p className="font-bold text-[13px] mb-0.5">
+                    Halo, {status.guestName}! 👋
+                  </p>
                 )}
                 <span className="text-xs font-medium">{status.message}</span>
               </div>
@@ -143,24 +132,44 @@ const Absensi = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
+            {/* Nama */}
             <div>
               <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Email Kampus <span className="text-red-500">*</span>
+                Nama <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Mail size={16} />
+                  <User size={16} />
                 </div>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
-                  placeholder="contoh: mahasiswa@umc.ac.id"
+                  placeholder="contoh: John Doe"
                   required
                   disabled={isLoading}
-                  autoComplete="email"
+                />
+              </div>
+            </div>
+            {/* Program Studi */}
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                Program Studi <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Backpack size={16} />
+                </div>
+                <input
+                  type="text"
+                  value={prodi}
+                  onChange={(e) => setProdi(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
+                  placeholder="contoh: Teknik Informatika"
+                  required
+                  disabled={isLoading}
+                  autoComplete="Prodi"
                 />
               </div>
             </div>

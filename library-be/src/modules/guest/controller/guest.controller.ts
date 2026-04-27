@@ -15,7 +15,7 @@ export class GuestController {
         name: name as string,
         faculty: faculty as string,
         major: major as string,
-        email: email as string,
+        email: email as string
       });
 
       if (!result.success) {
@@ -29,7 +29,7 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }
@@ -52,7 +52,7 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }
@@ -68,7 +68,7 @@ export class GuestController {
         res.status(400).json({
           success: false,
           message: "Email is required",
-          data: null,
+          data: null
         });
         return;
       }
@@ -86,7 +86,40 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
+      });
+    }
+  }
+
+  // POST /absensi - Create Absensi (Mahasiswa)
+  async createAbsensi(req: Request, res: Response) {
+    try {
+      const { name, major } = req.body;
+
+      if (!name || !major) {
+        res.status(400).json({
+          success: false,
+          message: "Name and major are required",
+          data: null
+        });
+        return;
+      }
+
+      const result = await guestService.createAbsensi(name, major);
+
+      if (!result.success) {
+        res.status(400).json(result);
+
+        return;
+      }
+
+      res.status(201).json(result);
+    } catch (err) {
+      console.error("[GuestController] Error creating absensi:", err);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        data: null
       });
     }
   }
@@ -102,7 +135,7 @@ export class GuestController {
         res.status(400).json({
           success: false,
           message: "Email is required",
-          data: null,
+          data: null
         });
         return;
       }
@@ -120,7 +153,7 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }
@@ -146,7 +179,7 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }
@@ -169,7 +202,7 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }
@@ -186,7 +219,7 @@ export class GuestController {
         res.status(400).json({
           success: false,
           message: "Name and email are required",
-          data: null,
+          data: null
         });
         return;
       }
@@ -196,7 +229,7 @@ export class GuestController {
         email,
         identifier: identifier || "UNKNOWN",
         faculty: faculty || "Not Specified",
-        major: major || "Not Specified",
+        major: major || "Not Specified"
       });
 
       if (!result.success) {
@@ -206,11 +239,14 @@ export class GuestController {
 
       res.status(201).json(result);
     } catch (error) {
-      console.error("[GuestController] Error creating direct guest log:", error);
+      console.error(
+        "[GuestController] Error creating direct guest log:",
+        error
+      );
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }
@@ -226,7 +262,7 @@ export class GuestController {
         res.status(400).json({
           success: false,
           message: "ID is required",
-          data: null,
+          data: null
         });
         return;
       }
@@ -244,7 +280,7 @@ export class GuestController {
       res.status(500).json({
         success: false,
         message: "Internal Server Error",
-        data: null,
+        data: null
       });
     }
   }

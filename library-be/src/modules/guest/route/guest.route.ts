@@ -2,7 +2,7 @@ import { Router } from "express";
 import { GuestController } from "../controller/guest.controller";
 import {
   isAuthenticated,
-  requireRole,
+  requireRole
 } from "../../../middlewares/auth.middleware";
 
 const router = Router();
@@ -75,7 +75,7 @@ router.get(
   "/guests/search",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.searchCampusUsers,
+  guestController.searchCampusUsers
 );
 
 /**
@@ -121,7 +121,7 @@ router.get(
   "/guests/campus",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.getAllCampusUsers,
+  guestController.getAllCampusUsers
 );
 
 /**
@@ -153,7 +153,7 @@ router.get(
   "/guests/campus/:email",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.getUserFromCampus,
+  guestController.getUserFromCampus
 );
 
 /**
@@ -175,7 +175,7 @@ router.get(
   "/guests/stats",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.getGuestStats,
+  guestController.getGuestStats
 );
 
 /**
@@ -225,7 +225,21 @@ router.post(
   "/guests/direct",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.createGuestLogDirect,
+  guestController.createGuestLogDirect
+);
+
+/**
+ * @swagger * /guest/absensi:
+ *   post:
+ *     summary: Create absensi log
+ *
+ */
+
+router.post(
+  "/guest/absensi",
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  guestController.createAbsensi
 );
 
 /**
@@ -264,7 +278,7 @@ router.post(
   "/guests",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.createGuestLog,
+  guestController.createGuestLog
 );
 
 /**
@@ -299,7 +313,7 @@ router.get(
   "/guests",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.getGuestLogs,
+  guestController.getGuestLogs
 );
 
 /**
@@ -330,7 +344,7 @@ router.delete(
   "/guests/:id",
   isAuthenticated,
   requireRole(["super_admin", "staff"]),
-  guestController.deleteGuestLog,
+  guestController.deleteGuestLog
 );
 
 export const guestRoutes = router;
