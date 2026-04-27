@@ -579,7 +579,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                   placeholder="Opsional, berikan pesan ke mahasiswa..."
                   value={actionNotes}
                   onChange={(e) => setActionNotes(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-medium focus:ring-2 focus:ring-green-500/20 focus:border-green-500/40 transition-all outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] text-black font-medium focus:ring-2 focus:ring-green-500/20 focus:border-green-500/40 transition-all outline-none"
                   rows={3}
                 />
               </div>

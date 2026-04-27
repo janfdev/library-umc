@@ -14,21 +14,27 @@ import Eresource from "../pages/EResoucePage";
 import MyLoans from "../pages/MyLoansPage";
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
+import NonAdminRoute from "./NonAdminRoute"; 
+import PublicRoute from "./PublicRoute"; // Komponen baru untuk memblokir akses login saat sudah masuk
 import TentangPage from "../pages/TentangPage";
 import WebTrafficTracker from "@/components/WebTrafficTracker";
-import AbsensiPage from "@/pages/Absensi";
+import AbsensiPage from "../pages/Absensi";
 
 const AppRoutes = () => {
   return (
     <>
       <WebTrafficTracker />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/katalog" element={<Katalog />} />
-        <Route path="/katalog/:id" element={<DetailKatalog />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/e-resource" element={<Eresource />} />
+        {/* Rute Publik (Akses terbatas untuk Admin) */}
+        <Route path="/" element={<NonAdminRoute><Home /></NonAdminRoute>} />
+        <Route path="/about" element={<NonAdminRoute><About /></NonAdminRoute>} />
+        <Route path="/katalog" element={<NonAdminRoute><Katalog /></NonAdminRoute>} />
+        <Route path="/katalog/:id" element={<NonAdminRoute><DetailKatalog /></NonAdminRoute>} />
+        <Route path="/profile" element={<NonAdminRoute><Profile /></NonAdminRoute>} />
+        <Route path="/e-resource" element={<NonAdminRoute><Eresource /></NonAdminRoute>} />
+        <Route path="/tentang" element={<NonAdminRoute><TentangPage /></NonAdminRoute>} />
+        <Route path="/absensi" element={<NonAdminRoute><AbsensiPage /></NonAdminRoute>} />
+        
         <Route 
           path="/my-loans" 
           element={
@@ -37,11 +43,14 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } 
         />
-        <Route path="/tentang" element={<TentangPage />} />
-        <Route path="/absensi" element={<AbsensiPage />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Auth Routes (Dibatasi agar tidak bisa diakses saat sudah login) */}
+        <Route path="/login" element={
+          <PublicRoute><Login /></PublicRoute>
+        } />
+        <Route path="/register" element={
+          <PublicRoute><Register /></PublicRoute>
+        } />
         <Route path="/handle" element={<HandleLogout />} />
 
         {/* Dashboard Routes - Protected */}
