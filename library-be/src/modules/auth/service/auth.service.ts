@@ -29,7 +29,6 @@ export interface AuthResponseData {
     image?: string | null;
     createdAt?: Date;
   };
-  token: string | null;
 }
 
 export class AuthService {
@@ -137,6 +136,12 @@ export class AuthService {
 
       const memberPayload = this.mapCampusRoleToMemberType(campusUser);
 
+      // Sync Users.role with memberType for consistent RBAC
+      await db
+        .update(UserTable)
+        .set({ role: memberPayload.memberType })
+        .where(eq(UserTable.id, userId));
+
       const [newMember] = await db
         .insert(MemberTable)
         .values({
@@ -199,6 +204,12 @@ export class AuthService {
     }
 
     if (!existingMember) {
+      // Sync Users.role with memberType
+      await db
+        .update(UserTable)
+        .set({ role: memberPayload.memberType })
+        .where(eq(UserTable.id, userId));
+
       const [newMember] = await db
         .insert(MemberTable)
         .values({
@@ -218,6 +229,12 @@ export class AuthService {
         member: newMember,
       };
     }
+
+    // Sync Users.role with memberType
+    await db
+      .update(UserTable)
+      .set({ role: memberPayload.memberType })
+      .where(eq(UserTable.id, userId));
 
     const [updatedMember] = await db
       .update(MemberTable)
@@ -283,7 +300,6 @@ export class AuthService {
           role: result.user.role || "student",
           createdAt: result.user.createdAt,
         },
-        token: result.token,
       };
     } catch (err: unknown) {
       if (err instanceof AppError) {
@@ -323,7 +339,6 @@ export class AuthService {
           role: result.user.role || "student",
           image: result.user.image,
         },
-        token: result.token,
       };
     } catch (err: unknown) {
       if (err instanceof AppError) {
