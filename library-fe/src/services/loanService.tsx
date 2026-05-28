@@ -133,18 +133,40 @@ class LoanService {
       throw new Error(result.message || "Gagal menolak peminjaman");
   }
 
-  // POST /loans/{loanId}/return - Return a book (Member/Admin)
-  async returnBook(loanId: string, condition?: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/loans/${loanId}/return`, {
+  // POST /loans/{loanId}/return-request - Member creates a return request
+  async createReturnRequest(loanId: string): Promise<{ success: boolean; message: string; data: unknown }> {
+    const response = await fetch(`${this.baseUrl}/api/loans/${loanId}/return-request`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ condition })
+      credentials: "include"
     });
     const result = await response.json();
-    if (!result.success)
-      throw new Error(result.message || "Gagal mengembalikan buku");
+    if (!result.success) throw new Error(result.message || "Gagal mengajukan pengembalian");
+    return result;
   }
+
+  // GET /loans/return-requests/pending - Admin gets pending return requests
+  async getPendingReturnRequests(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/loans/return-requests/pending`, {
+      credentials: "include"
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || "Gagal memuat permintaan pengembalian");
+    return result.data;
+  }
+
+  // POST /loans/return-requests/{requestId}/approve - Admin approves return request
+  async approveReturnRequest(requestId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/loans/return-requests/${requestId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || "Gagal menyetujui pengembalian");
+    return result;
+  }
+
 
   // GET /loans/verify/{token} - Verify loan token
   async verifyLoanToken(token: string): Promise<unknown> {

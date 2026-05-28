@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Info } from "lucide-react";
 import loanService, { type Loan as LoanData } from "@/services/loanService";
+import { useToast } from "@/hooks/useToast";
 
 interface RiwayatPeminjamanProps {
   type: "active" | "history";
@@ -117,6 +118,7 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
     month: "long",
     year: "numeric"
   });
+  const toast = useToast();
 
   return (
     <div className="bg-white rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-100 flex gap-5 group hover:shadow-lg transition-all">
@@ -146,7 +148,27 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
             </p>
           )}
         </div>
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end gap-2 mt-2">
+          <button
+            onClick={async () => {
+              try {
+                const loadingId = toast.loading("Memproses...", "Mengajukan pengembalian");
+                try {
+                  const res = await loanService.createReturnRequest(loan.id);
+                  toast.removeToast(loadingId);
+                  toast.success("Berhasil", res.message);
+                } catch (err: any) {
+                  toast.removeToast(loadingId);
+                  toast.error("Gagal", err.message || "Gagal mengajukan pengembalian");
+                }
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="px-4 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            Kembalikan
+          </button>
           <button className="px-4 py-1.5 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors">
             Perpanjang
           </button>

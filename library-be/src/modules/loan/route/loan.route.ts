@@ -173,11 +173,27 @@ router.post(
  *         description: Forbidden - Admin/Staff only
  */
 router.post(
-  "/loans/:loanId/return",
+  "/loans/:loanId/return-request",
   publicApiLimiter,
   isAuthenticated,
-  requireRole(["super_admin", "staff"]),
-  loanController.returnLoan,
+  // Any authenticated user can create a return request
+  loanController.createReturnRequest
+);
+
+router.post(
+  "/loans/return-requests/:requestId/approve",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin"]),
+  loanController.approveReturnRequest
+);
+
+router.get(
+  "/loans/return-requests/pending",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin"]),
+  loanController.getPendingReturnRequests
 );
 
 /**

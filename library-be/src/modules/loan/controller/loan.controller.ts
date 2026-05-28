@@ -115,8 +115,8 @@ export class LoanController {
     try {
       const user = req.user;
 
-      if (!user || (user.role !== "super_admin" && user.role !== "staff")) {
-        return sendError(res, "Akses ditolak — hanya Admin/Staff", 403);
+      if (!user || user.role !== "super_admin") {
+        return sendError(res, "Akses ditolak — hanya Super Admin", 403);
       }
 
       const result = await loanService.returnLoan(
@@ -186,6 +186,46 @@ export class LoanController {
   /**
    * POST /loans/:loanId/extend — Perpanjang peminjaman (Member)
    */
+  /**
+   * POST /loans/:loanId/return-request — Member creates a return request (offline)
+   */
+  async createReturnRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+      if (!user) {
+        return sendError(res, "Tidak terautentikasi", 401);
+      }
+      const { loanId } = req.params;
+      const memberId = await loanService.getMemberIdByUserId(user.id);
+      if (!memberId) {
+        return sendError(res, "Member tidak ditemukan", 400);
+      }
+      const result = await loanService.createReturnRequest(loanId, memberId);
+      sendSuccess(res, result.message, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /loans/return-requests/:requestId/approve — Super Admin approves return
+   */
+  async approveReturnRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+      if (!user || user.role !== "super_admin") {
+        return sendError(res, "Akses ditolak — hanya Super Admin", 403);
+      }
+      const { requestId } = req.params;
+      const result = await loanService.approveReturnRequest(requestId, user.id);
+      sendSuccess(res, result.message, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+  /**
+   * POST /loans/:loanId/extend — Perpanjang peminjaman (Member)
+   */
   async extendLoan(req: Request, res: Response, next: NextFunction) {
     try {
       const { loanId } = req.params;
@@ -203,6 +243,22 @@ export class LoanController {
       ) {
         return sendError(res, err.message, 400);
       }
+      next(error);
+    }
+  }
+
+  /**
+   * GET /loans/return-requests/pending — Super Admin gets all pending return requests
+   */
+  async getPendingReturnRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+      if (!user || user.role !== "super_admin") {
+        return sendError(res, "Akses ditolak — hanya Super Admin", 403);
+      }
+      const result = await loanService.getPendingReturnRequests();
+      sendSuccess(res, "Pending return requests retrieved", result.data);
+    } catch (error) {
       next(error);
     }
   }

@@ -12,7 +12,8 @@ import {
   Tag,
   Users,
   Wallet,
-  BookMarked
+  BookMarked,
+  CheckCircle
 } from "lucide-react";
 
 import Logo from "@/assets/logo_umc.png";
@@ -28,6 +29,7 @@ import LoansSection from "@/components/dashboard/LoansSection";
 import ReportsSection from "@/components/dashboard/ReportsSection";
 import UsersSection from "@/components/dashboard/UsersSection";
 import RecommendationsSection from "@/components/dashboard/RecommendationsSection";
+import ReturnApprovalsSection from "@/components/dashboard/ReturnApprovalsSection";
 import {
   CommandDialog,
   CommandEmpty,
@@ -67,6 +69,7 @@ type ActiveMenu =
   | "categories"
   | "fines"
   | "cardApprovals"
+  | "returnApprovals"
   | "users"
   | "audit"
   | "reports"
@@ -85,6 +88,7 @@ const MENU_CONFIG: MenuConfig[] = [
   { key: "collections", label: "Data Koleksi", icon: Book },
   { key: "guests", label: "Data Pengunjung", icon: Users },
   { key: "loans", label: "Peminjaman & Persetujuan", icon: BookOpen },
+  { key: "returnApprovals", label: "Konfirmasi Pengembalian", icon: CheckCircle, superAdminOnly: true },
   { key: "categories", label: "Manajemen Kategori", icon: Tag },
   { key: "fines", label: "Manajemen Denda", icon: Wallet },
   { key: "cardApprovals", label: "Persetujuan Kartu", icon: Shield },
@@ -373,6 +377,8 @@ export default function SuperAdminDashboard() {
         return <AuditLogsSection />;
       case "reports":
         return <ReportsSection />;
+      case "returnApprovals":
+        return <ReturnApprovalsSection />;
       case "recommendations":
         return <RecommendationsSection />;
       default:

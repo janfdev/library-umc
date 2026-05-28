@@ -356,6 +356,22 @@ export const reservations = pgTable("reservations", {
   deletedAt: timestamp("deleted_at")
 });
 
+export const returnRequestStatusEnum = pgEnum("return_request_status", [
+  "pending",
+  "approved"
+]);
+
+export const returnRequests = pgTable("return_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  loanId: uuid("loan_id")
+    .notNull()
+    .references(() => loans.id),
+  requestedAt: timestamp("requested_at").defaultNow(),
+  status: returnRequestStatusEnum("status").default("pending").notNull(),
+  processedAt: timestamp("processed_at"),
+  processedBy: text("processed_by").references(() => Users.id)
+});
+
 export const fines = pgTable("fines", {
   id: uuid("id").primaryKey().defaultRandom(), // Converted to UUID
   loanId: uuid("loan_id")
@@ -524,5 +540,16 @@ export const reservationRelations = relations(reservations, ({ one }) => ({
   collection: one(collections, {
     fields: [reservations.collectionId],
     references: [collections.id]
+  })
+}));
+
+export const returnRequestRelations = relations(returnRequests, ({ one }) => ({
+  loan: one(loans, {
+    fields: [returnRequests.loanId],
+    references: [loans.id]
+  }),
+  processedByUser: one(Users, {
+    fields: [returnRequests.processedBy],
+    references: [Users.id]
   })
 }));

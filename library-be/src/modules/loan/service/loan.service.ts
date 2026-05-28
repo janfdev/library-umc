@@ -6,12 +6,15 @@ import {
   members,
   fines,
   reservations,
-  collections
+  collections,
+  Users,
+  returnRequests
 } from "../../../db/schema";
 import crypto from "crypto";
 import qrcode from "qrcode";
 import { NotificationService } from "../../notification/service/notification.service";
 import reservationService from "../../reservation/service/reservation.service";
+import { ROLES } from "../../../utils/auth-types";
 
 const notificationService = new NotificationService();
 
@@ -273,109 +276,131 @@ export class LoanService {
   /**
    * 5. Return Loan (Pengembalian Buku) - NEW
    */
-  async returnLoan(loanId: string, _adminId: string) {
+  async approveReturnRequest(requestId: string, adminId: string) {
     return await db.transaction(async (tx) => {
-      const loan = await tx.query.loans.findFirst({
-        where: and(eq(loans.id, loanId), isNull(loans.deletedAt))
-      });
+      // Verify super_admin
+      const adminUser = await tx.query.Users.findFirst({ where: eq(Users.id, adminId) });
+      if (!adminUser || adminUser.role !== ROLES.SUPER_ADMIN) {
+        throw new Error("Pengembalian buku harus disetujui oleh Super Admin");
+      }
 
+      // Find pending return request
+      const request = await tx.query.returnRequests.findFirst({
+        where: and(eq(returnRequests.id, requestId), eq(returnRequests.status, "pending"))
+      });
+      if (!request) {
+        throw new Error("Permintaan pengembalian tidak ditemukan atau sudah diproses");
+      }
+
+      // Get the associated loan
+      const loan = await tx.query.loans.findFirst({
+        where: and(eq(loans.id, request.loanId), isNull(loans.deletedAt))
+      });
       if (!loan || !["approved", "extended"].includes(loan.status)) {
-        throw new Error(
-          "Buku ini tidak dalam status dipinjam atau data tidak ditemukan"
-        );
+        throw new Error("Buku tidak dalam status dipinjam atau data tidak ditemukan");
       }
 
       const returnDateStr = new Date().toISOString().split("T")[0];
 
-      // Update status peminjaman jadi 'returned'
-      await tx
-        .update(loans)
-        .set({
-          status: "returned",
-          returnDate: returnDateStr,
-          updatedAt: new Date()
-        })
-        .where(eq(loans.id, loanId));
+      // Update loan status to returned
+      await tx.update(loans).set({
+        status: "returned",
+        returnDate: returnDateStr,
+        updatedAt: new Date()
+      }).where(eq(loans.id, loan.id));
 
-      // Kembalikan status buku jadi 'available'
-      await tx
-        .update(items)
-        .set({
-          status: "available",
-          updatedAt: new Date()
-        })
-        .where(eq(items.id, loan.itemId));
+      // Update item status to available
+      await tx.update(items).set({ status: "available", updatedAt: new Date() }).where(eq(items.id, loan.itemId));
 
-      const loanItem = await tx.query.items.findFirst({
-        where: and(eq(items.id, loan.itemId), isNull(items.deletedAt))
-      });
-
+      // Sync collection stock if needed
+      const loanItem = await tx.query.items.findFirst({ where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)) });
       if (loanItem?.collectionId) {
         await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
       }
 
-      // Ambil collectionId dari item untuk auto-fulfill reservasi
-      const returnedItem = loanItem;
-      if (returnedItem?.collectionId) {
-        // Fire-and-forget: auto-fulfill reservasi tertua (FIFO)
-        void reservationService.fulfillNextReservation(
-          returnedItem.collectionId
-        );
+      // Auto-fulfill next reservation if any
+      if (loanItem?.collectionId) {
+        void reservationService.fulfillNextReservation(loanItem.collectionId);
       }
 
-      // Hitung Denda Keterlambatan
+      // Calculate late fine (same logic as returnLoan)
       const returnDateObj = new Date();
-      // Parse string dueDate menjadi format date (contoh '2026-03-04')
       const dueDateObj = new Date(loan.dueDate);
-
-      // Set jam ke 00:00:00 untuk komparasi tanggal yang akurat
       returnDateObj.setHours(0, 0, 0, 0);
       dueDateObj.setHours(0, 0, 0, 0);
-
       const isLate = returnDateObj > dueDateObj;
-
       if (isLate) {
-        const diffTime = Math.abs(
-          returnDateObj.getTime() - dueDateObj.getTime()
-        );
+        const diffTime = Math.abs(returnDateObj.getTime() - dueDateObj.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const finePerDay = 500; // Standar denda Rp 500 per hari
+        const finePerDay = 500;
         const fineAmount = diffDays * finePerDay;
-
-        // Hindari duplikasi denda: update denda unpaid yang sudah ada untuk loan ini.
         const existingUnpaidFine = await tx.query.fines.findFirst({
           where: and(
-            eq(fines.loanId, loanId),
+            eq(fines.loanId, loan.id),
             eq(fines.status, "unpaid"),
             isNull(fines.deletedAt)
           )
         });
-
         if (existingUnpaidFine) {
-          await tx
-            .update(fines)
-            .set({ amount: fineAmount.toString(), updatedAt: new Date() })
-            .where(eq(fines.id, existingUnpaidFine.id));
+          await tx.update(fines).set({ amount: fineAmount.toString(), updatedAt: new Date() }).where(eq(fines.id, existingUnpaidFine.id));
         } else {
-          await tx.insert(fines).values({
-            loanId: loanId,
-            amount: fineAmount.toString(),
-            status: "unpaid"
-          });
+          await tx.insert(fines).values({ loanId: loan.id, amount: fineAmount.toString(), status: "unpaid" });
         }
-
-        return {
-          success: true,
-          message: `Buku dikembalikan, namun terlambat ${diffDays} hari. Dikenakan denda sebesar Rp ${fineAmount.toLocaleString("id-ID")}.`
-        };
+        // Update request status to approved
+        await tx.update(returnRequests).set({ status: "approved", processedAt: new Date(), processedBy: adminId }).where(eq(returnRequests.id, requestId));
+        return { success: true, message: `Buku dikembalikan, namun terlambat ${diffDays} hari. Dikenakan denda sebesar Rp ${fineAmount.toLocaleString("id-ID")}.` };
       }
 
-      return {
-        success: true,
-        message: "Buku telah berhasil dikembalikan tepat waktu."
-      };
+      // Update request status to approved (no fine)
+      await tx.update(returnRequests).set({ status: "approved", processedAt: new Date(), processedBy: adminId }).where(eq(returnRequests.id, requestId));
+      return { success: true, message: "Buku telah berhasil dikembalikan tepat waktu." };
     });
   }
+
+  /**
+   * 5b. Create Return Request (Member mengajukan pengembalian)
+   */
+  async createReturnRequest(loanId: string, memberId: string) {
+    // Verify loan belongs to member and is eligible for return
+    const loan = await db.query.loans.findFirst({
+      where: and(eq(loans.id, loanId), eq(loans.memberId, memberId), isNull(loans.deletedAt))
+    });
+    if (!loan || !["approved", "extended"].includes(loan.status)) {
+      throw new Error("Loan not found or not in a returnable status");
+    }
+    // Check if there's already a pending return request for this loan
+    const existingRequest = await db.query.returnRequests.findFirst({
+      where: and(eq(returnRequests.loanId, loanId), eq(returnRequests.status, "pending"))
+    });
+    if (existingRequest) {
+      throw new Error("Sudah ada permintaan pengembalian yang sedang menunggu persetujuan");
+    }
+    // Insert pending return request
+    const [newRequest] = await db.insert(returnRequests).values({
+      loanId,
+      status: "pending"
+    }).returning();
+    return { success: true, message: "Permintaan pengembalian buku berhasil diajukan", data: newRequest };
+  }
+
+  /**
+   * 5c. Get All Pending Return Requests (for Super Admin dashboard)
+   */
+  async getPendingReturnRequests() {
+    const requests = await db.query.returnRequests.findMany({
+      where: eq(returnRequests.status, "pending"),
+      with: {
+        loan: {
+          with: {
+            member: { with: { user: true } },
+            item: { with: { collection: true } }
+          }
+        }
+      }
+    });
+    return { success: true, data: requests };
+  }
+
 
   // Helper: Get Member by User ID
   async getMemberIdByUserId(userId: string) {
