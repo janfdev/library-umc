@@ -190,16 +190,7 @@ export class LoanController {
     try {
       const { loanId } = req.params;
 
-      if (!req.user?.id) {
-        return sendError(res, "Tidak terautentikasi", 401);
-      }
-
-      const memberId = await loanService.getMemberIdByUserId(req.user.id);
-      if (!memberId) {
-        return sendError(res, "Profil member tidak ditemukan", 400);
-      }
-
-      const result = await loanService.extendLoan(String(loanId), memberId);
+      const result = await loanService.extendLoan(String(loanId));
       sendSuccess(res, result.message, result.data);
     } catch (error: unknown) {
       const err = error as Error;

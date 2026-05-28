@@ -113,6 +113,10 @@ const Navbar = () => {
     student: {
       label: "Mahasiswa",
       className: "bg-blue-100 text-blue-700"
+    }, 
+    external: {
+      label: "External",
+      className: "bg-green-100 text-green-700"
     }
   } as const;
 

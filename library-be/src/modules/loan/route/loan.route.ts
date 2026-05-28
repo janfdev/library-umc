@@ -267,6 +267,7 @@ router.post(
   "/loans/:loanId/extend",
   publicApiLimiter,
   isAuthenticated,
+  requireRole(["super_admin", "staff"]),
   loanController.extendLoan,
 );
 

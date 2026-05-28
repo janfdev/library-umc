@@ -73,7 +73,8 @@ export const memberType = pgEnum("member_type", [
   "student",
   "lecturer",
   "staff",
-  "super_admin"
+  "super_admin",
+  "external"
 ]);
 
 export const memberCardStatusEnum = pgEnum("member_card_status", [
@@ -200,6 +201,8 @@ export const members = pgTable(
     memberType: memberType("member_type").notNull(), // 'Student', 'Lecture'
     nimNidn: varchar("nim_nidn", { length: 255 }),
     faculty: varchar("faculty", { length: 255 }),
+    originRegion: varchar("origin_region", { length: 255 }),
+    institution: varchar("institution", { length: 255 }),
     phone: varchar("phone", { length: 100 }),
     cardStatus: memberCardStatusEnum("card_status")
       .notNull()

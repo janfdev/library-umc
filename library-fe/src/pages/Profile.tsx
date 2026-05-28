@@ -33,6 +33,8 @@ const Profile = () => {
   const [formData, setFormData] = useState<UpdateProfilePayload>({
     nimNidn: "",
     faculty: "",
+    originRegion: "",
+    institution: "",
     phone: ""
   });
   const [recommendationLoading, setRecommendationLoading] = useState(false);
@@ -52,6 +54,8 @@ const Profile = () => {
     setFormData({
       nimNidn: "",
       faculty: "",
+      originRegion: "",
+      institution: "",
       phone: ""
     });
 
@@ -66,6 +70,8 @@ const Profile = () => {
         setFormData({
           nimNidn: data.nimNidn || "",
           faculty: data.faculty || "",
+          originRegion: data.originRegion || "",
+          institution: data.institution || "",
           phone: data.phone || ""
         });
       } catch (err) {
@@ -209,15 +215,16 @@ const Profile = () => {
     );
   }
 
-  const initials =
-    profile?.user?.name
-      ?.split(" ")
+  const authUser = session?.user as AuthUser | undefined;
+  const userName = profile?.user?.name || authUser?.name || "User";
+  const initials = userName
+      .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .substring(0, 2) || "U";
-  const authUser = session?.user as AuthUser | undefined;
+      .substring(0, 2);
   const isLecturerOnly = authUser?.role === "lecturer";
+  const isExternal = profile?.memberType === "external" || profile?.isExternal;
 
   const tabs = [
     {
@@ -272,14 +279,16 @@ const Profile = () => {
           </div>
           <div className="flex-1 pb-4">
             <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-2 underline decoration-red-600/10 underline-offset-8">
-              {profile?.user?.name}
+              {profile?.user?.name || authUser?.name}
             </h2>
             <p className="text-lg text-slate-500 font-bold mb-2">
-              {profile?.faculty || "Teknik Informatika"}
+              {isExternal
+                ? profile?.institution || profile?.originRegion || "Umum"
+                : profile?.faculty || "Teknik Informatika"}
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest">
               <Mail size={14} className="text-red-700" />
-              {profile?.user?.email}
+              {profile?.user?.email || authUser?.email}
             </div>
           </div>
         </div>
@@ -476,32 +485,65 @@ const Profile = () => {
               </h3>
               <form onSubmit={handleUpdateProfile} className="space-y-8">
                 <div className="grid md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
-                      NIM / NIDN
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.nimNidn || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nimNidn: e.target.value })
-                      }
-                      className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
-                      Fakultas
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.faculty || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, faculty: e.target.value })
-                      }
-                      className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
-                    />
-                  </div>
+                  {isExternal ? (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                          Institusi
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.institution || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, institution: e.target.value })
+                          }
+                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                          Asal Daerah
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.originRegion || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, originRegion: e.target.value })
+                          }
+                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                          NIM / NIDN
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.nimNidn || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, nimNidn: e.target.value })
+                          }
+                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                          Fakultas
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.faculty || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, faculty: e.target.value })
+                          }
+                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">

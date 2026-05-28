@@ -3,9 +3,11 @@ import { API_BASE_URL } from "@/utils/api-config";
 export interface MemberProfile {
   id: string;
   userId: string;
-  memberType: "student" | "lecturer" | "staff" | "super_admin";
+  memberType: "student" | "lecturer" | "staff" | "super_admin" | "external";
   nimNidn: string | null;
   faculty: string | null;
+  originRegion: string | null;
+  institution: string | null;
   phone: string | null;
   cardStatus: "not_requested" | "pending" | "active" | "rejected" | "expired";
   cardNumber: string | null;
@@ -22,11 +24,14 @@ export interface MemberProfile {
     image: string | null;
     role: string;
   };
+  isExternal?: boolean;
 }
 
 export interface UpdateProfilePayload {
   nimNidn?: string;
   faculty?: string;
+  originRegion?: string;
+  institution?: string;
   phone?: string;
 }
 

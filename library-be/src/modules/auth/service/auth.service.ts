@@ -35,7 +35,16 @@ export class AuthService {
   private readonly CAMPUS_API_TIMEOUT = 15000;
 
   private mapCampusRoleToMemberType(campusUser: CampusUserData) {
-    let memberType: "student" | "lecturer" | "staff" | "super_admin" =
+    if (campusUser.role === "external") {
+      return {
+        memberType: "external" as any,
+        nimNidn: "-",
+        faculty: "-",
+        phone: campusUser.phone || null,
+      };
+    }
+
+    let memberType: "student" | "lecturer" | "staff" | "super_admin" | "external" =
       "student";
     let nimNidnValue = campusUser.nim;
 
@@ -44,7 +53,7 @@ export class AuthService {
       nimNidnValue = campusUser.nidn;
     }
 
-    if (campusUser.role === "dosen") memberType = "lecturer";
+    if (campusUser.role === "dosen" || campusUser.role === "lecturer") memberType = "lecturer";
     if (campusUser.role === "staff") memberType = "staff";
 
     return {
@@ -55,14 +64,19 @@ export class AuthService {
     };
   }
 
-  async getCampusUser(email: string): Promise<CampusUserData> {
+  async getCampusUser(email: string, userName: string = "User"): Promise<CampusUserData> {
     if (!email || !email.includes("@")) {
       throw new BadRequestError("Format email tidak valid");
     }
 
     const baseUrl = process.env.BASE_URL_API_UMC;
     if (!baseUrl) {
-      throw new InternalServerError("Konfigurasi API Kampus belum tersedia");
+      return {
+        id: "external-" + email,
+        name: userName,
+        email: email,
+        role: "external",
+      };
     }
 
     const controller = new AbortController();
@@ -85,38 +99,32 @@ export class AuthService {
       try {
         responseData = await response.json();
       } catch (e) {
-        // Do nothing if response cannot be parsed
+        // Fallback jika API tidak merespons JSON dengan benar
+        return { id: "external-" + email, name: userName, email, role: "external" };
       }
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 404) {
-          throw new NotFoundError(responseData?.message || "User tidak ditemukan di sistem kampus");
-        }
-        throw new InternalServerError(`API Kampus error: ${response.status}`);
+      // Jika response gagal (termasuk 401 atau 404), anggap external
+      if (!response.ok || !responseData?.success || !responseData?.data?.user) {
+        return { id: "external-" + email, name: userName, email, role: "external" };
       }
 
-      if (!responseData?.success || !responseData?.data?.user) {
-        throw new NotFoundError(responseData?.message || "User tidak ditemukan di sistem kampus");
-      }
+      const userData = responseData.data.user;
 
-      return responseData.data.user as CampusUserData;
+      // Berhasil dapat data kampus
+      return {
+        id: userData.id?.toString() || "external-" + email,
+        name: userData.full_name || userData.name || userName,
+        email: userData.email || email,
+        role: userData.role || "student",
+        nim: userData.nim,
+        nidn: userData.nidn,
+        faculty: userData.faculty,
+        phone: userData.phone,
+      };
     } catch (err: unknown) {
       clearTimeout(timeoutId);
-
-      if (
-        err instanceof BadRequestError ||
-        err instanceof NotFoundError ||
-        err instanceof InternalServerError
-      ) {
-        throw err;
-      }
-
-      if (err instanceof Error && err.name === "AbortError") {
-        throw new InternalServerError("Request ke API Kampus timeout");
-      }
-
-      console.error("[AuthService] Campus API Exception:", err);
-      throw new InternalServerError("Gagal terhubung ke API Kampus");
+      // Fallback jika fetch timeout atau error
+      return { id: "external-" + email, name: userName, email, role: "external" };
     }
   }
 
@@ -177,15 +185,13 @@ export class AuthService {
 
     let campusUser: CampusUserData;
     try {
-      campusUser = await this.getCampusUser(user.email);
+      campusUser = await this.getCampusUser(user.email, user.name);
     } catch (err: unknown) {
-      // Fallback data jika ternyata sistem kampus menolak/tidak menemukan data.
-      // Dibuatkan profil kosongan ke tabel `members` sebagai student dengan NIM strip (-).
       campusUser = {
         id: "fallback-" + user.id, 
         name: user.name,
         email: user.email,
-        role: "student", // default role 'student' (memberType: student)
+        role: "external",
         nim: "-",
         faculty: "-",
         phone: undefined,
@@ -258,7 +264,7 @@ export class AuthService {
   }
 
   async verifyWithCampus(email: string) {
-    const campusUser = await this.getCampusUser(email);
+    const campusUser = await this.getCampusUser(email, "Unknown");
 
     const localUser = await db.query.Users.findFirst({
       where: eq(UserTable.email, email),

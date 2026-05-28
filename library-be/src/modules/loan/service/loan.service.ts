@@ -450,13 +450,12 @@ export class LoanService {
   /**
    * 7. Extend Loan (Perpanjangan Peminjaman oleh Member)
    */
-  async extendLoan(loanId: string, memberId: string) {
+  async extendLoan(loanId: string) {
     return await db.transaction(async (tx) => {
       // 1. Cari data loan
       const loan = await tx.query.loans.findFirst({
         where: and(
           eq(loans.id, loanId),
-          eq(loans.memberId, memberId),
           isNull(loans.deletedAt)
         ),
         with: {

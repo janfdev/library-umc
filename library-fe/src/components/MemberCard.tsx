@@ -124,6 +124,12 @@ const MemberCard = ({
                 <h3 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
                   {user?.name || "Nama Anggota"}
                 </h3>
+                {profile.isExternal && (
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-orange-500/80 to-amber-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ring-1 ring-white/20">
+                    <Sparkles size={12} className="opacity-80" />
+                    <span>Bukan Mahasiswa UMC</span>
+                  </div>
+                )}
                 <p className="max-w-2xl text-sm leading-6 text-white/75 sm:text-base">
                   {status.description}
                 </p>

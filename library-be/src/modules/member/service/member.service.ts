@@ -11,6 +11,8 @@ type ServiceResponse<T> = {
 type UpdateProfileData = {
   nimNidn?: string;
   faculty?: string;
+  originRegion?: string;
+  institution?: string;
   phone?: string;
 };
 
@@ -42,12 +44,30 @@ export class MemberService {
         };
       }
 
-      const member = await db.query.members.findFirst({
+      let member = await db.query.members.findFirst({
         where: and(eq(members.userId, userId), isNull(members.deletedAt)),
         with: {
           user: true
         }
       });
+
+      // Auto-heal: If member not found, attempt to sync it from Users table
+      if (!member) {
+        try {
+          const { AuthService } = await import("../../auth/service/auth.service");
+          const authService = new AuthService();
+          await authService.syncUserMemberByUserId(userId);
+          
+          member = await db.query.members.findFirst({
+            where: and(eq(members.userId, userId), isNull(members.deletedAt)),
+            with: {
+              user: true
+            }
+          });
+        } catch (syncErr) {
+          console.error("[MemberService] Auto-sync member failed:", syncErr);
+        }
+      }
 
       if (!member) {
         return {
@@ -60,7 +80,10 @@ export class MemberService {
       return {
         success: true,
         message: "Member retrieved successfully",
-        data: member
+        data: {
+          ...member,
+          isExternal: member.memberType === "external"
+        }
       };
     } catch (err) {
       console.error("[MemberService] Error getting member by userId:", err);
@@ -170,7 +193,8 @@ export class MemberService {
           cardRequestedAt: member.cardRequestedAt,
           cardApprovedAt: member.cardApprovedAt,
           cardRejectedAt: member.cardRejectedAt,
-          cardRejectedReason: member.cardRejectedReason
+          cardRejectedReason: member.cardRejectedReason,
+          isExternal: member.memberType === "external"
         }
       };
     } catch (err) {
@@ -434,6 +458,8 @@ export class MemberService {
       const updateDataMember = {
         nimNidn: data.nimNidn?.trim() || member.nimNidn,
         faculty: data.faculty?.trim() || member.faculty,
+        originRegion: data.originRegion?.trim() || member.originRegion,
+        institution: data.institution?.trim() || member.institution,
         phone: data.phone?.trim() || member.phone,
         updatedAt: new Date()
       };
