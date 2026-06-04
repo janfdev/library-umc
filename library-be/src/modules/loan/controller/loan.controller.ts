@@ -195,7 +195,7 @@ export class LoanController {
       if (!user) {
         return sendError(res, "Tidak terautentikasi", 401);
       }
-      const { loanId } = req.params;
+      const loanId = String(req.params.loanId);
       const memberId = await loanService.getMemberIdByUserId(user.id);
       if (!memberId) {
         return sendError(res, "Member tidak ditemukan", 400);
@@ -216,7 +216,7 @@ export class LoanController {
       if (!user || user.role !== "super_admin") {
         return sendError(res, "Akses ditolak — hanya Super Admin", 403);
       }
-      const { requestId } = req.params;
+      const requestId = String(req.params.requestId);
       const result = await loanService.approveReturnRequest(requestId, user.id);
       sendSuccess(res, result.message, result);
     } catch (error) {

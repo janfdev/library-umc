@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckCircle, Clock, BookOpen, AlertCircle, XCircle } from "lucide-react";
+import { CheckCircle, Clock, BookOpen,} from "lucide-react";
 import loanService from "@/services/loanService";
 import { useToast } from "@/hooks/useToast";
 

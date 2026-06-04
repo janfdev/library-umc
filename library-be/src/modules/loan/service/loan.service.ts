@@ -274,6 +274,74 @@ export class LoanService {
   }
 
   /**
+   * Return Loan (Pengembalian Buku secara langsung oleh Admin/Staff)
+   */
+  async returnLoan(loanId: string, adminId: string) {
+    return await db.transaction(async (tx) => {
+      // Find the loan
+      const loan = await tx.query.loans.findFirst({
+        where: and(eq(loans.id, loanId), isNull(loans.deletedAt))
+      });
+      if (!loan || !["approved", "extended"].includes(loan.status)) {
+        throw new Error("Buku tidak dalam status dipinjam atau data tidak ditemukan");
+      }
+
+      const returnDateStr = new Date().toISOString().split("T")[0];
+
+      // Update loan status to returned
+      await tx.update(loans).set({
+        status: "returned",
+        returnDate: returnDateStr,
+        updatedAt: new Date()
+      }).where(eq(loans.id, loan.id));
+
+      // Update item status to available
+      await tx.update(items).set({ status: "available", updatedAt: new Date() }).where(eq(items.id, loan.itemId));
+
+      // Sync collection stock if needed
+      const loanItem = await tx.query.items.findFirst({ where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)) });
+      if (loanItem?.collectionId) {
+        await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
+      }
+
+      // Auto-fulfill next reservation if any
+      if (loanItem?.collectionId) {
+        void reservationService.fulfillNextReservation(loanItem.collectionId);
+      }
+
+      // Calculate late fine
+      const returnDateObj = new Date();
+      const dueDateObj = new Date(loan.dueDate);
+      returnDateObj.setHours(0, 0, 0, 0);
+      dueDateObj.setHours(0, 0, 0, 0);
+      const isLate = returnDateObj > dueDateObj;
+      if (isLate) {
+        const diffTime = Math.abs(returnDateObj.getTime() - dueDateObj.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const finePerDay = 500;
+        const fineAmount = diffDays * finePerDay;
+        const existingUnpaidFine = tx.query.fines
+          ? await tx.query.fines.findFirst({
+              where: and(
+                eq(fines.loanId, loan.id),
+                eq(fines.status, "unpaid"),
+                isNull(fines.deletedAt)
+              )
+            })
+          : null;
+        if (existingUnpaidFine) {
+          await tx.update(fines).set({ amount: fineAmount.toString(), updatedAt: new Date() }).where(eq(fines.id, existingUnpaidFine.id));
+        } else {
+          await tx.insert(fines).values({ loanId: loan.id, amount: fineAmount.toString(), status: "unpaid" });
+        }
+        return { success: true, message: `Buku dikembalikan, namun terlambat ${diffDays} hari. Dikenakan denda sebesar Rp ${fineAmount.toLocaleString("id-ID")}.` };
+      }
+
+      return { success: true, message: "Buku telah berhasil dikembalikan tepat waktu." };
+    });
+  }
+
+  /**
    * 5. Return Loan (Pengembalian Buku) - NEW
    */
   async approveReturnRequest(requestId: string, adminId: string) {
