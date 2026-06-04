@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle, Info, Clock, RefreshCw, RotateCcw } from "lucide-react";
 import loanService, { type Loan as LoanData } from "@/services/loanService";
 import { useToast } from "@/hooks/useToast";
 
@@ -120,6 +120,51 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
   });
   const toast = useToast();
 
+  // Local state: sudah submit return request di sesi ini
+  const [returnPending, setReturnPending] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+  const [isExtending, setIsExtending] = useState(false);
+
+  // Hitung sisa hari
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueDateObj = dueDate ? new Date(dueDate) : null;
+  dueDateObj?.setHours(0, 0, 0, 0);
+  const daysLeft = dueDateObj ? Math.ceil((dueDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+  const isLate = daysLeft !== null && daysLeft < 0;
+  const isWarning = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+
+  const handleReturn = async () => {
+    setIsReturning(true);
+    const loadingId = toast.loading("Memproses...", "Mengajukan pengembalian ke admin");
+    try {
+      const res = await loanService.createReturnRequest(loan.id);
+      toast.removeToast(loadingId);
+      toast.success("Berhasil Diajukan", res.message || "Menunggu konfirmasi dari admin");
+      setReturnPending(true);
+    } catch (err: any) {
+      toast.removeToast(loadingId);
+      toast.error("Gagal", err.message || "Gagal mengajukan pengembalian");
+    } finally {
+      setIsReturning(false);
+    }
+  };
+
+  const handleExtend = async () => {
+    setIsExtending(true);
+    const loadingId = toast.loading("Memproses...", "Sedang mengajukan perpanjangan");
+    try {
+      const res = await loanService.extendLoan(loan.id);
+      toast.removeToast(loadingId);
+      toast.success("Perpanjangan Berhasil", res.message || "Batas waktu berhasil diperpanjang 7 hari");
+    } catch (err: any) {
+      toast.removeToast(loadingId);
+      toast.error("Perpanjangan Gagal", err.message || "Gagal memperpanjang peminjaman");
+    } finally {
+      setIsExtending(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-100 flex gap-5 group hover:shadow-lg transition-all">
       <div className="shrink-0 w-24 h-32 bg-slate-200 rounded-2xl overflow-hidden flex items-center justify-center text-slate-400">
@@ -130,7 +175,7 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
             className="w-full h-full object-cover"
           />
         ) : (
-          <Info size={24} orientation="vertical" />
+          <Info size={24} />
         )}
       </div>
       <div className="flex-1 flex flex-col justify-between py-1">
@@ -138,40 +183,60 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
           <h4 className="font-bold text-slate-900 text-sm mb-1 line-clamp-2 leading-tight">
             {collection?.title || "Unknown Title"}
           </h4>
-          <p className="text-[10px] font-medium text-slate-400 mb-4">
+          <p className="text-[10px] font-medium text-slate-400 mb-2">
             {collection?.author || "Unknown Author"}
           </p>
-          {formattedDate && (
-            <p className="text-[10px] font-bold text-slate-400">
-              Jatuh Tempo :{" "}
-              <span className="text-slate-500">{formattedDate}</span>
+
+          {/* Status jatuh tempo */}
+          {daysLeft !== null && (
+            <p className={`text-[10px] font-bold mb-3 ${isLate ? "text-red-500" : isWarning ? "text-orange-500" : "text-slate-400"}`}>
+              {isLate
+                ? `⚠ Terlambat ${Math.abs(daysLeft)} hari`
+                : daysLeft === 0
+                  ? "⚠ Jatuh tempo hari ini"
+                  : `Jatuh Tempo: ${formattedDate}`}
             </p>
           )}
+
+          {/* Indikator menunggu konfirmasi admin */}
+          {returnPending && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-xl mb-2">
+              <Clock size={11} className="text-yellow-600 shrink-0" />
+              <span className="text-[10px] font-bold text-yellow-700">Menunggu Konfirmasi Admin</span>
+            </div>
+          )}
         </div>
+
         <div className="flex justify-end gap-2 mt-2">
-          <button
-            onClick={async () => {
-              try {
-                const loadingId = toast.loading("Memproses...", "Mengajukan pengembalian");
-                try {
-                  const res = await loanService.createReturnRequest(loan.id);
-                  toast.removeToast(loadingId);
-                  toast.success("Berhasil", res.message);
-                } catch (err: any) {
-                  toast.removeToast(loadingId);
-                  toast.error("Gagal", err.message || "Gagal mengajukan pengembalian");
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            }}
-            className="px-4 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-100 transition-colors"
-          >
-            Kembalikan
-          </button>
-          <button className="px-4 py-1.5 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors">
-            Perpanjang
-          </button>
+          {/* Tombol Kembalikan */}
+          {!returnPending ? (
+            <button
+              onClick={handleReturn}
+              disabled={isReturning || isExtending}
+              className="px-4 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              {isReturning ? (
+                <><RefreshCw size={9} className="animate-spin" /> Memproses...</>
+              ) : "Kembalikan"}
+            </button>
+          ) : (
+            <div className="px-4 py-1.5 bg-yellow-50 text-yellow-600 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center gap-1">
+              <Clock size={9} /> Diajukan
+            </div>
+          )}
+
+          {/* Tombol Perpanjang — hanya jika tidak terlambat dan belum pernah extend */}
+          {loan.status !== "extended" && !isLate && (
+            <button
+              onClick={handleExtend}
+              disabled={isExtending || isReturning || returnPending}
+              className="px-4 py-1.5 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              {isExtending ? (
+                <><RotateCcw size={9} className="animate-spin" /> Memproses...</>
+              ) : "Perpanjang"}
+            </button>
+          )}
         </div>
       </div>
     </div>
