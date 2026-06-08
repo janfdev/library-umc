@@ -7,6 +7,8 @@ import Katalog from "../pages/Katalog";
 import DetailKatalog from "../pages/KatalogDetail";
 import Login from "../pages/LoginPage";
 import Register from "../pages/Register";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 import HandleLogout from "../pages/Handlelogout";
 import SuperAdminDashboard from "../pages/dashboard/SuperAdminDashboard";
 import Profile from "../pages/Profile";
@@ -50,6 +52,12 @@ const AppRoutes = () => {
         } />
         <Route path="/register" element={
           <PublicRoute><Register /></PublicRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <PublicRoute><ForgotPasswordPage /></PublicRoute>
+        } />
+        <Route path="/reset-password" element={
+          <PublicRoute><ResetPasswordPage /></PublicRoute>
         } />
         <Route path="/handle" element={<HandleLogout />} />
 

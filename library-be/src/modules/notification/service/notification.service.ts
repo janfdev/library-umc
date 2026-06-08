@@ -3,6 +3,7 @@ import {
   buildLoanEmail,
   buildFineEmail,
   buildReservationEmail,
+  buildResetPasswordEmail,
   buildEmailTemplate,
   escapeHtml,
   formatContent,
@@ -80,6 +81,24 @@ export class NotificationService {
     } catch (error) {
       console.error(
         "[NotificationService] Failed to send reservation notification:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  async sendResetPasswordEmail(
+    email: string,
+    name: string,
+    resetUrl: string
+  ) {
+    try {
+      const subject = "Reset Password — Perpustakaan Universitas Muhammadiyah Cirebon";
+      const html = buildResetPasswordEmail({ name, resetUrl });
+      await this.sendEmail(email, subject, html);
+    } catch (error) {
+      console.error(
+        "[NotificationService] Failed to send reset password email:",
         error
       );
       throw error;

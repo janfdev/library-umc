@@ -2,8 +2,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { admin } from "better-auth/plugins";
 import { AuthService } from "../modules/auth/service/auth.service";
+import { NotificationService } from "../modules/notification/service/notification.service";
 
 const authService = new AuthService();
 
@@ -25,6 +25,15 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      const notificationService = new NotificationService();
+      await notificationService.sendResetPasswordEmail(
+        user.email,
+        user.name,
+        url
+      );
+    },
+    resetPasswordTokenExpiresIn: 3600, // 1 jam dalam detik
   },
   user: {
     additionalFields: {
@@ -49,10 +58,9 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    admin({
-      defaultRole: "student",
-      adminRole: "super_admin",
-    }),
+    // Plugin admin() dihapus untuk mencegah akses ke endpoint bawaan 
+    // seperti /api/auth/admin/update-user dan /api/auth/admin/revoke-user-session
+    // yang menyebabkan bug impersonasi dan perubahan data user lain.
   ],
   databaseHooks: {
     user: {

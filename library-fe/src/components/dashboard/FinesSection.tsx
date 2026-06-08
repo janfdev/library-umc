@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   BookOpen,
   RotateCcw,
+  RefreshCcw,
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -242,19 +243,7 @@ export default function FinesSection() {
         </button>
       </div>
 
-      {/* Legend: book status badges */}
-      {activeTab === "unpaid" && (
-        <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5">
-          <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">Keterangan:</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
-            <BookOpen size={10} /> Belum Dikembalikan
-          </span>
-          <span className="text-slate-300">—</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg">
-            <RotateCcw size={10} /> Sudah Dikembalikan, Denda Belum Lunas
-          </span>
-        </div>
-      )}
+    
 
       {/* Main Card */}
       <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
@@ -266,7 +255,7 @@ export default function FinesSection() {
               type="text"
               id="fines-search"
               placeholder="Cari nama mahasiswa..."
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-slate-400"
+              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-slate-400 text-black"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -276,9 +265,9 @@ export default function FinesSection() {
           </div>
           <button
             onClick={fetchFines}
-            className="text-xs font-bold text-slate-500 hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-red-50"
+            className="text-xs flex items-center gap-2 font-bold text-slate-500 hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-red-50"
           >
-            🔄 Refresh
+            Refresh <RefreshCcw className="w-4 h-4"/>
           </button>
         </div>
 

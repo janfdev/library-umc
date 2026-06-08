@@ -134,6 +134,84 @@ export function buildReservationEmail(opts: {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Reset Password Email
+// ──────────────────────────────────────────────────────────────
+export function buildResetPasswordEmail(opts: {
+  name: string;
+  resetUrl: string;
+}): string {
+  const { name, resetUrl } = opts;
+  const safeUrl = escapeHtml(resetUrl);
+  const safeName = escapeHtml(name);
+
+  return buildShell(`
+    <tr>
+      <td style="padding:0 0 12px;">
+        <span style="display:inline-block;background:#7c3aed;color:#ffffff;
+          font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+          padding:3px 10px;border-radius:4px;">Reset Password</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 6px;font-size:20px;font-weight:700;color:#111827;line-height:1.3;">
+        Permintaan Reset Password
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6;">
+        Halo <strong>${safeName}</strong>, kami menerima permintaan untuk mereset password akun Anda
+        di Perpustakaan UMC.
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 20px;text-align:center;">
+        <a href="${safeUrl}"
+          style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;
+          font-weight:700;padding:14px 32px;border-radius:8px;font-size:15px;
+          letter-spacing:0.02em;">
+          Reset Password Saya
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+          style="border-collapse:collapse;background:#faf5ff;
+          border:1px solid #ddd6fe;border-radius:8px;">
+          <tr>
+            <td style="padding:14px 16px;font-size:13px;color:#5b21b6;line-height:1.6;">
+              ⏱️ <strong>Link ini hanya berlaku selama 1 jam</strong> sejak email ini dikirim.
+              Setelah itu, Anda perlu mengajukan permintaan reset password baru.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+          style="border-collapse:collapse;background:#fef2f2;
+          border:1px solid #fca5a5;border-radius:8px;">
+          <tr>
+            <td style="padding:14px 16px;font-size:13px;color:#7f1d1d;line-height:1.6;">
+              🔒 Jika Anda <strong>tidak merasa meminta reset password</strong>, abaikan email ini.
+              Password Anda tidak akan berubah dan akun Anda tetap aman.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 0 16px;font-size:12px;color:#9ca3af;line-height:1.6;">
+        Atau salin link berikut ke browser Anda:<br/>
+        <span style="color:#7c3aed;word-break:break-all;">${safeUrl}</span>
+      </td>
+    </tr>
+    ${buildFooter("Jika Anda tidak meminta reset password, hubungi administrator perpustakaan.")}
+  `);
+}
+
+// ──────────────────────────────────────────────────────────────
 // Generic / Announcement Email
 // ──────────────────────────────────────────────────────────────
 export function buildEmailTemplate(opts: {
