@@ -7,6 +7,8 @@ import {
   Loader,
   CheckCircle,
   AlertTriangle,
+  BookOpen,
+  RotateCcw,
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -240,6 +242,20 @@ export default function FinesSection() {
         </button>
       </div>
 
+      {/* Legend: book status badges */}
+      {activeTab === "unpaid" && (
+        <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5">
+          <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">Keterangan:</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
+            <BookOpen size={10} /> Belum Dikembalikan
+          </span>
+          <span className="text-slate-300">—</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg">
+            <RotateCcw size={10} /> Sudah Dikembalikan, Denda Belum Lunas
+          </span>
+        </div>
+      )}
+
       {/* Main Card */}
       <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
         {/* Controls Bar */}
@@ -287,6 +303,9 @@ export default function FinesSection() {
                         BUKU &amp; KETERLAMBATAN
                       </th>
                       <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        STATUS BUKU
+                      </th>
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
                         TOTAL DENDA
                       </th>
                       <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">
@@ -315,7 +334,7 @@ export default function FinesSection() {
                 {paginatedList.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-8 py-12 text-center text-slate-400"
                     >
                       <Wallet size={48} className="mx-auto mb-4 opacity-20" />
@@ -364,6 +383,20 @@ export default function FinesSection() {
                               </p>
                             )}
                           </div>
+                        </td>
+                        {/* STATUS BUKU BADGE */}
+                        <td className="px-8 py-5">
+                          {fine.loan.status === "returned" ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-[11px] font-bold whitespace-nowrap">
+                              <RotateCcw size={11} />
+                              Sudah Dikembalikan
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[11px] font-bold whitespace-nowrap">
+                              <BookOpen size={11} />
+                              Belum Dikembalikan
+                            </span>
+                          )}
                         </td>
                         <td className="px-8 py-5">
                           <p className="text-[14px] font-bold text-[#B91C1C]">

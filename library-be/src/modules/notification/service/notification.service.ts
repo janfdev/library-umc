@@ -49,11 +49,14 @@ export class NotificationService {
     name: string,
     amount: number,
     bookTitle: string,
-    overdueDays?: number
+    overdueDays?: number,
+    isBookReturned?: boolean
   ) {
     try {
-      const subject = "Notifikasi Denda Keterlambatan — Perpustakaan UMC";
-      const html = buildFineEmail({ name, bookTitle, amount, overdueDays });
+      const subject = isBookReturned
+        ? `⚠️ Tagihan Denda Belum Lunas — Perpustakaan UMC`
+        : `Notifikasi Denda Keterlambatan ${overdueDays ? `(Hari ke-${overdueDays}) ` : ''}— Perpustakaan UMC`;
+      const html = buildFineEmail({ name, bookTitle, amount, overdueDays, isBookReturned });
       await this.sendEmail(email, subject, html);
     } catch (error) {
       console.error(

@@ -117,7 +117,7 @@ function DashboardSidebar({
     <Sidebar
       variant="sidebar"
       collapsible="icon"
-      className="border-r border-slate-800/40"
+      className="border-r border-slate-800/40 z-100"
     >
       <SidebarHeader className="bg-[#0F172A] p-6 pb-4 group-data-[collapsible=icon]:px-8 group-data-[collapsible=icon]:pb-5">
         <div className="flex items-center gap-3 border-b border-slate-800/30 pb-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-b-0 group-data-[collapsible=icon]:pb-0">

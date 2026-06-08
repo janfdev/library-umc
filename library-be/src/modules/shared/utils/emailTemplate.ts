@@ -68,8 +68,9 @@ export function buildFineEmail(opts: {
   bookTitle: string;
   amount: number;
   overdueDays?: number;
+  isBookReturned?: boolean;
 }): string {
-  const { name, bookTitle, amount, overdueDays } = opts;
+  const { name, bookTitle, amount, overdueDays, isBookReturned } = opts;
   const rows: InfoRow[] = [
     { label: "Judul Buku", value: bookTitle },
     { label: "Jumlah Denda", value: `Rp ${amount.toLocaleString("id-ID")}` },
@@ -78,14 +79,22 @@ export function buildFineEmail(opts: {
     rows.push({ label: "Keterlambatan", value: `${overdueDays} hari` });
   }
 
+  const summary = isBookReturned
+    ? `Halo ${escapeHtml(name)}, buku sudah dikembalikan namun denda keterlambatan Anda masih belum dilunasi.`
+    : `Halo ${escapeHtml(name)}, sistem mendeteksi keterlambatan pengembalian buku.`;
+
+  const infoBoxText = isBookReturned
+    ? "Buku sudah kembali ke perpustakaan. Mohon segera lunasi denda di loket administrasi untuk mengaktifkan kembali hak pinjam Anda."
+    : "Segera kembalikan buku dan lunasi denda di loket perpustakaan untuk menghindari akumulasi denda lebih lanjut.";
+
   return buildBaseTemplate({
-    badgeText: "Notifikasi Denda",
+    badgeText: isBookReturned ? "Tagihan Denda" : "Notifikasi Denda",
     badgeColor: "#9b1c1c",
-    title: `Terdapat Denda pada Akun Anda`,
-    summary: `Halo ${escapeHtml(name)}, sistem mendeteksi keterlambatan pengembalian buku.`,
+    title: isBookReturned ? `Tagihan Denda Belum Lunas` : `Terdapat Denda pada Akun Anda`,
+    summary,
     rows,
     infoBox: {
-      text: "Silakan segera selesaikan pembayaran denda di loket perpustakaan.",
+      text: infoBoxText,
       color: "#7f1d1d",
       bg: "#fef2f2",
       border: "#fca5a5",
