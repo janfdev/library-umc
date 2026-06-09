@@ -17,10 +17,10 @@ vi.mock("@/hooks/useToast", () => ({
   }),
 }));
 
-const mockForgetPassword = vi.fn();
+const mockRequestPasswordReset = vi.fn();
 vi.mock("@/utils/auth-client", () => ({
   authClient: {
-    forgetPassword: (...args: any[]) => mockForgetPassword(...args),
+    requestPasswordReset: (...args: any[]) => mockRequestPasswordReset(...args),
   },
 }));
 
@@ -30,6 +30,7 @@ vi.mock("@/utils/auth-client", () => ({
 describe("ForgotPasswordPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRequestPasswordReset.mockResolvedValue({ data: null, error: null }); // default success
   });
 
   it("should render the forgot password form correctly", () => {
@@ -55,7 +56,7 @@ describe("ForgotPasswordPage", () => {
   });
 
   it("should handle successful password reset request", async () => {
-    mockForgetPassword.mockResolvedValueOnce({ data: { success: true }, error: null });
+    mockRequestPasswordReset.mockResolvedValueOnce({ data: { success: true }, error: null });
 
     render(<ForgotPasswordPage />);
     
@@ -66,9 +67,9 @@ describe("ForgotPasswordPage", () => {
     fireEvent.submit(form!);
 
     await waitFor(() => {
-      expect(mockForgetPassword).toHaveBeenCalledWith({
+      expect(mockRequestPasswordReset).toHaveBeenCalledWith({
         email: "test@umc.ac.id",
-        redirectTo: "/reset-password",
+        redirectTo: expect.stringContaining("/reset-password"),
       });
     });
 
@@ -80,7 +81,7 @@ describe("ForgotPasswordPage", () => {
   });
 
   it("should handle failed password reset request", async () => {
-    mockForgetPassword.mockResolvedValueOnce({ 
+    mockRequestPasswordReset.mockResolvedValueOnce({ 
       data: null, 
       error: { message: "Internal Error" } 
     });
@@ -94,7 +95,7 @@ describe("ForgotPasswordPage", () => {
     fireEvent.submit(form!);
 
     await waitFor(() => {
-      expect(mockForgetPassword).toHaveBeenCalled();
+      expect(mockRequestPasswordReset).toHaveBeenCalled();
     });
 
     // Form should still be visible because it didn't succeed

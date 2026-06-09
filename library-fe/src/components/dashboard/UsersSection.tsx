@@ -249,7 +249,7 @@ export default function UsersSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       <div>
         <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
           Manajemen User
