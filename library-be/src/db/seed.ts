@@ -1,98 +1,120 @@
 import { db } from ".";
-import { Users, members } from "./schema";
+import {
+  Users, members, categories, locations, vendors,
+  publishers, languages, publicationPlaces, gmds,
+  collectionTypes, authors, subjects
+} from "./schema";
 import { eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
 
 async function seed() {
   console.log("Seeding database...");
 
-  const usersData = [
-    {
-      email: "fauzanrizqinoor@gmail.com",
-      full_name: "Rizqi Noor Fauzan",
-      role: "mahasiswa" as const,
-      nim: "12345678",
-      status: "active",
-      faculty: "Teknik",
-    },
-    {
-      email: "rizqinoorf@gmail.com",
-      full_name: "Fauzan AJA",
-      role: "dosen" as const,
-      nidn: "98765432",
-      status: "active",
-      faculty: "Ilmu Komputer",
-    },
-    {
-      email: "staff@campus.ac.id",
-      full_name: "Pak Joko Staff",
-      role: "staff" as const,
-      status: "active",
-      faculty: "Administrasi",
-    },
-    {
-      email: "inactive@campus.ac.id",
-      full_name: "Andi Drop Out",
-      role: "mahasiswa" as const,
-      nim: "87654321",
-      status: "blacklist", // corrected from 'inactive' to match schema enum
-      faculty: "Teknik",
-    },
-  ];
-
-  for (const data of usersData) {
-    const existing = await db.query.Users.findFirst({
-      where: eq(Users.email, data.email),
+  // 1. Seed admin user
+  const adminEmail = "admin@mucilib.ac.id";
+  const existingAdmin = await db.query.Users.findFirst({
+    where: eq(Users.email, adminEmail),
+  });
+  if (!existingAdmin) {
+    const now = new Date();
+    await db.insert(Users).values({
+      id: "admin-seed-001",
+      name: "Super Admin",
+      email: adminEmail,
+      emailVerified: true,
+      role: "super_admin",
+      createdAt: now,
+      updatedAt: now,
     });
+    console.log("Created admin user");
+  }
 
+  // 2. Seed categories
+  const categoryNames = [
+    "Pendidikan", "Psikologi", "PAUD", "FAI", "BK",
+    "Komunikasi", "Pemerintahan", "Umum", "Bahasa Inggris", "Matematika"
+  ];
+  for (const name of categoryNames) {
+    const existing = await db.query.categories.findFirst({
+      where: eq(categories.name, name),
+    });
     if (!existing) {
-      const userId = randomUUID();
-      const now = new Date();
-
-      // 1. Insert into Users table
-      await db.insert(Users).values({
-        id: userId,
-        name: data.full_name,
-        email: data.email,
-        emailVerified: true,
-        role: data.role,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // 2. Insert into members table if applicable (has nim or nidn)
-      let memberType: "student" | "lecturer" | "staff" = "student";
-      let nimNidnValue: string | null = null;
-      let shouldInsertMember = false;
-
-      if (data.role === "mahasiswa") {
-        memberType = "student";
-        if ("nim" in data) nimNidnValue = data.nim;
-        shouldInsertMember = true;
-      } else if (data.role === "dosen") {
-        memberType = "lecturer";
-        if ("nidn" in data) nimNidnValue = data.nidn;
-        shouldInsertMember = true;
-      } else if (data.role === "staff") {
-        memberType = "staff";
-        shouldInsertMember = true;
-      }
-
-      if (shouldInsertMember) {
-        await db.insert(members).values({
-          userId: userId,
-          memberType,
-          nimNidn: nimNidnValue,
-          faculty: data.faculty,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-
-      console.log(`Created user: ${data.email}`);
-    } else {
-      console.log(`User already exists: ${data.email}`);
+      await db.insert(categories).values({ name });
     }
+  }
+  console.log(`Seeded ${categoryNames.length} categories`);
+
+  // 3. Seed default location
+  const existingLoc = await db.query.locations.findFirst();
+  if (!existingLoc) {
+    await db.insert(locations).values({
+      room: "UMC Library",
+      rack: "Rak Utama",
+      shelf: "Lantai 1",
+    });
+    console.log("Created default location");
+  }
+
+  // 4. Seed languages
+  const langData = [
+    { code: "id", name: "Indonesia" },
+    { code: "en", name: "English" },
+    { code: "ar", name: "Arabic" },
+    { code: "ms", name: "Malay" },
+  ];
+  for (const lang of langData) {
+    const existing = await db.query.languages.findFirst({
+      where: eq(languages.code, lang.code),
+    });
+    if (!existing) {
+      await db.insert(languages).values(lang);
+    }
+  }
+  console.log(`Seeded ${langData.length} languages`);
+
+  // 5. Seed GMDs
+  const gmdNames = ["Text", "Electronic", "Audio", "Video", "Image", "Map", "Mixed"];
+  for (const name of gmdNames) {
+    const existing = await db.query.gmds.findFirst({
+      where: eq(gmds.name, name),
+    });
+    if (!existing) {
+      await db.insert(gmds).values({ name });
+    }
+  }
+  console.log(`Seeded ${gmdNames.length} GMDs`);
+
+  // 6. Seed collection types
+  const ctData = [
+    { name: "Text", code: "Text" },
+    { name: "Pendidikan", code: "Pendidikan" },
+    { name: "Psikologi", code: "Psikologi" },
+    { name: "PAUD", code: "PAUD" },
+    { name: "FAI", code: "FAI" },
+    { name: "BK", code: "BK" },
+    { name: "Komunikasi", code: "Komunikasi" },
+    { name: "Pemerintahan", code: "Pemerintahan" },
+    { name: "Umum", code: "Umum" },
+    { name: "Bahasa Inggris", code: "Bahasa Inggris" },
+    { name: "Matematika", code: "Matematika" },
+  ];
+  for (const ct of ctData) {
+    const existing = await db.query.collectionTypes.findFirst({
+      where: eq(collectionTypes.name, ct.name),
+    });
+    if (!existing) {
+      await db.insert(collectionTypes).values(ct);
+    }
+  }
+  console.log(`Seeded ${ctData.length} collection types`);
+
+  // 7. Seed default vendor
+  const existingVendor = await db.query.vendors.findFirst();
+  if (!existingVendor) {
+    await db.insert(vendors).values({
+      name: "UMC Library",
+      contact: "library@umc.ac.id",
+    });
+    console.log("Created default vendor");
   }
 
   console.log("Seeding complete.");

@@ -1,116 +1,142 @@
-import { type NextFunction, type Request, type Response } from "express";
-import { ItemService } from "../service/item.service";
+import { type Request, type Response, type NextFunction } from "express";
+import { itemService } from "../service/item.service";
 import {
-  createItemSchema,
-  updateItemSchema,
+  createItemSchema, bulkCreateItemSchema, updateItemSchema,
+  updateItemStatusSchema, updateItemLocationSchema,
 } from "../validation/item.validation";
-import {
-  sendSuccess,
-  sendError,
-  sendValidationError,
-} from "../../../utils/api-utils";
-
-const itemService = new ItemService();
+import { sendSuccess, sendError, sendValidationError } from "../../../utils/api-utils";
+import auditService from "../../audit/service/audit.service";
+import qrcode from "qrcode";
 
 export class ItemController {
-  /**
-   * GET /items — Ambil semua item fisik (opsional filter ?collectionId=)
-   */
-  async getAllItems(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { collectionId } = req.query;
-      const result = await itemService.getAllItems(collectionId as string);
 
-      res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
+  async getAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const collectionId = req.query.collectionId as string | undefined;
+      const result = await itemService.getAllItems(collectionId);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
   }
 
-  /**
-   * GET /items/:id — Ambil item berdasarkan ID
-   */
-  async getItemById(req: Request, res: Response, next: NextFunction) {
+  async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await itemService.getItemById(String(req.params.id));
-
-      if (!result.success) {
-        return sendError(res, result.message ?? "Item tidak ditemukan", 404);
-      }
-
-      sendSuccess(res, "Data item berhasil diambil", result.data);
-    } catch (error) {
-      next(error);
-    }
+      const result = await itemService.getItemById(req.params.id as string);
+      if (!result.success) return sendError(res, result.message, 404);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
   }
 
-  /**
-   * POST /items — Buat item baru (Admin/Staff)
-   */
-  async createItem(req: Request, res: Response, next: NextFunction) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = createItemSchema.safeParse(req.body);
-      if (!validation.success) {
-        return sendValidationError(res, validation.error.flatten());
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
+      const result = await itemService.createItem(validation.data);
+      if (!result.success) return sendError(res, result.message, 400);
+      if (result.data) {
+        await auditService.createLog({ action: "create", entity: "item", entityId: result.data.id, userId: (req as any).user?.id, ipAddress: req.ip });
       }
-
-      const result = await itemService.createItem(validation.data as any);
-
-      if (!result.success) {
-        return sendError(res, result.message ?? "Gagal membuat item", 400);
-      }
-
-      sendSuccess(res, "Item berhasil dibuat", result.data, 201);
-    } catch (error) {
-      next(error);
-    }
+      sendSuccess(res, result.message, result.data, 201);
+    } catch (error) { next(error); }
   }
 
-  /**
-   * PATCH /items/:id — Update item (Admin/Staff)
-   */
-  async updateItem(req: Request, res: Response, next: NextFunction) {
+  async bulkCreate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bibId = req.params.bibliographyId as string;
+      const validation = bulkCreateItemSchema.safeParse(req.body);
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
+      const result = await itemService.bulkCreate(bibId, validation.data);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, result.data, 201);
+    } catch (error) { next(error); }
+  }
+
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const validation = updateItemSchema.safeParse(req.body);
-      if (!validation.success) {
-        return sendValidationError(res, validation.error.flatten());
-      }
-
-      const result = await itemService.updateItem(
-        String(req.params.id),
-        validation.data as any,
-      );
-
-      if (!result.success) {
-        const status = result.message === "Item not found" ? 404 : 400;
-        return sendError(
-          res,
-          result.message ?? "Gagal memperbarui item",
-          status,
-        );
-      }
-
-      sendSuccess(res, "Item berhasil diperbarui", result.data);
-    } catch (error) {
-      next(error);
-    }
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
+      const result = await itemService.updateItem(req.params.id as string, validation.data);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
   }
 
-  /**
-   * DELETE /items/:id — Hapus item (Admin/Staff)
-   */
-  async deleteItem(req: Request, res: Response, next: NextFunction) {
+  async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await itemService.deleteItem(String(req.params.id));
+      const validation = updateItemStatusSchema.safeParse(req.body);
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
+      const result = await itemService.updateItemStatus(req.params.id as string, validation.data.status);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
+  }
 
-      if (!result.success) {
-        const status = result.message === "Item not found" ? 404 : 400;
-        return sendError(res, result.message ?? "Gagal menghapus item", status);
+  async updateLocation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = updateItemLocationSchema.safeParse(req.body);
+      if (!validation.success) return sendValidationError(res, validation.error.flatten());
+      const result = await itemService.updateItemLocation(req.params.id as string, validation.data.locationId);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
+  }
+
+  async softDelete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await itemService.deleteItem(req.params.id as string);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, null);
+    } catch (error) { next(error); }
+  }
+
+  async getQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await itemService.getItemById(req.params.id as string);
+      if (!result.success || !result.data) return sendError(res, "Item not found", 404);
+      const format = req.query.format as string || "svg";
+      if (format === "png") {
+        const png = await qrcode.toBuffer(result.data.qrToken || "", { width: 300, errorCorrectionLevel: "H" });
+        res.setHeader("Content-Type", "image/png");
+        res.send(png);
+      } else {
+        const svg = await qrcode.toString(result.data.qrToken || "", { type: "svg" });
+        res.setHeader("Content-Type", "image/svg+xml");
+        res.send(svg);
       }
+    } catch (error) { next(error); }
+  }
 
-      sendSuccess(res, "Item berhasil dihapus", null);
-    } catch (error) {
-      next(error);
-    }
+  async regenerateQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await itemService.regenerateQr(req.params.id as string);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
+  }
+
+  async revokeQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await itemService.revokeQr(req.params.id as string);
+      if (!result.success) return sendError(res, result.message, 400);
+      sendSuccess(res, result.message, result.data);
+    } catch (error) { next(error); }
+  }
+
+  async resolveQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const item = await itemService.resolveByQrToken(req.params.token as string);
+      if (!item) return sendError(res, "QR not found or revoked", 404);
+      sendSuccess(res, "QR resolved", item);
+    } catch (error) { next(error); }
+  }
+
+  async bulkLabels(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ids = (req.query.ids as string || "").split(",").filter(Boolean);
+      if (ids.length === 0) return sendError(res, "No IDs provided", 400);
+      const data = await itemService.getBulkLabelData(ids);
+      sendSuccess(res, "Label data retrieved", data);
+    } catch (error) { next(error); }
   }
 }
+
+export const itemController = new ItemController();

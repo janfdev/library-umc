@@ -13,6 +13,9 @@ import { recommendationRoutes } from "../modules/recommendation/route/recommenda
 import { auditRoutes } from "../modules/audit/route/audit.route";
 import { reportRoutes } from "../modules/report/route/report.route";
 import { locationRoutes } from "../modules/location/route/location.route";
+import bibliographyRoutes from "../modules/bibliography/route/bibliography.route";
+import importRoutes from "../modules/import/route/import.route";
+import exportRoutes from "../modules/export/route/export.route";
 
 const router = Router();
 
@@ -22,7 +25,10 @@ router.use(authRoutes);
 // Member
 router.use(memberRoutes);
 
-// Collections
+// Bibliographies (new P1)
+router.use(bibliographyRoutes);
+
+// Collections (compatibility alias)
 router.use(collectionRoutes);
 
 // Categories
@@ -30,6 +36,12 @@ router.use(categoryRoutes);
 
 // Items (Physical Copies)
 router.use(itemRoutes);
+
+// Import (new P1)
+router.use(importRoutes);
+
+// Export (new P1)
+router.use(exportRoutes);
 
 // Guests
 router.use(guestRoutes);

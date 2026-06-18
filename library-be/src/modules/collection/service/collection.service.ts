@@ -487,13 +487,17 @@ export class CollectionService {
         );
       }
 
-      const values = Array.from({ length: diff }, (_, idx) => ({
-        collectionId,
-        locationId: defaultLocation.id,
-        status: "available" as const,
-        barcode: this.generateAutoCode("AUTO", collectionId, idx),
-        uniqueCode: this.generateAutoCode("UC", collectionId, idx)
-      }));
+      const values = Array.from({ length: diff }, (_, idx) => {
+        const autoBarcode = this.generateAutoCode("AUTO", collectionId, idx);
+        return {
+          collectionId,
+          locationId: defaultLocation.id,
+          status: "available" as const,
+          barcode: autoBarcode,
+          uniqueCode: this.generateAutoCode("UC", collectionId, idx),
+          itemCode: autoBarcode
+        };
+      });
 
       await tx.insert(items).values(values);
     } else {

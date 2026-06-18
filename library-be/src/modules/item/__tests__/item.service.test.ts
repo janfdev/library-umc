@@ -101,6 +101,7 @@ describe("ItemService Unit Tests", () => {
         collectionId: "coll-1",
         locationId: 1,
         barcode: "TEST-001",
+        itemCode: "TEST-001",
       });
 
       expect(result.success).toBe(true);
@@ -108,20 +109,21 @@ describe("ItemService Unit Tests", () => {
       expect(mockTx.insert).toHaveBeenCalled();
     });
 
-    it("should reject duplicate barcode", async () => {
+    it("should reject duplicate item_code", async () => {
       (db.query.items.findFirst as any).mockResolvedValue({
         id: "existing",
-        barcode: "TEST-001",
+        itemCode: "TEST-001",
       });
 
       const result = await itemService.createItem({
         collectionId: "coll-1",
         locationId: 1,
         barcode: "TEST-001",
+        itemCode: "TEST-001",
       });
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe("Barcode already exists");
+      expect(result.message).toBe("item_code already exists");
       expect(db.transaction).not.toHaveBeenCalled();
     });
 
@@ -133,6 +135,7 @@ describe("ItemService Unit Tests", () => {
         collectionId: "nonexistent",
         locationId: 1,
         barcode: "TEST-002",
+        itemCode: "TEST-002",
       });
 
       expect(result.success).toBe(false);
@@ -150,6 +153,7 @@ describe("ItemService Unit Tests", () => {
         collectionId: "coll-1",
         locationId: 999,
         barcode: "TEST-003",
+        itemCode: "TEST-003",
       });
 
       expect(result.success).toBe(false);
@@ -184,9 +188,7 @@ describe("ItemService Unit Tests", () => {
       const result = await itemService.deleteItem("item-1");
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe(
-        "Cannot delete item that is currently loaned"
-      );
+      expect(result.message).toBe("Cannot delete loaned item");
       expect(db.transaction).not.toHaveBeenCalled();
     });
 
@@ -226,9 +228,7 @@ describe("ItemService Unit Tests", () => {
         "../../shared/utils/stock-sync"
       );
 
-      const result = await itemService.updateItem("item-1", {
-        status: "damaged",
-      });
+      const result = await itemService.updateItemStatus("item-1", "damaged");
 
       expect(result.success).toBe(true);
       expect(db.transaction).toHaveBeenCalled();
