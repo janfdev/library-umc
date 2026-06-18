@@ -15,27 +15,11 @@ import qrcode from "qrcode";
 import { NotificationService } from "../../notification/service/notification.service";
 import reservationService from "../../reservation/service/reservation.service";
 import { ROLES } from "../../../utils/auth-types";
+import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 
 const notificationService = new NotificationService();
 
 export class LoanService {
-  private async syncCollectionAvailableStock(tx: any, collectionId: string) {
-    const [availableCount] = await tx
-      .select({ count: sql<number>`count(*)` })
-      .from(items)
-      .where(
-        and(
-          eq(items.collectionId, collectionId),
-          eq(items.status, "available"),
-          isNull(items.deletedAt)
-        )
-      );
-
-    await tx
-      .update(collections)
-      .set({ stock: Number(availableCount?.count ?? 0), updatedAt: new Date() })
-      .where(eq(collections.id, collectionId));
-  }
 
   /**
    * 1. Mahasiswa Request Pinjam Buku
@@ -204,7 +188,7 @@ export class LoanService {
         .set({ status: "loaned", updatedAt: new Date() })
         .where(eq(items.id, updatedLoan.itemId));
 
-      await this.syncCollectionAvailableStock(tx, loanData.item.collectionId);
+      await syncCollectionAvailableStock(tx, loanData.item.collectionId);
 
       return loanData;
     });
@@ -265,7 +249,7 @@ export class LoanService {
         .set({ status: "available", updatedAt: new Date() })
         .where(eq(items.id, updatedLoan.itemId));
 
-      await this.syncCollectionAvailableStock(tx, loanData.item.collectionId);
+      await syncCollectionAvailableStock(tx, loanData.item.collectionId);
     });
 
     return {
@@ -301,7 +285,7 @@ export class LoanService {
       // Sync collection stock if needed
       const loanItem = await tx.query.items.findFirst({ where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)) });
       if (loanItem?.collectionId) {
-        await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
+        await syncCollectionAvailableStock(tx, loanItem.collectionId);
       }
 
       // Auto-fulfill next reservation if any
@@ -383,7 +367,7 @@ export class LoanService {
       // Sync collection stock if needed
       const loanItem = await tx.query.items.findFirst({ where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)) });
       if (loanItem?.collectionId) {
-        await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
+        await syncCollectionAvailableStock(tx, loanItem.collectionId);
       }
 
       // Auto-fulfill next reservation if any

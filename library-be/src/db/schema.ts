@@ -408,7 +408,7 @@ export const acquisitions = pgTable("acquisitions", {
     .references(() => collections.id), // Reference UUID
   quantity: integer("quantity"),
   acquiredAt: date("acquired_at"),
-  createdAt: date("created_at").defaultNow()
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 // Tabel rekomendasi dosen ke pustakaawan

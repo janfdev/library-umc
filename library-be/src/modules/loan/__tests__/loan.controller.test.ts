@@ -3,6 +3,7 @@ import express from "express";
 import request from "supertest";
 import { LoanController } from "../controller/loan.controller";
 import { LoanService } from "../service/loan.service";
+import { MemberService } from "../../member/service/member.service";
 
 // ============================================================
 // SETUP: Express App Palsu untuk Controller Testing
@@ -88,11 +89,15 @@ describe("LoanController Unit Tests", () => {
         qrCodeUrl: "mock-qr",
       };
 
-      // Mock getMemberIdByUserId agar mengembalikan memberId
+      // Mock MemberService.getBorrowEligibilityByUserId
       vi.spyOn(
-        LoanService.prototype,
-        "getMemberIdByUserId",
-      ).mockResolvedValueOnce("member-1");
+        MemberService.prototype,
+        "getBorrowEligibilityByUserId",
+      ).mockResolvedValueOnce({
+        success: true,
+        message: "Eligible",
+        data: { memberId: "member-1", cardStatus: "active", cardNumber: "UMCLIB-001" },
+      } as any);
 
       // Mock requestLoan agar mengembalikan loan palsu
       vi.spyOn(LoanService.prototype, "requestLoan").mockResolvedValueOnce(
@@ -108,19 +113,23 @@ describe("LoanController Unit Tests", () => {
       expect(response.body.data.status).toBe("pending");
     });
 
-    // 🔴 RED CASE: Member profile belum dibuat (getMemberIdByUserId = undefined)
+    // 🔴 RED CASE: Member profile belum dibuat
     it("harus return 400 jika member profile belum ditemukan", async () => {
       vi.spyOn(
-        LoanService.prototype,
-        "getMemberIdByUserId",
-      ).mockResolvedValueOnce(undefined);
+        MemberService.prototype,
+        "getBorrowEligibilityByUserId",
+      ).mockResolvedValueOnce({
+        success: false,
+        message: "Profil member belum tersedia",
+        data: null,
+      } as any);
 
       const response = await request(app)
         .post("/loans/request")
         .send({ collectionId: "collection-abc" });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toContain("Profil member tidak ditemukan");
+      expect(response.body.message).toContain("Profil member belum tersedia");
     });
   });
 

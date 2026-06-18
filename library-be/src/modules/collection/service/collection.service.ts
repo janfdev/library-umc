@@ -2,6 +2,7 @@ import { db } from "../../../db";
 import { collections, categories, items, locations } from "../../../db/schema";
 import { uploadToCloudinary } from "../../../utils/upload";
 import { eq, ne, or, ilike, and, isNull, sql, inArray } from "drizzle-orm";
+import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 import ExcelJS from "exceljs";
 import { Readable } from "stream";
 import {
@@ -449,24 +450,6 @@ export class CollectionService {
     }
   }
 
-  private async syncCollectionAvailableStock(tx: any, collectionId: string) {
-    const [availableCount] = await tx
-      .select({ count: sql<number>`count(*)` })
-      .from(items)
-      .where(
-        and(
-          eq(items.collectionId, collectionId),
-          eq(items.status, "available"),
-          isNull(items.deletedAt)
-        )
-      );
-
-    await tx
-      .update(collections)
-      .set({ stock: Number(availableCount?.count ?? 0), updatedAt: new Date() })
-      .where(eq(collections.id, collectionId));
-  }
-
   private generateAutoCode(
     prefix: string,
     collectionId: string,
@@ -487,7 +470,7 @@ export class CollectionService {
 
     const currentStock = existingItems.length;
     if (targetStock === currentStock) {
-      await this.syncCollectionAvailableStock(tx, collectionId);
+      await syncCollectionAvailableStock(tx, collectionId);
       return;
     }
 
@@ -539,7 +522,7 @@ export class CollectionService {
       );
     }
 
-    await this.syncCollectionAvailableStock(tx, collectionId);
+    await syncCollectionAvailableStock(tx, collectionId);
   }
 
   // Get All Collections (Search & Filter enabled)

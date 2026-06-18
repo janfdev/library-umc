@@ -6,6 +6,7 @@ import {
   type updateItemSchema,
 } from "../validation/item.validation";
 import { type z } from "zod";
+import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 
 type CreateItemData = z.infer<typeof createItemSchema>;
 type UpdateItemData = z.infer<typeof updateItemSchema>;
@@ -95,6 +96,7 @@ export class ItemService {
 
   /**
    * Create New Item
+   * Stock is synced within the same transaction.
    */
   async createItem(data: CreateItemData) {
     // Check if barcode already exists
@@ -133,17 +135,22 @@ export class ItemService {
       };
     }
 
-    const [newItem] = await db.insert(items).values(data).returning();
+    const result = await db.transaction(async (tx) => {
+      const [newItem] = await tx.insert(items).values(data).returning();
+      await syncCollectionAvailableStock(tx, data.collectionId);
+      return newItem;
+    });
 
     return {
       success: true,
       message: "Item created successfully",
-      data: newItem,
+      data: result,
     };
   }
 
   /**
    * Update Item
+   * Stock is synced if status changed.
    */
   async updateItem(id: string, data: UpdateItemData) {
     const existingItem = await db.query.items.findFirst({
@@ -171,21 +178,32 @@ export class ItemService {
       }
     }
 
-    const [updatedItem] = await db
-      .update(items)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(items.id, id))
-      .returning();
+    const statusChanged = data.status && data.status !== existingItem.status;
+
+    const result = await db.transaction(async (tx) => {
+      const [updatedItem] = await tx
+        .update(items)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(items.id, id))
+        .returning();
+
+      if (statusChanged) {
+        await syncCollectionAvailableStock(tx, existingItem.collectionId);
+      }
+
+      return updatedItem;
+    });
 
     return {
       success: true,
       message: "Item updated successfully",
-      data: updatedItem,
+      data: result,
     };
   }
 
   /**
-   * Delete Item
+   * Delete Item (soft delete)
+   * Stock is synced after deletion.
    */
   async deleteItem(id: string) {
     const existingItem = await db.query.items.findFirst({
@@ -199,9 +217,6 @@ export class ItemService {
       };
     }
 
-    // Check if item has loan history?
-    // Usually hard delete is risky if there are active loans.
-    // Assuming schema has cascading or we check status.
     if (existingItem.status === "loaned") {
       return {
         success: false,
@@ -209,10 +224,14 @@ export class ItemService {
       };
     }
 
-    await db
-      .update(items)
-      .set({ deletedAt: new Date(), status: "lost" })
-      .where(eq(items.id, id));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(items)
+        .set({ deletedAt: new Date(), status: "lost" })
+        .where(eq(items.id, id));
+
+      await syncCollectionAvailableStock(tx, existingItem.collectionId);
+    });
 
     return {
       success: true,
