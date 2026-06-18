@@ -15,6 +15,8 @@ import type { AuthUser } from "@/types/auth";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // Tambahan state khusus mobile accordion agar sub-menu akun bisa di-toggle dropdown
+  const [isMobileSubMenuOpen, setIsMobileSubMenuOpen] = useState(false);
 
   // Ambil session dari Better Auth
   const { data: session } = authClient.useSession();
@@ -68,17 +70,20 @@ const Navbar = () => {
     }
 
     setIsDropdownOpen(false);
+    setIsMenuOpen(false);
     navigate("/login");
   };
 
   const handleProfileClick = () => {
     navigate("/profile");
     setIsDropdownOpen(false);
+    setIsMenuOpen(false);
   };
 
   const handleMyLoansClick = () => {
     navigate("/my-loans");
     setIsDropdownOpen(false);
+    setIsMenuOpen(false);
   };
 
   const getInitials = (name: string | null | undefined) => {
@@ -113,10 +118,6 @@ const Navbar = () => {
     student: {
       label: "Mahasiswa",
       className: "bg-blue-100 text-blue-700"
-    }, 
-    external: {
-      label: "External",
-      className: "bg-green-100 text-green-700"
     }
   } as const;
 
@@ -133,7 +134,8 @@ const Navbar = () => {
   return (
     <>
       {/* NAVBAR UTAMA */}
-      <div className="flex justify-between items-center p-4 px-6 bg-white shadow-sm sticky top-0 z-50">
+      {/* Diubah z-index ke z-40 agar berada di bawah Tirai Overlay HP */}
+      <div className="flex justify-between items-center p-4 px-6 bg-white shadow-sm sticky top-0 z-40">
         {/* Logo & Teks */}
         <div
           className="flex items-center space-x-2 cursor-pointer"
@@ -186,12 +188,12 @@ const Navbar = () => {
                 className="flex items-center space-x-3 bg-white border border-gray-200 rounded-full px-3 py-1.5 hover:shadow-md transition-all duration-200 group"
               >
                 {/* Avatar */}
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white shadow-sm">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white shadow-sm overflow-hidden">
                   {activeUser?.image ? (
                     <img
                       src={activeUser.image}
                       alt={displayName || "User"}
-                      className="w-full h-full rounded-full object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-white font-bold text-sm">
@@ -304,7 +306,7 @@ const Navbar = () => {
 
         {/* Hamburger Menu - Mobile */}
         <button
-          className="md:hidden hamburger"
+          className="md:hidden hamburger p-2 hover:bg-gray-50 rounded-xl transition-all"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -335,14 +337,15 @@ const Navbar = () => {
       </div>
 
       {/* SIDEBAR MOBILE - ANIMASI SMOOTH */}
+      {/* Dinaikkan z-index ke z-50 agar menutupi area navbar belakang */}
       <div
-        className={`fixed top-0 right-0 w-64 h-full bg-white shadow-xl z-50
+        className={`fixed top-0 right-0 w-68 h-full bg-white shadow-2xl z-50 flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        <div className="p-6 flex flex-col h-full">
+        <div className="p-5 flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
             <div
               className="flex items-center space-x-2 cursor-pointer"
               onClick={() => {
@@ -362,12 +365,12 @@ const Navbar = () => {
             </div>
             <button
               onClick={() => setIsMenuOpen(false)}
-              className="text-gray-500 hover:text-gray-700"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
               aria-label="Close menu"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -382,8 +385,8 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Navigation Items */}
-          <nav className="flex flex-col space-y-3 mt-4">
+          {/* Navigation Items (Tanpa UL/LI, Tombol lebih bersih) */}
+          <nav className="flex flex-col space-y-1.5">
             {navItems.map((item) => (
               <a
                 key={item.name}
@@ -393,81 +396,83 @@ const Navbar = () => {
                   navigate(item.href);
                   setIsMenuOpen(false);
                 }}
-                className={`text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors relative ${
+                className={`text-sm font-semibold py-3 px-4 rounded-xl transition-all relative flex items-center ${
                   isActive(item.href)
-                    ? "bg-red-50 text-red-700 font-semibold"
-                    : "hover:bg-gray-50 hover:text-red-600"
+                    ? "bg-red-50 text-red-700 font-bold"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-red-600"
                 }`}
               >
                 <span>{item.name}</span>
                 {isActive(item.href) && (
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                  <span className="absolute left-2 w-1 h-4 bg-red-600 rounded-full"></span>
                 )}
               </a>
             ))}
           </nav>
 
-          {/* Divider */}
-          {isLoggedIn && <div className="my-4 border-t border-gray-200"></div>}
-
-          {/* User Menu / Login - Mobile */}
-          <div className="mt-auto pt-4">
+          {/* User Menu / Login - Mobile (Dropdown Mode di Sidebar) */}
+          <div className="mt-auto pt-4 border-t border-gray-100">
             {isLoggedIn ? (
-              <div className="space-y-3">
-                {/* User Info */}
-                <div className="flex items-center space-x-3 px-3 py-4 bg-gray-50 rounded-xl">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white flex-shrink-0">
-                    {activeUser?.image ? (
-                      <img
-                        src={activeUser.image}
-                        alt={displayName || "User"}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-white font-bold text-lg">
-                        {getInitials(displayName)}
+              <div className="space-y-2">
+                {/* Kotak Akun Utama (Bertindak sebagai Trigger Accordion/Dropdown) */}
+                <button
+                  onClick={() => setIsMobileSubMenuOpen(!isMobileSubMenuOpen)}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-all text-left"
+                >
+                  <div className="flex items-center space-x-3 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border border-white flex-shrink-0 overflow-hidden">
+                      {activeUser?.image ? (
+                        <img
+                          src={activeUser.image}
+                          alt={displayName || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white font-bold text-sm">
+                          {getInitials(displayName)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-bold text-gray-800 truncate">
+                        {displayName || "User"}
+                      </p>
+                      <span
+                        className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full mt-0.5 inline-block ${currentRoleAppearance.className}`}
+                      >
+                        {currentRoleAppearance.label}
                       </span>
-                    )}
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <p className="text-sm font-bold text-gray-800 truncate">
-                      {displayName || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {displayEmail || "Email tidak tersedia"}
-                    </p>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${currentRoleAppearance.className}`}
-                    >
-                      {currentRoleAppearance.label}
-                    </span>
-                  </div>
-                </div>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                      isMobileSubMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-                {/* Menu Items - Mobile */}
-                <div className="space-y-2">
+                {/* Sub Menu Dropdown Akun di Mobile */}
+                <div
+                  className={`space-y-1 pl-2 transition-all duration-200 ${
+                    isMobileSubMenuOpen ? "block" : "hidden"
+                  }`}
+                >
                   {!isSuperAdmin && (
                     <>
                       <button
-                        onClick={() => {
-                          handleProfileClick();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={handleProfileClick}
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                       >
-                        <User className="w-5 h-5 text-red-600" />
-                        <span className="font-medium">Profil Saya</span>
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span>Profil Saya</span>
                       </button>
 
                       <button
-                        onClick={() => {
-                          handleMyLoansClick();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={handleMyLoansClick}
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                       >
-                        <BookOpen className="w-5 h-5 text-red-600" />
-                        <span className="font-medium">Peminjaman Saya</span>
+                        <BookOpen className="w-4 h-4 text-gray-400" />
+                        <span>Peminjaman Saya</span>
                       </button>
                     </>
                   )}
@@ -476,22 +481,19 @@ const Navbar = () => {
                     <a
                       href="/dashboard/super-admin"
                       onClick={() => setIsMenuOpen(false)}
-                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                     >
-                      <LayoutDashboard className="w-5 h-5 text-purple-600" />
-                      <span className="font-medium">Dashboard Admin</span>
+                      <LayoutDashboard className="w-4 h-4 text-purple-500" />
+                      <span>Dashboard Admin</span>
                     </a>
                   )}
 
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-2 hover:bg-red-100 transition-colors"
+                    onClick={handleLogout}
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all mt-1"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Keluar</span>
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span>Keluar Akun</span>
                   </button>
                 </div>
               </div>
@@ -501,33 +503,20 @@ const Navbar = () => {
                   navigate("/login");
                   setIsMenuOpen(false);
                 }}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center space-x-2 hover:from-red-700 hover:to-red-800 transition-all duration-200"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 shadow-md"
               >
                 <span>Login</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0z M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* OVERLAY */}
+      {/* OVERLAY / BACKDROP GELAP */}
+      {/* Menggunakan z-45 agar berada tepat di atas navbar utama tetapi di bawah sidebar */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-45 transition-all duration-300 animate-fade-in"
           onClick={() => setIsMenuOpen(false)}
         ></div>
       )}
