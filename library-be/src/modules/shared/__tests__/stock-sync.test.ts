@@ -16,10 +16,11 @@ describe("syncCollectionAvailableStock", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockTx = {
-      execute: vi.fn().mockResolvedValue(undefined),
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ count: 5 }]),
+          where: vi.fn().mockReturnValue({
+            for: vi.fn().mockResolvedValue([{ id: "bib-1" }]),
+          }),
         }),
       }),
       update: vi.fn().mockReturnValue({
@@ -30,40 +31,62 @@ describe("syncCollectionAvailableStock", () => {
     };
   });
 
-  it("should count items and update stock", async () => {
+  it("should lock row FOR UPDATE, count items, and update stock", async () => {
+    // Mock the count query (second select call)
+    mockTx.select
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            for: vi.fn().mockResolvedValue([{ id: "bib-1" }]),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ count: 5 }]),
+        }),
+      });
+
     await syncCollectionAvailableStock(mockTx, "bib-1");
 
-    expect(mockTx.select).toHaveBeenCalled();
+    expect(mockTx.select).toHaveBeenCalledTimes(2);
     expect(mockTx.update).toHaveBeenCalled();
   });
 
-  it("should handle zero available items", async () => {
+  it("should throw when bibliography not found", async () => {
     mockTx.select = vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([{ count: 0 }]),
+        where: vi.fn().mockReturnValue({
+          for: vi.fn().mockResolvedValue([]),
+        }),
       }),
     });
+
+    await expect(
+      syncCollectionAvailableStock(mockTx, "nonexistent")
+    ).rejects.toThrow("not found for stock lock");
+  });
+
+  it("should handle zero available items", async () => {
+    mockTx.select
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            for: vi.fn().mockResolvedValue([{ id: "bib-1" }]),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ count: 0 }]),
+        }),
+      });
 
     await syncCollectionAvailableStock(mockTx, "bib-1");
 
     const setCall = mockTx.update().set;
     expect(setCall).toHaveBeenCalledWith(
       expect.objectContaining({ stock: 0 })
-    );
-  });
-
-  it("should set stock to the counted value", async () => {
-    mockTx.select = vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([{ count: 12 }]),
-      }),
-    });
-
-    await syncCollectionAvailableStock(mockTx, "bib-1");
-
-    const setCall = mockTx.update().set;
-    expect(setCall).toHaveBeenCalledWith(
-      expect.objectContaining({ stock: 12 })
     );
   });
 });

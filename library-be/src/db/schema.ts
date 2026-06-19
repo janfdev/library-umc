@@ -355,6 +355,8 @@ export const items = pgTable("items", {
   itemCodeIdx: index("item_code_idx").on(table.itemCode),
   qrTokenIdx: index("item_qr_token_idx").on(table.qrToken),
   qrTokenUnique: unique("item_qr_token_unique").on(table.qrToken),
+  itemCodeUnique: unique("item_item_code_unique").on(table.itemCode),
+  inventoryCodeUnique: unique("item_inventory_code_unique").on(table.inventoryCode)
 }));
 
 // ==========================================

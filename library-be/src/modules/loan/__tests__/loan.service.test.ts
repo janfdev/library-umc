@@ -51,11 +51,19 @@ function mockSelectCounts(counts: number[]) {
 function createTxForStockSync(availableCount = 0) {
   return {
     execute: vi.fn().mockResolvedValue(undefined),
-    select: vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([{ count: availableCount }]),
+    select: vi.fn()
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            for: vi.fn().mockResolvedValue([{ id: "bib-1" }]),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ count: availableCount }]),
+        }),
       }),
-    }),
     update: vi.fn().mockReturnValue({
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
@@ -69,6 +77,7 @@ function createTxForStockSync(availableCount = 0) {
     query: {
       loans: { findFirst: vi.fn() },
       items: { findFirst: vi.fn() },
+      returnRequests: { findFirst: vi.fn() },
     },
   };
 }
