@@ -66,18 +66,33 @@ export class ItemService {
     const location = await db.query.locations.findFirst({ where: eq(locations.id, data.locationId) });
     if (!location) return { success: false, message: "Location not found" };
 
-    const result = await db.transaction(async (tx) => {
-      const insertData: any = {
-        ...data,
-        price: data.price != null ? String(data.price) : null,
-        qrToken: this.generateQrToken(),
-        qrVersion: 1,
-        qrGeneratedAt: new Date(),
-      };
-      const [newItem] = await tx.insert(items).values(insertData).returning();
-      await syncCollectionAvailableStock(tx, data.bibliographyId);
-      return newItem;
-    });
+    let result: any;
+    try {
+      result = await db.transaction(async (tx) => {
+        const insertData: any = {
+          ...data,
+          price: data.price != null ? String(data.price) : null,
+          qrToken: this.generateQrToken(),
+          qrVersion: 1,
+          qrGeneratedAt: new Date(),
+        };
+        const [newItem] = await tx.insert(items).values(insertData).returning();
+        await syncCollectionAvailableStock(tx, data.bibliographyId);
+        return newItem;
+      });
+    } catch (err: any) {
+      // Handle unique constraint violations gracefully
+      if (err?.cause?.code === '23505' || err?.code === '23505') {
+        const detail = err?.cause?.detail || err?.detail || '';
+        if (detail.includes('item_code') || detail.includes('item_item_code')) {
+          return { success: false, message: "item_code already exists" };
+        }
+        if (detail.includes('qr_token') || detail.includes('item_qr_token')) {
+          return { success: false, message: "QR token collision, please retry" };
+        }
+      }
+      throw err;
+    }
 
     return { success: true, message: "Item created", data: result };
   }

@@ -1,5 +1,5 @@
 {
-  "id": "733f5315-728a-4a8c-940c-1da46f4dfea4",
+  "id": "db19e465-b4be-4a8c-b3fb-22181aadce1e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2136,13 +2136,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "item_inventory_code_unique": {
-          "name": "item_inventory_code_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "inventory_code"
-          ]
-        },
         "item_qr_token_unique": {
           "name": "item_qr_token_unique",
           "nullsNotDistinct": false,

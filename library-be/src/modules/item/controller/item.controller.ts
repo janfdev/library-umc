@@ -28,7 +28,10 @@ export class ItemController {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const validation = createItemSchema.safeParse(req.body);
+      // Merge bibliographyId from URL params into body for validation
+      const bibId = req.params.bibliographyId as string;
+      const bodyData = bibId ? { ...req.body, bibliographyId: bibId } : req.body;
+      const validation = createItemSchema.safeParse(bodyData);
       if (!validation.success) return sendValidationError(res, validation.error.flatten());
       const result = await itemService.createItem(validation.data);
       if (!result.success) return sendError(res, result.message, 400);

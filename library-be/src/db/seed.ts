@@ -1,25 +1,31 @@
 import { db } from ".";
 import {
-  Users, members, categories, locations, vendors,
+  Users, account as accountTable, members, categories, locations, vendors,
   publishers, languages, publicationPlaces, gmds,
   collectionTypes, authors, subjects
 } from "./schema";
 import { eq } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
+
+const ADMIN_EMAIL = "admin@mucilib.ac.id";
+const ADMIN_PASSWORD = "Admin123456!";
 
 async function seed() {
   console.log("Seeding database...");
 
   // 1. Seed admin user
-  const adminEmail = "admin@mucilib.ac.id";
   const existingAdmin = await db.query.Users.findFirst({
-    where: eq(Users.email, adminEmail),
+    where: eq(Users.email, ADMIN_EMAIL),
   });
+  
+  let adminId: string;
   if (!existingAdmin) {
     const now = new Date();
+    adminId = "admin-seed-001";
     await db.insert(Users).values({
-      id: "admin-seed-001",
+      id: adminId,
       name: "Super Admin",
-      email: adminEmail,
+      email: ADMIN_EMAIL,
       emailVerified: true,
       role: "super_admin",
       createdAt: now,
@@ -27,7 +33,29 @@ async function seed() {
     });
     console.log("Created admin user");
   } else {
+    adminId = existingAdmin.id;
     console.log("Admin user already exists");
+  }
+
+  // 1b. Ensure admin has credential account for Better Auth login
+  const existingAccount = await db.query.account.findFirst({
+    where: eq(accountTable.userId, adminId),
+  });
+  if (!existingAccount) {
+    const hashedPassword = await hashPassword(ADMIN_PASSWORD);
+    const now = new Date();
+    await db.insert(accountTable).values({
+      id: `account-${adminId}-credential`,
+      accountId: ADMIN_EMAIL,
+      providerId: "credential",
+      userId: adminId,
+      password: hashedPassword,
+      createdAt: now,
+      updatedAt: now,
+    });
+    console.log("Created admin credential account");
+  } else {
+    console.log("Admin credential account already exists");
   }
 
   // 2. Seed categories

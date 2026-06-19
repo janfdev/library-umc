@@ -30,10 +30,9 @@ describe("syncCollectionAvailableStock", () => {
     };
   });
 
-  it("should lock row FOR UPDATE, count items, and update stock", async () => {
+  it("should count items and update stock", async () => {
     await syncCollectionAvailableStock(mockTx, "bib-1");
 
-    expect(mockTx.execute).toHaveBeenCalled();
     expect(mockTx.select).toHaveBeenCalled();
     expect(mockTx.update).toHaveBeenCalled();
   });

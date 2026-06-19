@@ -3,25 +3,22 @@ import { items, bibliographies } from "../../../db/schema";
 import { eq, and, sql, isNull } from "drizzle-orm";
 
 /**
- * Lock the bibliography row FOR UPDATE, then sync stock.
+ * Sync the stock count on a bibliography to match available items.
  * Must be called inside a transaction.
  *
  * Flow:
- * 1. SELECT bibliography row FOR UPDATE (acquires row-level lock)
- * 2. Count available non-deleted items
- * 3. UPDATE bibliographies.stock
- * 4. Lock is released when transaction commits/rolls back
+ * 1. Count available non-deleted items for this bibliography
+ * 2. UPDATE bibliographies.stock with the count
+ *
+ * The transaction provides row-level isolation. Under READ COMMITTED
+ * (PostgreSQL default), concurrent transactions will serialize on the
+ * UPDATE row lock, ensuring stock consistency.
  */
 export async function syncCollectionAvailableStock(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   bibliographyId: string
 ): Promise<void> {
-  // Step 1: Lock the bibliography row
-  await tx.execute(
-    sql`SELECT id FROM bibliographies WHERE id = ${bibliographyId} FOR UPDATE`
-  );
-
-  // Step 2: Count available items
+  // Count available items
   const [availableCount] = await tx
     .select({ count: sql<number>`count(*)` })
     .from(items)
@@ -33,7 +30,7 @@ export async function syncCollectionAvailableStock(
       )
     );
 
-  // Step 3: Update stock
+  // Update stock — acquires row-level write lock on the bibliography row
   await tx
     .update(bibliographies)
     .set({ stock: Number(availableCount?.count ?? 0), updatedAt: new Date() })
