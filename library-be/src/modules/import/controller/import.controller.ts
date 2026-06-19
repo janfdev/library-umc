@@ -39,7 +39,7 @@ export class ImportController {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
-      const result = await importService.previewBatch(req.params.batchId as string, limit, offset);
+      const result = await importService.previewBatch(req.params.batchId as string, limit);
       sendSuccess(res, "Preview retrieved", result);
     } catch (error) { next(error); }
   }
@@ -67,7 +67,14 @@ export class ImportController {
 
   async downloadErrorsCsv(req: Request, res: Response, next: NextFunction) {
     try {
-      const csv = await importService.downloadErrorsCsv(req.params.batchId as string);
+      const errors = await importService.getErrors(req.params.batchId as string);
+      const header = "row_number,errors,raw_data";
+      const csvRows = errors.map((r: any) => {
+        const errs = Array.isArray(r.errors) ? r.errors.join("; ") : String(r.errors);
+        const rawJson = JSON.stringify(r.rawData).replace(/"/g, '""');
+        return `${r.rowNumber},"${errs.replace(/"/g, '""')}","${rawJson}"`;
+      });
+      const csv = [header, ...csvRows].join("\n");
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="errors-${req.params.batchId}.csv"`);
       res.send("\uFEFF" + csv);

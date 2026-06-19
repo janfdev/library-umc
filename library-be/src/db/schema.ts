@@ -253,6 +253,7 @@ export const bibliographies = pgTable("bibliographies", {
   notes: text("notes"),
   image: text("image"),
   sor: text("sor"),
+  unlistedAuthorsLabel: varchar("unlisted_authors_label", { length: 100 }),
   gmdId: integer("gmd_id").references(() => gmds.id),
   collectionTypeId: integer("collection_type_id").references(() => collectionTypes.id),
   categoryId: integer("category_id").references(() => categories.id),
@@ -275,10 +276,12 @@ export const bibliographyAuthors = pgTable("bibliography_authors", {
   id: uuid("id").primaryKey().defaultRandom(),
   bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
   authorId: integer("author_id").notNull().references(() => authors.id),
-  role: varchar("role", { length: 50 }).default("primary"),
+  position: integer("position").notNull().default(1),
+  role: varchar("role", { length: 50 }).notNull().default("author"),
   createdAt: timestamp("created_at").defaultNow()
 }, (table) => ({
-  unique: unique("bibliography_author_unique").on(table.bibliographyId, table.authorId),
+  bibAuthorRoleUnique: unique("bibliography_author_role_unique").on(table.bibliographyId, table.authorId, table.role),
+  bibPositionUnique: unique("bibliography_position_unique").on(table.bibliographyId, table.position),
   bibliographyIdx: index("ba_bibliography_idx").on(table.bibliographyId),
   authorIdx: index("ba_author_idx").on(table.authorId)
 }));
@@ -494,18 +497,22 @@ export const importBatches = pgTable("import_batches", {
   type: importBatchTypeEnum("type").notNull(),
   filename: varchar("filename", { length: 255 }).notNull(),
   status: importBatchStatusEnum("status").notNull().default("uploading"),
+  referenceBatchId: uuid("reference_batch_id"),
   totalRows: integer("total_rows").default(0),
   processedRows: integer("processed_rows").default(0),
   validRows: integer("valid_rows").default(0),
   invalidRows: integer("invalid_rows").default(0),
   committedRows: integer("committed_rows").default(0),
   duplicateRows: integer("duplicate_rows").default(0),
+  failedRows: integer("failed_rows").default(0),
   filePath: text("file_path"),
   errorReportPath: text("error_report_path"),
   metadata: jsonb("metadata"),
   createdBy: text("created_by").references(() => Users.id),
+  approvedBy: text("approved_by").references(() => Users.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  committedAt: timestamp("committed_at")
+  committedAt: timestamp("committed_at"),
+  lastProcessedAt: timestamp("last_processed_at")
 });
 
 export const importBibliographyRows = pgTable("import_bibliography_rows", {
@@ -531,6 +538,7 @@ export const importItemRows = pgTable("import_item_rows", {
   status: importRowStatusEnum("status").notNull().default("pending"),
   resolvedData: jsonb("resolved_data"),
   resolvedId: uuid("resolved_id"),
+  resolutionMethod: varchar("resolution_method", { length: 50 }),
   createdAt: timestamp("created_at").notNull().defaultNow()
 }, (table) => ({
   batchIdx: index("import_item_row_batch_idx").on(table.batchId),
@@ -547,6 +555,21 @@ export const importErrors = pgTable("import_errors", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 }, (table) => ({
   batchIdx: index("import_error_batch_idx").on(table.batchId)
+}));
+
+export const importBibliographyItemCodes = pgTable("import_bibliography_item_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  batchId: uuid("batch_id").notNull().references(() => importBatches.id),
+  bibliographyRowId: uuid("bibliography_row_id").references(() => importBibliographyRows.id),
+  itemCode: varchar("item_code", { length: 50 }).notNull(),
+  sourcePosition: integer("source_position").notNull().default(1),
+  committedBibliographyId: uuid("committed_bibliography_id").references(() => bibliographies.id),
+  validationStatus: varchar("validation_status", { length: 20 }).default("pending"),
+  warningCodes: jsonb("warning_codes"),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+}, (table) => ({
+  batchItemCodeIdx: index("ibic_batch_item_code_idx").on(table.batchId, table.itemCode),
+  committedBibIdx: index("ibic_committed_bib_idx").on(table.committedBibliographyId)
 }));
 
 // ==========================================
