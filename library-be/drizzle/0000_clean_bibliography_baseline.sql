@@ -65,7 +65,7 @@ CREATE TABLE "authors" (
 --> statement-breakpoint
 CREATE TABLE "bibliographies" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"title" varchar(500),
+	"title" varchar(500) NOT NULL,
 	"isbn_issn" varchar(255),
 	"edition" varchar(100),
 	"publisher_id" integer,
@@ -85,8 +85,8 @@ CREATE TABLE "bibliographies" (
 	"description" text,
 	"type" "collection_type",
 	"stock" integer DEFAULT 0 NOT NULL,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now(),
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"deleted_at" timestamp
 );
 --> statement-breakpoint
@@ -183,21 +183,41 @@ CREATE TABLE "import_batches" (
 	"error_report_path" text,
 	"metadata" jsonb,
 	"created_by" text,
-	"created_at" timestamp DEFAULT now(),
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	"committed_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "import_rows" (
+CREATE TABLE "import_bibliography_rows" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"batch_id" uuid NOT NULL,
 	"row_number" integer NOT NULL,
 	"raw_data" jsonb NOT NULL,
 	"status" "import_row_status" DEFAULT 'pending' NOT NULL,
-	"errors" jsonb,
 	"resolved_data" jsonb,
 	"resolved_id" uuid,
-	"created_at" timestamp DEFAULT now(),
-	CONSTRAINT "import_row_batch_number_unique" UNIQUE("batch_id","row_number")
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "import_bib_row_batch_number_unique" UNIQUE("batch_id","row_number")
+);
+--> statement-breakpoint
+CREATE TABLE "import_errors" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"batch_id" uuid NOT NULL,
+	"row_number" integer NOT NULL,
+	"raw_data" jsonb NOT NULL,
+	"errors" jsonb NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "import_item_rows" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"batch_id" uuid NOT NULL,
+	"row_number" integer NOT NULL,
+	"raw_data" jsonb NOT NULL,
+	"status" "import_row_status" DEFAULT 'pending' NOT NULL,
+	"resolved_data" jsonb,
+	"resolved_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "import_item_row_batch_number_unique" UNIQUE("batch_id","row_number")
 );
 --> statement-breakpoint
 CREATE TABLE "items" (
@@ -219,13 +239,16 @@ CREATE TABLE "items" (
 	"price" numeric(14, 2),
 	"price_currency" varchar(10) DEFAULT 'IDR',
 	"invoice_date" date,
-	"qr_token" varchar(100),
-	"qr_version" integer DEFAULT 1,
+	"qr_token" varchar(100) NOT NULL,
+	"qr_version" integer DEFAULT 1 NOT NULL,
 	"qr_generated_at" timestamp,
 	"qr_revoked_at" timestamp,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now(),
-	"deleted_at" timestamp
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"deleted_at" timestamp,
+	CONSTRAINT "item_inventory_code_unique" UNIQUE("inventory_code"),
+	CONSTRAINT "item_qr_token_unique" UNIQUE("qr_token"),
+	CONSTRAINT "item_item_code_unique" UNIQUE("item_code")
 );
 --> statement-breakpoint
 CREATE TABLE "languages" (
@@ -416,7 +439,9 @@ ALTER TABLE "bibliography_views" ADD CONSTRAINT "bibliography_views_bibliography
 ALTER TABLE "bibliography_views" ADD CONSTRAINT "bibliography_views_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "fines" ADD CONSTRAINT "fines_loan_id_loans_id_fk" FOREIGN KEY ("loan_id") REFERENCES "public"."loans"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "import_batches" ADD CONSTRAINT "import_batches_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "import_rows" ADD CONSTRAINT "import_rows_batch_id_import_batches_id_fk" FOREIGN KEY ("batch_id") REFERENCES "public"."import_batches"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "import_bibliography_rows" ADD CONSTRAINT "import_bibliography_rows_batch_id_import_batches_id_fk" FOREIGN KEY ("batch_id") REFERENCES "public"."import_batches"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "import_errors" ADD CONSTRAINT "import_errors_batch_id_import_batches_id_fk" FOREIGN KEY ("batch_id") REFERENCES "public"."import_batches"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "import_item_rows" ADD CONSTRAINT "import_item_rows_batch_id_import_batches_id_fk" FOREIGN KEY ("batch_id") REFERENCES "public"."import_batches"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "items" ADD CONSTRAINT "items_bibliography_id_bibliographies_id_fk" FOREIGN KEY ("bibliography_id") REFERENCES "public"."bibliographies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "items" ADD CONSTRAINT "items_collection_type_id_collection_types_id_fk" FOREIGN KEY ("collection_type_id") REFERENCES "public"."collection_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "items" ADD CONSTRAINT "items_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -448,8 +473,11 @@ CREATE INDEX "bs_bibliography_idx" ON "bibliography_subjects" USING btree ("bibl
 CREATE INDEX "bs_subject_idx" ON "bibliography_subjects" USING btree ("subject_id");--> statement-breakpoint
 CREATE INDEX "bv_bibliography_idx" ON "bibliography_views" USING btree ("bibliography_id");--> statement-breakpoint
 CREATE INDEX "bv_viewed_at_idx" ON "bibliography_views" USING btree ("viewed_at");--> statement-breakpoint
-CREATE INDEX "import_row_batch_idx" ON "import_rows" USING btree ("batch_id");--> statement-breakpoint
-CREATE INDEX "import_row_status_idx" ON "import_rows" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "import_bib_row_batch_idx" ON "import_bibliography_rows" USING btree ("batch_id");--> statement-breakpoint
+CREATE INDEX "import_bib_row_status_idx" ON "import_bibliography_rows" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "import_error_batch_idx" ON "import_errors" USING btree ("batch_id");--> statement-breakpoint
+CREATE INDEX "import_item_row_batch_idx" ON "import_item_rows" USING btree ("batch_id");--> statement-breakpoint
+CREATE INDEX "import_item_row_status_idx" ON "import_item_rows" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "item_bibliography_idx" ON "items" USING btree ("bibliography_id");--> statement-breakpoint
 CREATE INDEX "item_status_idx" ON "items" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "item_deleted_at_idx" ON "items" USING btree ("deleted_at");--> statement-breakpoint

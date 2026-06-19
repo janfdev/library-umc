@@ -1,5 +1,5 @@
 {
-  "id": "f442b40d-baf6-4943-bbd8-bb1df7e3bd2d",
+  "id": "733f5315-728a-4a8c-940c-1da46f4dfea4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -390,7 +390,7 @@
           "name": "title",
           "type": "varchar(500)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "isbn_issn": {
           "name": "isbn_issn",
@@ -512,14 +512,14 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "deleted_at": {
@@ -1475,7 +1475,7 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "committed_at": {
@@ -1507,8 +1507,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.import_rows": {
-      "name": "import_rows",
+    "public.import_bibliography_rows": {
+      "name": "import_bibliography_rows",
       "schema": "",
       "columns": {
         "id": {
@@ -1544,11 +1544,205 @@
           "notNull": true,
           "default": "'pending'"
         },
+        "resolved_data": {
+          "name": "resolved_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolved_id": {
+          "name": "resolved_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "import_bib_row_batch_idx": {
+          "name": "import_bib_row_batch_idx",
+          "columns": [
+            {
+              "expression": "batch_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "import_bib_row_status_idx": {
+          "name": "import_bib_row_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "import_bibliography_rows_batch_id_import_batches_id_fk": {
+          "name": "import_bibliography_rows_batch_id_import_batches_id_fk",
+          "tableFrom": "import_bibliography_rows",
+          "tableTo": "import_batches",
+          "columnsFrom": [
+            "batch_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "import_bib_row_batch_number_unique": {
+          "name": "import_bib_row_batch_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "batch_id",
+            "row_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.import_errors": {
+      "name": "import_errors",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "batch_id": {
+          "name": "batch_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_number": {
+          "name": "row_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_data": {
+          "name": "raw_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
         "errors": {
           "name": "errors",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "import_error_batch_idx": {
+          "name": "import_error_batch_idx",
+          "columns": [
+            {
+              "expression": "batch_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "import_errors_batch_id_import_batches_id_fk": {
+          "name": "import_errors_batch_id_import_batches_id_fk",
+          "tableFrom": "import_errors",
+          "tableTo": "import_batches",
+          "columnsFrom": [
+            "batch_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.import_item_rows": {
+      "name": "import_item_rows",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "batch_id": {
+          "name": "batch_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_number": {
+          "name": "row_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_data": {
+          "name": "raw_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "import_row_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
         },
         "resolved_data": {
           "name": "resolved_data",
@@ -1566,13 +1760,13 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         }
       },
       "indexes": {
-        "import_row_batch_idx": {
-          "name": "import_row_batch_idx",
+        "import_item_row_batch_idx": {
+          "name": "import_item_row_batch_idx",
           "columns": [
             {
               "expression": "batch_id",
@@ -1586,8 +1780,8 @@
           "method": "btree",
           "with": {}
         },
-        "import_row_status_idx": {
-          "name": "import_row_status_idx",
+        "import_item_row_status_idx": {
+          "name": "import_item_row_status_idx",
           "columns": [
             {
               "expression": "status",
@@ -1603,9 +1797,9 @@
         }
       },
       "foreignKeys": {
-        "import_rows_batch_id_import_batches_id_fk": {
-          "name": "import_rows_batch_id_import_batches_id_fk",
-          "tableFrom": "import_rows",
+        "import_item_rows_batch_id_import_batches_id_fk": {
+          "name": "import_item_rows_batch_id_import_batches_id_fk",
+          "tableFrom": "import_item_rows",
           "tableTo": "import_batches",
           "columnsFrom": [
             "batch_id"
@@ -1619,8 +1813,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "import_row_batch_number_unique": {
-          "name": "import_row_batch_number_unique",
+        "import_item_row_batch_number_unique": {
+          "name": "import_item_row_batch_number_unique",
           "nullsNotDistinct": false,
           "columns": [
             "batch_id",
@@ -1752,13 +1946,13 @@
           "name": "qr_token",
           "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "qr_version": {
           "name": "qr_version",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": 1
         },
         "qr_generated_at": {
@@ -1777,14 +1971,14 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "deleted_at": {
@@ -1941,7 +2135,29 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "item_inventory_code_unique": {
+          "name": "item_inventory_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "inventory_code"
+          ]
+        },
+        "item_qr_token_unique": {
+          "name": "item_qr_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "qr_token"
+          ]
+        },
+        "item_item_code_unique": {
+          "name": "item_item_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "item_code"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

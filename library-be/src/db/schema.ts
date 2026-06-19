@@ -239,7 +239,7 @@ export const members = pgTable("members", {
 
 export const bibliographies = pgTable("bibliographies", {
   id: uuid("id").primaryKey().defaultRandom(),
-  title: varchar("title", { length: 500 }),
+  title: varchar("title", { length: 500 }).notNull(),
   isbnIssn: varchar("isbn_issn", { length: 255 }),
   edition: varchar("edition", { length: 100 }),
   publisherId: integer("publisher_id").references(() => publishers.id),
@@ -259,8 +259,8 @@ export const bibliographies = pgTable("bibliographies", {
   description: text("description"),
   type: collectionTypeEnum("type"),
   stock: integer("stock").notNull().default(0),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at")
 }, (table) => ({
   titleIdx: index("bibliography_title_idx").on(table.title),
@@ -340,12 +340,12 @@ export const items = pgTable("items", {
   price: numeric("price", { precision: 14, scale: 2 }),
   priceCurrency: varchar("price_currency", { length: 10 }).default("IDR"),
   invoiceDate: date("invoice_date"),
-  qrToken: varchar("qr_token", { length: 100 }),
-  qrVersion: integer("qr_version").default(1),
+  qrToken: varchar("qr_token", { length: 100 }).notNull(),
+  qrVersion: integer("qr_version").notNull().default(1),
   qrGeneratedAt: timestamp("qr_generated_at"),
   qrRevokedAt: timestamp("qr_revoked_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at")
 }, (table) => ({
   bibIdx: index("item_bibliography_idx").on(table.bibliographyId),
@@ -353,7 +353,10 @@ export const items = pgTable("items", {
   deletedAtIdx: index("item_deleted_at_idx").on(table.deletedAt),
   locationIdx: index("item_location_idx").on(table.locationId),
   itemCodeIdx: index("item_code_idx").on(table.itemCode),
-  qrTokenIdx: index("item_qr_token_idx").on(table.qrToken)
+  qrTokenIdx: index("item_qr_token_idx").on(table.qrToken),
+  inventoryCodeUnique: unique("item_inventory_code_unique").on(table.inventoryCode),
+  qrTokenUnique: unique("item_qr_token_unique").on(table.qrToken),
+  itemCodeUnique: unique("item_item_code_unique").on(table.itemCode)
 }));
 
 // ==========================================
@@ -501,24 +504,49 @@ export const importBatches = pgTable("import_batches", {
   errorReportPath: text("error_report_path"),
   metadata: jsonb("metadata"),
   createdBy: text("created_by").references(() => Users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   committedAt: timestamp("committed_at")
 });
 
-export const importRows = pgTable("import_rows", {
+export const importBibliographyRows = pgTable("import_bibliography_rows", {
   id: uuid("id").primaryKey().defaultRandom(),
   batchId: uuid("batch_id").notNull().references(() => importBatches.id),
   rowNumber: integer("row_number").notNull(),
   rawData: jsonb("raw_data").notNull(),
   status: importRowStatusEnum("status").notNull().default("pending"),
-  errors: jsonb("errors"),
   resolvedData: jsonb("resolved_data"),
   resolvedId: uuid("resolved_id"),
-  createdAt: timestamp("created_at").defaultNow()
+  createdAt: timestamp("created_at").notNull().defaultNow()
 }, (table) => ({
-  batchIdx: index("import_row_batch_idx").on(table.batchId),
-  statusIdx: index("import_row_status_idx").on(table.status),
-  batchRowUnique: unique("import_row_batch_number_unique").on(table.batchId, table.rowNumber)
+  batchIdx: index("import_bib_row_batch_idx").on(table.batchId),
+  statusIdx: index("import_bib_row_status_idx").on(table.status),
+  batchRowUnique: unique("import_bib_row_batch_number_unique").on(table.batchId, table.rowNumber)
+}));
+
+export const importItemRows = pgTable("import_item_rows", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  batchId: uuid("batch_id").notNull().references(() => importBatches.id),
+  rowNumber: integer("row_number").notNull(),
+  rawData: jsonb("raw_data").notNull(),
+  status: importRowStatusEnum("status").notNull().default("pending"),
+  resolvedData: jsonb("resolved_data"),
+  resolvedId: uuid("resolved_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+}, (table) => ({
+  batchIdx: index("import_item_row_batch_idx").on(table.batchId),
+  statusIdx: index("import_item_row_status_idx").on(table.status),
+  batchRowUnique: unique("import_item_row_batch_number_unique").on(table.batchId, table.rowNumber)
+}));
+
+export const importErrors = pgTable("import_errors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  batchId: uuid("batch_id").notNull().references(() => importBatches.id),
+  rowNumber: integer("row_number").notNull(),
+  rawData: jsonb("raw_data").notNull(),
+  errors: jsonb("errors").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+}, (table) => ({
+  batchIdx: index("import_error_batch_idx").on(table.batchId)
 }));
 
 // ==========================================
@@ -583,9 +611,19 @@ export const returnRequestRelations = relations(returnRequests, ({ one }) => ({
 
 export const importBatchRelations = relations(importBatches, ({ one, many }) => ({
   creator: one(Users, { fields: [importBatches.createdBy], references: [Users.id] }),
-  rows: many(importRows)
+  bibliographyRows: many(importBibliographyRows),
+  itemRows: many(importItemRows),
+  errors: many(importErrors)
 }));
 
-export const importRowRelations = relations(importRows, ({ one }) => ({
-  batch: one(importBatches, { fields: [importRows.batchId], references: [importBatches.id] })
+export const importBibliographyRowRelations = relations(importBibliographyRows, ({ one }) => ({
+  batch: one(importBatches, { fields: [importBibliographyRows.batchId], references: [importBatches.id] })
+}));
+
+export const importItemRowRelations = relations(importItemRows, ({ one }) => ({
+  batch: one(importBatches, { fields: [importItemRows.batchId], references: [importBatches.id] })
+}));
+
+export const importErrorRelations = relations(importErrors, ({ one }) => ({
+  batch: one(importBatches, { fields: [importErrors.batchId], references: [importBatches.id] })
 }));

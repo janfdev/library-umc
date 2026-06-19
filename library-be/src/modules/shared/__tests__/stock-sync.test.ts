@@ -16,6 +16,7 @@ describe("syncCollectionAvailableStock", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockTx = {
+      execute: vi.fn().mockResolvedValue(undefined),
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([{ count: 5 }]),
@@ -29,9 +30,10 @@ describe("syncCollectionAvailableStock", () => {
     };
   });
 
-  it("should count available items and update collection stock", async () => {
-    await syncCollectionAvailableStock(mockTx, "collection-1");
+  it("should lock row FOR UPDATE, count items, and update stock", async () => {
+    await syncCollectionAvailableStock(mockTx, "bib-1");
 
+    expect(mockTx.execute).toHaveBeenCalled();
     expect(mockTx.select).toHaveBeenCalled();
     expect(mockTx.update).toHaveBeenCalled();
   });
@@ -43,7 +45,7 @@ describe("syncCollectionAvailableStock", () => {
       }),
     });
 
-    await syncCollectionAvailableStock(mockTx, "collection-1");
+    await syncCollectionAvailableStock(mockTx, "bib-1");
 
     const setCall = mockTx.update().set;
     expect(setCall).toHaveBeenCalledWith(
@@ -58,7 +60,7 @@ describe("syncCollectionAvailableStock", () => {
       }),
     });
 
-    await syncCollectionAvailableStock(mockTx, "collection-1");
+    await syncCollectionAvailableStock(mockTx, "bib-1");
 
     const setCall = mockTx.update().set;
     expect(setCall).toHaveBeenCalledWith(
