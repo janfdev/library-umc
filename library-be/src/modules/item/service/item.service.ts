@@ -1,6 +1,6 @@
 import { db } from "../../../db";
-import { items, bibliographies, locations } from "../../../db/schema";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { items, bibliographies, locations, logs } from "../../../db/schema";
+import { eq, and, like, isNull, sql } from "drizzle-orm";
 import type { CreateItemData, BulkCreateItemData, UpdateItemData } from "../validation/item.validation";
 import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 import crypto from "crypto";
@@ -194,35 +194,73 @@ export class ItemService {
     return { success: true, message: "Item deleted" };
   }
 
-  async regenerateQr(id: string) {
+  async regenerateQr(id: string, userId?: string) {
     const existingItem = await db.query.items.findFirst({
       where: and(eq(items.id, id), isNull(items.deletedAt)),
     });
     if (!existingItem) return { success: false, message: "Item not found" };
 
+    const oldVersion = existingItem.qrVersion || 0;
+    const newVersion = oldVersion + 1;
     const newToken = this.generateQrToken();
-    const [updated] = await db.update(items).set({
-      qrToken: newToken,
-      qrVersion: (existingItem.qrVersion || 0) + 1,
-      qrGeneratedAt: new Date(),
-      qrRevokedAt: null,
-      updatedAt: new Date(),
-    }).where(eq(items.id, id)).returning();
 
+    await db.transaction(async (tx) => {
+      const [updated] = await tx.update(items).set({
+        qrToken: newToken,
+        qrVersion: newVersion,
+        qrGeneratedAt: new Date(),
+        qrRevokedAt: null,
+        updatedAt: new Date(),
+      }).where(eq(items.id, id)).returning();
+
+      await tx.insert(logs).values({
+        userId: userId || null,
+        action: "update",
+        entity: "item",
+        entityId: id,
+        detail: JSON.stringify({
+          event: "QR_REGENERATED",
+          itemCode: existingItem.itemCode,
+          oldVersion,
+          newVersion,
+        }),
+      });
+
+      return updated;
+    });
+
+    const updated = await db.query.items.findFirst({ where: eq(items.id, id) });
     return { success: true, message: "QR regenerated", data: updated };
   }
 
-  async revokeQr(id: string) {
+  async revokeQr(id: string, userId?: string) {
     const existingItem = await db.query.items.findFirst({
       where: and(eq(items.id, id), isNull(items.deletedAt)),
     });
     if (!existingItem) return { success: false, message: "Item not found" };
 
-    const [updated] = await db.update(items).set({
-      qrRevokedAt: new Date(),
-      updatedAt: new Date(),
-    }).where(eq(items.id, id)).returning();
+    await db.transaction(async (tx) => {
+      const [updated] = await tx.update(items).set({
+        qrRevokedAt: new Date(),
+        updatedAt: new Date(),
+      }).where(eq(items.id, id)).returning();
 
+      await tx.insert(logs).values({
+        userId: userId || null,
+        action: "update",
+        entity: "item",
+        entityId: id,
+        detail: JSON.stringify({
+          event: "QR_REVOKED",
+          itemCode: existingItem.itemCode,
+          version: existingItem.qrVersion,
+        }),
+      });
+
+      return updated;
+    });
+
+    const updated = await db.query.items.findFirst({ where: eq(items.id, id) });
     return { success: true, message: "QR revoked", data: updated };
   }
 

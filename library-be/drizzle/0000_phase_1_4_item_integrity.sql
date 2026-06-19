@@ -1,1 +1,0 @@
-ALTER TABLE "items" ADD CONSTRAINT "item_inventory_code_unique" UNIQUE("inventory_code");

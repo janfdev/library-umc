@@ -110,7 +110,7 @@ export class ItemController {
 
   async regenerateQr(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await itemService.regenerateQr(req.params.id as string);
+      const result = await itemService.regenerateQr(req.params.id as string, (req as any).user?.id);
       if (!result.success) return sendError(res, result.message, 400);
       sendSuccess(res, result.message, result.data);
     } catch (error) { next(error); }
@@ -118,7 +118,7 @@ export class ItemController {
 
   async revokeQr(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await itemService.revokeQr(req.params.id as string);
+      const result = await itemService.revokeQr(req.params.id as string, (req as any).user?.id);
       if (!result.success) return sendError(res, result.message, 400);
       sendSuccess(res, result.message, result.data);
     } catch (error) { next(error); }
