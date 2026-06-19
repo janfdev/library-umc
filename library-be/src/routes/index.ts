@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { authRoutes } from "../modules/auth/route/auth.route";
 import { memberRoutes } from "../modules/member/route/member.route";
-import { collectionRoutes } from "../modules/collection/route/collection.route";
 import { categoryRoutes } from "../modules/category/route/category.route";
 import { guestRoutes } from "../modules/guest/route/guest.route";
 import { loanRoutes } from "../modules/loan/route/loan.route";
@@ -14,6 +13,7 @@ import { auditRoutes } from "../modules/audit/route/audit.route";
 import { reportRoutes } from "../modules/report/route/report.route";
 import { locationRoutes } from "../modules/location/route/location.route";
 import bibliographyRoutes from "../modules/bibliography/route/bibliography.route";
+import { collectionRoutes } from "../modules/collection/route/collection.route";
 import importRoutes from "../modules/import/route/import.route";
 import exportRoutes from "../modules/export/route/export.route";
 
@@ -25,22 +25,22 @@ router.use(authRoutes);
 // Member
 router.use(memberRoutes);
 
-// Bibliographies (new P1)
+// Bibliographies (canonical)
 router.use(bibliographyRoutes);
 
-// Collections (compatibility alias)
+// /api/collections compatibility alias → same bibliography logic
 router.use(collectionRoutes);
 
 // Categories
 router.use(categoryRoutes);
 
-// Items (Physical Copies)
+// Items
 router.use(itemRoutes);
 
-// Import (new P1)
+// Import
 router.use(importRoutes);
 
-// Export (new P1)
+// Export
 router.use(exportRoutes);
 
 // Guests
@@ -64,10 +64,10 @@ router.use(recommendationRoutes);
 // Audit
 router.use(auditRoutes);
 
-// Reports & Export
+// Reports
 router.use(reportRoutes);
 
-// Locations (Rak & Ruangan)
+// Locations
 router.use(locationRoutes);
 
 export const routes = router;

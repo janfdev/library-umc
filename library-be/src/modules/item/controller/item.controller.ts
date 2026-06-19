@@ -12,8 +12,8 @@ export class ItemController {
 
   async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const collectionId = req.query.collectionId as string | undefined;
-      const result = await itemService.getAllItems(collectionId);
+      const bibliographyId = req.query.bibliographyId as string | undefined;
+      const result = await itemService.getAllItems(bibliographyId);
       sendSuccess(res, result.message, result.data);
     } catch (error) { next(error); }
   }

@@ -35,9 +35,8 @@ yarn-error.log*
 *.swp
 
 # Drizzle
-drizzle/meta 
-# (Note: Keep drizzle/*.sql migrations in git, but sometimes meta is ignored depending on team preference. 
-# For now usually we commit migrations folder)
+# drizzle/meta is now version-controlled for migration reproducibility
+# Old migrations archived in docs/archive/drizzle-pre-bibliography/
 
 # Temporary
 tmp/

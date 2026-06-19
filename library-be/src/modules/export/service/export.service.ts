@@ -1,6 +1,6 @@
 import { db } from "../../../db";
 import {
-  collections, items, collectionAuthors, collectionSubjects,
+  bibliographies, items, bibliographyAuthors, bibliographySubjects,
   authors, subjects, publishers, publicationPlaces, gmds,
   languages, locations, vendors, collectionTypes
 } from "../../../db/schema";
@@ -39,25 +39,25 @@ function formatDate(d: Date | string | null | undefined): string {
 export class ExportService {
 
   async exportBibliographies(): Promise<string> {
-    const rows = await db.query.collections.findMany({
-      where: isNull(collections.deletedAt),
+    const rows = await db.query.bibliographies.findMany({
+      where: isNull(bibliographies.deletedAt),
       with: {
         gmd: true,
         publisher: true,
         language: true,
         publicationPlace: true,
-        collectionAuthors: { with: { author: true } },
-        collectionSubjects: { with: { subject: true } },
+        bibliographyAuthors: { with: { author: true } },
+        bibliographySubjects: { with: { subject: true } },
         items: { where: isNull(items.deletedAt) },
       },
-      orderBy: [asc(collections.title)],
+      orderBy: [asc(bibliographies.title)],
     });
 
     const lines: string[] = [BIBLIO_HEADERS.join(";")];
 
     for (const bib of rows) {
-      const authorNames = bib.collectionAuthors.map(ca => `<${ca.author.name}>`).join("");
-      const topicNames = bib.collectionSubjects.map(cs => `<${cs.subject.name}>`).join("");
+      const authorNames = bib.bibliographyAuthors.map(ca => `<${ca.author.name}>`).join("");
+      const topicNames = bib.bibliographySubjects.map(cs => `<${cs.subject.name}>`).join("");
       const itemCodes = bib.items.map(i => `<${i.itemCode}>`).join("");
 
       const row = [
@@ -65,7 +65,7 @@ export class ExportService {
         escapeCsvField(bib.gmd?.name || ""),
         escapeCsvField(bib.edition || ""),
         escapeCsvField(bib.isbnIssn || ""),
-        escapeCsvField(bib.publisher?.name || bib.publisher || ""),
+        escapeCsvField(bib.publisher?.name || ""),
         escapeCsvField(bib.publishYear?.toString() || ""),
         escapeCsvField(bib.collation || ""),
         escapeCsvField(bib.seriesTitle || ""),
@@ -90,7 +90,7 @@ export class ExportService {
     const allItems = await db.query.items.findMany({
       where: isNull(items.deletedAt),
       with: {
-        collection: true,
+        bibliography: true,
         location: true,
         vendor: true,
         collectionType: true,
@@ -101,8 +101,8 @@ export class ExportService {
     const lines: string[] = [ITEM_HEADERS.join(";")];
 
     for (const item of allItems) {
-      const locationName = item.location
-        ? `${item.location.room}, ${item.location.rack}, ${item.location.shelf}`
+      const locationName = (item as any).location
+        ? `${(item as any).location.room}, ${(item as any).location.rack}, ${(item as any).location.shelf}`
         : "";
       const statusMap: Record<string, string> = {
         available: "Available",
@@ -114,10 +114,10 @@ export class ExportService {
       const row = [
         escapeCsvField(item.itemCode),
         escapeCsvField(item.callNumber || ""),
-        escapeCsvField(item.collectionType?.name || ""),
+        escapeCsvField((item as any).collectionType?.name || ""),
         escapeCsvField(item.inventoryCode || ""),
         escapeCsvField(formatDate(item.receivedDate)),
-        escapeCsvField(item.vendor?.name || ""),
+        escapeCsvField((item as any).vendor?.name || ""),
         escapeCsvField(item.orderNo || ""),
         escapeCsvField(locationName),
         escapeCsvField(formatDate(item.orderDate)),
@@ -130,7 +130,7 @@ export class ExportService {
         escapeCsvField(formatDate(item.invoiceDate)),
         escapeCsvField(formatDate(item.createdAt)),
         escapeCsvField(formatDate(item.updatedAt)),
-        escapeCsvField(item.collection?.title || ""),
+        escapeCsvField((item as any).bibliography?.title || ""),
       ];
       lines.push(row.join(";"));
     }

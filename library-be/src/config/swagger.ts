@@ -70,15 +70,21 @@ const swaggerDefinition = {
           description: { type: "string", nullable: true },
         },
       },
-      Collection: {
+      Bibliography: {
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          isbn: { type: "string", nullable: true },
+          isbnIssn: { type: "string", nullable: true },
           title: { type: "string" },
-          author: { type: "string" },
-          publisher: { type: "string" },
-          publicationYear: { type: "string" },
+          sor: { type: "string", nullable: true },
+          edition: { type: "string", nullable: true },
+          publisher: { type: "object", nullable: true },
+          publishYear: { type: "integer", nullable: true },
+          collation: { type: "string", nullable: true },
+          seriesTitle: { type: "string", nullable: true },
+          callNumber: { type: "string", nullable: true },
+          classification: { type: "string", nullable: true },
+          notes: { type: "string", nullable: true },
           type: {
             type: "string",
             enum: ["physical_book", "ebook", "journal", "thesis"],
@@ -86,6 +92,11 @@ const swaggerDefinition = {
           categoryId: { type: "integer" },
           description: { type: "string", nullable: true },
           image: { type: "string", nullable: true },
+          stock: { type: "integer" },
+          authors: { type: "array", items: { type: "object" } },
+          subjects: { type: "array", items: { type: "object" } },
+          totalItems: { type: "integer" },
+          availableItems: { type: "integer" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
           category: { $ref: "#/components/schemas/Category" },
@@ -116,7 +127,7 @@ const swaggerDefinition = {
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          collectionId: { type: "string", format: "uuid" },
+          bibliographyId: { type: "string", format: "uuid" },
           barcode: { type: "string", nullable: true },
           uniqueCode: { type: "string", nullable: true },
           status: {
@@ -126,7 +137,7 @@ const swaggerDefinition = {
           locationId: { type: "integer" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
-          collection: { $ref: "#/components/schemas/Collection" },
+          collection: { $ref: "#/components/schemas/Bibliography" },
           location: { $ref: "#/components/schemas/Location" },
         },
       },
@@ -155,7 +166,7 @@ const swaggerDefinition = {
         properties: {
           id: { type: "string", format: "uuid" },
           memberId: { type: "string", format: "uuid" },
-          collectionId: { type: "string", format: "uuid" },
+          bibliographyId: { type: "string", format: "uuid" },
           status: {
             type: "string",
             enum: ["waiting", "fulfilled", "canceled"],
@@ -163,7 +174,7 @@ const swaggerDefinition = {
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
           member: { $ref: "#/components/schemas/Member" },
-          collection: { $ref: "#/components/schemas/Collection" },
+          collection: { $ref: "#/components/schemas/Bibliography" },
         },
       },
       Fine: {
@@ -243,8 +254,8 @@ const swaggerDefinition = {
       description: "Guest/Visitor log management (Admin only)",
     },
     {
-      name: "Collections",
-      description: "Book & Collection management",
+        name: "Bibliographies",
+        description: "Book & Bibliography management",
     },
   ],
   paths: {
@@ -326,15 +337,15 @@ const swaggerDefinition = {
         },
       },
     },
-    "/collections": {
+    "/bibliographies": {
       get: {
-        summary: "Get All Collections",
-        description: "Retrieve a list of all collections (books, etc).",
-        tags: ["Collections"],
+        summary: "Get All Bibliographies",
+        description: "Retrieve a list of all bibliographies (books, etc).",
+        tags: ["Bibliographies"],
         security: [],
         responses: {
           200: {
-            description: "List of collections",
+            description: "List of bibliographies",
             content: {
               "application/json": {
                 schema: {
@@ -346,9 +357,9 @@ const swaggerDefinition = {
         },
       },
       post: {
-        summary: "Create New Collection",
+        summary: "Create New Bibliography",
         description: "Add a new collection (book) with cover image upload.",
-        tags: ["Collections"],
+        tags: ["Bibliographies"],
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -404,7 +415,7 @@ const swaggerDefinition = {
         },
         responses: {
           201: {
-            description: "Collection created successfully",
+            description: "Bibliography created successfully",
             content: {
               "application/json": {
                 schema: {

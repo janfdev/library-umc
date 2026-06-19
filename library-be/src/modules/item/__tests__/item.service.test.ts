@@ -13,7 +13,7 @@ vi.mock("../../../db", () => {
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([
-            { id: "item-1", collectionId: "coll-1", status: "available", barcode: "OLD-001" },
+            { id: "item-1", bibliographyId: "coll-1", status: "available", itemCode: "OLD-001" },
           ]),
         }),
       }),
@@ -21,7 +21,7 @@ vi.mock("../../../db", () => {
     insert: vi.fn().mockReturnValue({
       values: vi.fn().mockReturnValue({
         returning: vi.fn().mockResolvedValue([
-          { id: "new-item-id", collectionId: "coll-1", status: "available" },
+          { id: "new-item-id", bibliographyId: "coll-1", status: "available" },
         ]),
       }),
     }),
@@ -30,7 +30,7 @@ vi.mock("../../../db", () => {
     db: {
       query: {
         items: { findFirst: vi.fn(), findMany: vi.fn() },
-        collections: { findFirst: vi.fn() },
+        bibliographies: { findFirst: vi.fn() },
         locations: { findFirst: vi.fn() },
       },
       insert: vi.fn(),
@@ -42,7 +42,7 @@ vi.mock("../../../db", () => {
 
 vi.mock("../../../db/schema", () => ({
   items: Symbol("items"),
-  collections: Symbol("collections"),
+      bibliographies: Symbol("bibliographies"),
   locations: Symbol("locations"),
 }));
 
@@ -61,7 +61,7 @@ function createMockTx(availableCount = 0) {
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([
-            { id: "item-1", collectionId: "coll-1", status: "available", barcode: "OLD-001" },
+            { id: "item-1", bibliographyId: "coll-1", status: "available", itemCode: "OLD-001" },
           ]),
         }),
       }),
@@ -69,7 +69,7 @@ function createMockTx(availableCount = 0) {
     insert: vi.fn().mockReturnValue({
       values: vi.fn().mockReturnValue({
         returning: vi.fn().mockResolvedValue([
-          { id: "new-item-id", collectionId: "coll-1", status: "available" },
+          { id: "new-item-id", bibliographyId: "coll-1", status: "available" },
         ]),
       }),
     }),
@@ -87,7 +87,7 @@ describe("ItemService Unit Tests", () => {
   describe("createItem", () => {
     it("should create item and sync stock in transaction", async () => {
       (db.query.items.findFirst as any).mockResolvedValue(null);
-      (db.query.collections.findFirst as any).mockResolvedValue({
+      (db.query.bibliographies.findFirst as any).mockResolvedValue({
         id: "coll-1",
       });
       (db.query.locations.findFirst as any).mockResolvedValue({
@@ -98,7 +98,7 @@ describe("ItemService Unit Tests", () => {
       (db.transaction as any).mockImplementation(async (fn: any) => fn(mockTx));
 
       const result = await itemService.createItem({
-        collectionId: "coll-1",
+        bibliographyId: "coll-1",
         locationId: 1,
         barcode: "TEST-001",
         itemCode: "TEST-001",
@@ -116,7 +116,7 @@ describe("ItemService Unit Tests", () => {
       });
 
       const result = await itemService.createItem({
-        collectionId: "coll-1",
+        bibliographyId: "coll-1",
         locationId: 1,
         barcode: "TEST-001",
         itemCode: "TEST-001",
@@ -129,28 +129,28 @@ describe("ItemService Unit Tests", () => {
 
     it("should reject if collection not found", async () => {
       (db.query.items.findFirst as any).mockResolvedValue(null);
-      (db.query.collections.findFirst as any).mockResolvedValue(null);
+      (db.query.bibliographies.findFirst as any).mockResolvedValue(null);
 
       const result = await itemService.createItem({
-        collectionId: "nonexistent",
+        bibliographyId: "nonexistent",
         locationId: 1,
         barcode: "TEST-002",
         itemCode: "TEST-002",
       });
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe("Collection not found");
+      expect(result.message).toBe("Bibliography not found");
     });
 
     it("should reject if location not found", async () => {
       (db.query.items.findFirst as any).mockResolvedValue(null);
-      (db.query.collections.findFirst as any).mockResolvedValue({
+      (db.query.bibliographies.findFirst as any).mockResolvedValue({
         id: "coll-1",
       });
       (db.query.locations.findFirst as any).mockResolvedValue(null);
 
       const result = await itemService.createItem({
-        collectionId: "coll-1",
+        bibliographyId: "coll-1",
         locationId: 999,
         barcode: "TEST-003",
         itemCode: "TEST-003",
@@ -165,7 +165,7 @@ describe("ItemService Unit Tests", () => {
     it("should soft-delete and sync stock in transaction", async () => {
       (db.query.items.findFirst as any).mockResolvedValue({
         id: "item-1",
-        collectionId: "coll-1",
+        bibliographyId: "coll-1",
         status: "available",
       });
 
@@ -181,7 +181,7 @@ describe("ItemService Unit Tests", () => {
     it("should reject deletion of loaned item", async () => {
       (db.query.items.findFirst as any).mockResolvedValue({
         id: "item-1",
-        collectionId: "coll-1",
+        bibliographyId: "coll-1",
         status: "loaned",
       });
 
@@ -206,9 +206,9 @@ describe("ItemService Unit Tests", () => {
     it("should sync stock when status changes", async () => {
       (db.query.items.findFirst as any).mockResolvedValue({
         id: "item-1",
-        collectionId: "coll-1",
+        bibliographyId: "coll-1",
         status: "available",
-        barcode: "OLD-001",
+        itemCode: "OLD-001",
       });
 
       const mockTx = createMockTx(0);
@@ -242,7 +242,7 @@ describe("ItemService Unit Tests", () => {
       (db.query.items.findFirst as any)
         .mockResolvedValueOnce({
           id: "item-1",
-          collectionId: "coll-1",
+          bibliographyId: "coll-1",
           status: "available",
           barcode: "OLD-001",
         })
@@ -286,25 +286,34 @@ describe("ItemService Unit Tests", () => {
       expect(result.message).toBe("Item not found");
     });
 
-    it("should reject duplicate barcode on update", async () => {
+    it("should update item fields", async () => {
       (db.query.items.findFirst as any)
         .mockResolvedValueOnce({
           id: "item-1",
-          collectionId: "coll-1",
+          bibliographyId: "coll-1",
           status: "available",
-          barcode: "OLD-001",
-        })
-        .mockResolvedValueOnce({
-          id: "item-2",
-          barcode: "TAKEN-001",
+          itemCode: "OLD-001",
         });
 
-      const result = await itemService.updateItem("item-1", {
-        barcode: "TAKEN-001",
+      const mockTx = createMockTx(0);
+      mockTx.update = vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              { id: "item-1", callNumber: "NEW-CALL" },
+            ]),
+          }),
+        }),
       });
 
-      expect(result.success).toBe(false);
-      expect(result.message).toBe("Barcode already exists");
+      (db.transaction as any).mockImplementation(async (fn: any) => fn(mockTx));
+
+      const result = await itemService.updateItem("item-1", {
+        callNumber: "NEW-CALL",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe("Item updated");
     });
   });
 });

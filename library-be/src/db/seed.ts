@@ -26,6 +26,8 @@ async function seed() {
       updatedAt: now,
     });
     console.log("Created admin user");
+  } else {
+    console.log("Admin user already exists");
   }
 
   // 2. Seed categories
@@ -52,6 +54,8 @@ async function seed() {
       shelf: "Lantai 1",
     });
     console.log("Created default location");
+  } else {
+    console.log("Default location already exists");
   }
 
   // 4. Seed languages
@@ -115,6 +119,8 @@ async function seed() {
       contact: "library@umc.ac.id",
     });
     console.log("Created default vendor");
+  } else {
+    console.log("Default vendor already exists");
   }
 
   console.log("Seeding complete.");

@@ -1,6 +1,6 @@
 import { db } from "../../../db";
 import {
-  importBatches, importRows, collections, items, collectionAuthors, collectionSubjects,
+  importBatches, importRows, bibliographies, items, bibliographyAuthors, bibliographySubjects,
   authors, subjects, publishers, publicationPlaces, gmds, collectionTypes, languages, locations
 } from "../../../db/schema";
 import { eq, and, isNull, sql } from "drizzle-orm";
@@ -245,16 +245,16 @@ export class ImportService {
         try {
           await db.transaction(async (tx) => {
             // Check duplicate by title
-            const existing = await tx.query.collections.findFirst({
-              where: and(eq(collections.title, resolved.title), isNull(collections.deletedAt)),
+            const existing = await tx.query.bibliographies.findFirst({
+              where: and(eq(bibliographies.title, resolved.title), isNull(bibliographies.deletedAt)),
             });
 
-            let collectionId: string;
+            let bibliographyId: string;
             if (existing) {
-              collectionId = existing.id;
+              bibliographyId = existing.id;
               duplicateCount++;
             } else {
-              const [bib] = await tx.insert(collections).values({
+              const [bib] = await tx.insert(bibliographies).values({
                 title: resolved.title,
                 isbnIssn: resolved.isbn_issn || null,
                 edition: resolved.edition || null,
@@ -272,36 +272,36 @@ export class ImportService {
                 publicationPlaceId: resolved._placeId || null,
                 stock: 0,
               }).returning();
-              collectionId = bib.id;
+              bibliographyId = bib.id;
             }
 
             // Sync authors
             if (resolved._parsedAuthors && resolved._parsedAuthors.length > 0) {
-              await tx.delete(collectionAuthors).where(eq(collectionAuthors.collectionId, collectionId));
+              await tx.delete(bibliographyAuthors).where(eq(bibliographyAuthors.bibliographyId, bibliographyId));
               for (const authorName of resolved._parsedAuthors) {
                 const norm = normalizeName(authorName);
                 let author = await tx.query.authors.findFirst({ where: eq(authors.normalizedName, norm) });
                 if (!author) {
                   [author] = await tx.insert(authors).values({ name: authorName.trim(), normalizedName: norm }).returning();
                 }
-                await tx.insert(collectionAuthors).values({ collectionId, authorId: author.id, role: "primary" });
+                await tx.insert(bibliographyAuthors).values({ bibliographyId, authorId: author.id, role: "primary" });
               }
             }
 
             // Sync subjects
             if (resolved._parsedSubjects && resolved._parsedSubjects.length > 0) {
-              await tx.delete(collectionSubjects).where(eq(collectionSubjects.collectionId, collectionId));
+              await tx.delete(bibliographySubjects).where(eq(bibliographySubjects.bibliographyId, bibliographyId));
               for (const subjectName of resolved._parsedSubjects) {
                 const norm = normalizeName(subjectName);
                 let subject = await tx.query.subjects.findFirst({ where: eq(subjects.normalizedName, norm) });
                 if (!subject) {
                   [subject] = await tx.insert(subjects).values({ name: subjectName.trim(), normalizedName: norm }).returning();
                 }
-                await tx.insert(collectionSubjects).values({ collectionId, subjectId: subject.id });
+                await tx.insert(bibliographySubjects).values({ bibliographyId, subjectId: subject.id });
               }
             }
 
-            await db.update(importRows).set({ status: "committed", resolvedId: collectionId }).where(eq(importRows.id, row.id));
+            await db.update(importRows).set({ status: "committed", resolvedId: bibliographyId }).where(eq(importRows.id, row.id));
             committedCount++;
           });
         } catch (err) {
@@ -319,8 +319,8 @@ export class ImportService {
         try {
           await db.transaction(async (tx) => {
             // Find bibliography by title
-            const bib = await tx.query.collections.findFirst({
-              where: and(eq(collections.title, resolved.title), isNull(collections.deletedAt)),
+            const bib = await tx.query.bibliographies.findFirst({
+              where: and(eq(bibliographies.title, resolved.title), isNull(bibliographies.deletedAt)),
             });
             if (!bib) throw new Error(`Bibliography "${resolved.title}" not found`);
 
@@ -335,9 +335,8 @@ export class ImportService {
             }
 
             const [item] = await tx.insert(items).values({
-              collectionId: bib.id,
+              bibliographyId: bib.id,
               itemCode: resolved.item_code,
-              barcode: resolved.item_code,
               callNumber: resolved.call_number || null,
               inventoryCode: resolved.inventory_code || null,
               locationId: resolved._locationId || 1,

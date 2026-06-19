@@ -7,7 +7,7 @@ vi.mock("../../../db", () => ({
 
 vi.mock("../../../db/schema", () => ({
   items: Symbol("items"),
-  collections: Symbol("collections"),
+  bibliographies: Symbol("bibliographies"),
 }));
 
 describe("syncCollectionAvailableStock", () => {

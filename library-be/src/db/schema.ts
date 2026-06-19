@@ -20,96 +20,45 @@ import { relations } from "drizzle-orm";
 // ==========================================
 
 export const collectionTypeEnum = pgEnum("collection_type", [
-  "physical_book",
-  "ebook",
-  "journal",
-  "thesis"
+  "physical_book", "ebook", "journal", "thesis"
 ]);
 export const contentTypeEnum = pgEnum("content_type", ["text", "pdf", "url"]);
 export const itemStatusEnum = pgEnum("item_status", [
-  "available",
-  "loaned",
-  "damaged",
-  "lost"
+  "available", "loaned", "damaged", "lost"
 ]);
 export const loansStatusEnum = pgEnum("loans_status", [
-  "pending",
-  "approved",
-  "returned",
-  "extended",
-  "rejected"
+  "pending", "approved", "returned", "extended", "rejected"
 ]);
 export const reservationsStatusEnum = pgEnum("reservations_status", [
-  "waiting",
-  "fulfilled",
-  "canceled"
+  "waiting", "fulfilled", "canceled"
 ]);
 export const finesStatusEnum = pgEnum("fines_status", ["paid", "unpaid"]);
 export const logsStatusEnum = pgEnum("logs_status", [
-  "create",
-  "update",
-  "delete",
-  "approve",
-  "blacklist",
-  "failed_login",
-  "rate_limited"
+  "create", "update", "delete", "approve", "blacklist", "failed_login", "rate_limited"
 ]);
 export const logsEntityEnum = pgEnum("logs_entity", [
-  "loan",
-  "item",
-  "fine",
-  "Users",
-  "category",
-  "collection",
-  "reservation",
-  "auth"
+  "loan", "item", "fine", "Users", "category", "bibliography", "reservation", "auth"
 ]);
 export const recommendationStatusEnum = pgEnum("recommendation_status", [
-  "pending",
-  "approved",
-  "rejected"
+  "pending", "approved", "rejected"
 ]);
 export const memberType = pgEnum("member_type", [
-  "student",
-  "lecturer",
-  "staff",
-  "super_admin",
-  "external"
+  "student", "lecturer", "staff", "super_admin", "external"
 ]);
 export const memberCardStatusEnum = pgEnum("member_card_status", [
-  "not_requested",
-  "pending",
-  "active",
-  "rejected",
-  "expired"
+  "not_requested", "pending", "active", "rejected", "expired"
 ]);
 export const returnRequestStatusEnum = pgEnum("return_request_status", [
-  "pending",
-  "approved"
+  "pending", "approved"
 ]);
-
-// P1: Import enums
 export const importBatchStatusEnum = pgEnum("import_batch_status", [
-  "uploading",
-  "parsing",
-  "validating",
-  "preview",
-  "approved",
-  "committed",
-  "failed",
-  "cancelled"
+  "uploading", "parsing", "validating", "preview", "approved", "committed", "failed", "cancelled"
 ]);
 export const importBatchTypeEnum = pgEnum("import_batch_type", [
-  "bibliography",
-  "item"
+  "bibliography", "item"
 ]);
 export const importRowStatusEnum = pgEnum("import_row_status", [
-  "pending",
-  "valid",
-  "invalid",
-  "committed",
-  "skipped",
-  "duplicate"
+  "pending", "valid", "invalid", "committed", "skipped", "duplicate"
 ]);
 
 // ==========================================
@@ -138,7 +87,6 @@ export const vendors = pgTable("vendors", {
   deletedAt: timestamp("deleted_at")
 });
 
-// P1: Publishers master
 export const publishers = pgTable("publishers", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -149,7 +97,6 @@ export const publishers = pgTable("publishers", {
   normalizedNameIdx: index("publisher_normalized_name_idx").on(table.normalizedName)
 }));
 
-// P1: Languages master
 export const languages = pgTable("languages", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   code: varchar("code", { length: 10 }).notNull(),
@@ -157,7 +104,6 @@ export const languages = pgTable("languages", {
   deletedAt: timestamp("deleted_at")
 });
 
-// P1: Publication places master
 export const publicationPlaces = pgTable("publication_places", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -168,14 +114,12 @@ export const publicationPlaces = pgTable("publication_places", {
   normalizedNameIdx: index("place_normalized_name_idx").on(table.normalizedName)
 }));
 
-// P1: GMDs master
 export const gmds = pgTable("gmds", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 100 }).notNull(),
   deletedAt: timestamp("deleted_at")
 });
 
-// P1: Collection types master
 export const collectionTypes = pgTable("collection_types", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -183,7 +127,6 @@ export const collectionTypes = pgTable("collection_types", {
   deletedAt: timestamp("deleted_at")
 });
 
-// P1: Authors master
 export const authors = pgTable("authors", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -194,7 +137,6 @@ export const authors = pgTable("authors", {
   normalizedNameIdx: index("author_normalized_name_idx").on(table.normalizedName)
 }));
 
-// P1: Subjects master
 export const subjects = pgTable("subjects", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -209,27 +151,23 @@ export const subjects = pgTable("subjects", {
 // 3. AUTHENTICATION (BETTER AUTH)
 // ==========================================
 
-export const Users = pgTable(
-  "users",
-  {
-    id: text("id").primaryKey(),
-    name: text("name").notNull(),
-    email: text("email").notNull().unique(),
-    emailVerified: boolean("email_verified").notNull(),
-    image: text("image"),
-    createdAt: timestamp("created_at").notNull(),
-    updatedAt: timestamp("updated_at").notNull(),
-    passwordHash: varchar("password_hash", { length: 255 }),
-    deletedAt: timestamp("deleted_at"),
-    role: text("role").default("student"),
-    banned: boolean("banned").default(false),
-    banReason: text("ban_reason"),
-    banExpires: timestamp("ban_expires")
-  },
-  (table) => ({
-    deletedAtIdx: index("user_deleted_at_idx").on(table.deletedAt)
-  })
-);
+export const Users = pgTable("users", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }),
+  deletedAt: timestamp("deleted_at"),
+  role: text("role").default("student"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires")
+}, (table) => ({
+  deletedAtIdx: index("user_deleted_at_idx").on(table.deletedAt)
+}));
 
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
@@ -269,58 +207,39 @@ export const verification = pgTable("verification", {
 });
 
 // ==========================================
-// 4. MEMBERS & PROFILE
+// 4. MEMBERS
 // ==========================================
 
-export const members = pgTable(
-  "members",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().unique().references(() => Users.id),
-    memberType: memberType("member_type").notNull(),
-    nimNidn: varchar("nim_nidn", { length: 255 }),
-    faculty: varchar("faculty", { length: 255 }),
-    originRegion: varchar("origin_region", { length: 255 }),
-    institution: varchar("institution", { length: 255 }),
-    phone: varchar("phone", { length: 100 }),
-    cardStatus: memberCardStatusEnum("card_status").notNull().default("not_requested"),
-    cardNumber: varchar("card_number", { length: 100 }).unique(),
-    cardRequestedAt: timestamp("card_requested_at"),
-    cardApprovedAt: timestamp("card_approved_at"),
-    cardRejectedAt: timestamp("card_rejected_at"),
-    cardRejectedReason: text("card_rejected_reason"),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-    deletedAt: timestamp("deleted_at")
-  },
-  (table) => ({
-    nimIdx: index("member_nim_idx").on(table.nimNidn),
-    deletedAtIdx: index("member_deleted_at_idx").on(table.deletedAt)
-  })
-);
-
-// ==========================================
-// 5. COLLECTIONS (BIBLIOGRAPHY) — EXTENDED
-// ==========================================
-
-export const collections = pgTable("collections", {
+export const members = pgTable("members", {
   id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull().unique().references(() => Users.id),
+  memberType: memberType("member_type").notNull(),
+  nimNidn: varchar("nim_nidn", { length: 255 }),
+  faculty: varchar("faculty", { length: 255 }),
+  originRegion: varchar("origin_region", { length: 255 }),
+  institution: varchar("institution", { length: 255 }),
+  phone: varchar("phone", { length: 100 }),
+  cardStatus: memberCardStatusEnum("card_status").notNull().default("not_requested"),
+  cardNumber: varchar("card_number", { length: 100 }).unique(),
+  cardRequestedAt: timestamp("card_requested_at"),
+  cardApprovedAt: timestamp("card_approved_at"),
+  cardRejectedAt: timestamp("card_rejected_at"),
+  cardRejectedReason: text("card_rejected_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+}, (table) => ({
+  nimIdx: index("member_nim_idx").on(table.nimNidn),
+  deletedAtIdx: index("member_deleted_at_idx").on(table.deletedAt)
+}));
 
-  // Legacy fields (retained for backward compatibility)
-  isbn: varchar("isbn", { length: 255 }),
-  author: varchar("author", { length: 255 }),
-  publisher: varchar("publisher", { length: 150 }),
-  publicationYear: varchar("publication_year", { length: 100 }),
+// ==========================================
+// 5. BIBLIOGRAPHIES (renamed from collections)
+// ==========================================
 
-  // Core fields
+export const bibliographies = pgTable("bibliographies", {
+  id: uuid("id").primaryKey().defaultRandom(),
   title: varchar("title", { length: 500 }),
-  description: text("description"),
-  image: text("image"),
-  stock: integer("stock").notNull().default(0),
-  type: collectionTypeEnum("type"),
-  categoryId: integer("category_id").references(() => categories.id),
-
-  // P1: New bibliography fields
   isbnIssn: varchar("isbn_issn", { length: 255 }),
   edition: varchar("edition", { length: 100 }),
   publisherId: integer("publisher_id").references(() => publishers.id),
@@ -332,49 +251,53 @@ export const collections = pgTable("collections", {
   publicationPlaceId: integer("publication_place_id").references(() => publicationPlaces.id),
   classification: varchar("classification", { length: 100 }),
   notes: text("notes"),
+  image: text("image"),
   sor: text("sor"),
   gmdId: integer("gmd_id").references(() => gmds.id),
   collectionTypeId: integer("collection_type_id").references(() => collectionTypes.id),
-
+  categoryId: integer("category_id").references(() => categories.id),
+  description: text("description"),
+  type: collectionTypeEnum("type"),
+  stock: integer("stock").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at")
 }, (table) => ({
-  titleIdx: index("collection_title_idx").on(table.title),
-  isbnIdx: index("collection_isbn_idx").on(table.isbnIssn),
-  callNumberIdx: index("collection_call_number_idx").on(table.callNumber),
-  publishYearIdx: index("collection_publish_year_idx").on(table.publishYear),
-  deletedAtIdx: index("collection_deleted_at_idx").on(table.deletedAt)
+  titleIdx: index("bibliography_title_idx").on(table.title),
+  isbnIdx: index("bibliography_isbn_idx").on(table.isbnIssn),
+  callNumberIdx: index("bibliography_call_number_idx").on(table.callNumber),
+  publishYearIdx: index("bibliography_publish_year_idx").on(table.publishYear),
+  deletedAtIdx: index("bibliography_deleted_at_idx").on(table.deletedAt)
 }));
 
-// P1: Collection <-> Authors junction
-export const collectionAuthors = pgTable("collection_authors", {
+// P1: Bibliography <-> Authors junction
+export const bibliographyAuthors = pgTable("bibliography_authors", {
   id: uuid("id").primaryKey().defaultRandom(),
-  collectionId: uuid("collection_id").notNull().references(() => collections.id),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
   authorId: integer("author_id").notNull().references(() => authors.id),
   role: varchar("role", { length: 50 }).default("primary"),
   createdAt: timestamp("created_at").defaultNow()
 }, (table) => ({
-  collectionAuthorUnique: unique("collection_author_unique").on(table.collectionId, table.authorId),
-  collectionIdx: index("ca_collection_idx").on(table.collectionId),
-  authorIdx: index("ca_author_idx").on(table.authorId)
+  unique: unique("bibliography_author_unique").on(table.bibliographyId, table.authorId),
+  bibliographyIdx: index("ba_bibliography_idx").on(table.bibliographyId),
+  authorIdx: index("ba_author_idx").on(table.authorId)
 }));
 
-// P1: Collection <-> Subjects junction
-export const collectionSubjects = pgTable("collection_subjects", {
+// P1: Bibliography <-> Subjects junction
+export const bibliographySubjects = pgTable("bibliography_subjects", {
   id: uuid("id").primaryKey().defaultRandom(),
-  collectionId: uuid("collection_id").notNull().references(() => collections.id),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
   subjectId: integer("subject_id").notNull().references(() => subjects.id),
   createdAt: timestamp("created_at").defaultNow()
 }, (table) => ({
-  collectionSubjectUnique: unique("collection_subject_unique").on(table.collectionId, table.subjectId),
-  collectionIdx: index("cs_collection_idx").on(table.collectionId),
-  subjectIdx: index("cs_subject_idx").on(table.subjectId)
+  unique: unique("bibliography_subject_unique").on(table.bibliographyId, table.subjectId),
+  bibliographyIdx: index("bs_bibliography_idx").on(table.bibliographyId),
+  subjectIdx: index("bs_subject_idx").on(table.subjectId)
 }));
 
-export const collectionContents = pgTable("collection_contents", {
+export const bibliographyContents = pgTable("bibliography_contents", {
   id: uuid("id").primaryKey().defaultRandom(),
-  collectionId: uuid("collection_id").references(() => collections.id),
+  bibliographyId: uuid("bibliography_id").references(() => bibliographies.id),
   contentType: contentTypeEnum("content_type"),
   content: text("content"),
   contentUrl: varchar("content_url", { length: 255 }),
@@ -383,111 +306,88 @@ export const collectionContents = pgTable("collection_contents", {
   deletedAt: timestamp("deleted_at")
 });
 
-export const collectionViews = pgTable(
-  "collection_views",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    collectionId: uuid("collection_id").notNull().references(() => collections.id),
-    userId: text("user_id").references(() => Users.id),
-    ipAddress: varchar("ip_address", { length: 45 }),
-    viewedAt: timestamp("viewed_at").defaultNow()
-  },
-  (table) => ({
-    collIdx: index("cv_collection_idx").on(table.collectionId),
-    viewedAtIdx: index("cv_viewed_at_idx").on(table.viewedAt)
-  })
-);
+export const bibliographyViews = pgTable("bibliography_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
+  userId: text("user_id").references(() => Users.id),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  viewedAt: timestamp("viewed_at").defaultNow()
+}, (table) => ({
+  bibIdx: index("bv_bibliography_idx").on(table.bibliographyId),
+  viewedAtIdx: index("bv_viewed_at_idx").on(table.viewedAt)
+}));
 
 // ==========================================
-// 6. ITEMS — EXTENDED
+// 6. ITEMS
 // ==========================================
 
-export const items = pgTable(
-  "items",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    collectionId: uuid("collection_id").notNull().references(() => collections.id),
-
-    // Legacy fields (retained for backward compatibility)
-    barcode: varchar("barcode", { length: 50 }),
-    uniqueCode: varchar("unique_code", { length: 30 }),
-
-    // Core fields
-    status: itemStatusEnum("status").notNull().default("available"),
-    locationId: integer("location_id").notNull().references(() => locations.id),
-
-    // P1: New item fields
-    itemCode: varchar("item_code", { length: 50 }).notNull(),
-    inventoryCode: varchar("inventory_code", { length: 50 }),
-    callNumber: varchar("call_number", { length: 100 }),
-    collectionTypeId: integer("collection_type_id").references(() => collectionTypes.id),
-    vendorId: integer("vendor_id").references(() => vendors.id),
-    receivedDate: date("received_date"),
-    orderNo: varchar("order_no", { length: 100 }),
-    orderDate: date("order_date"),
-    source: varchar("source", { length: 255 }),
-    invoice: varchar("invoice", { length: 255 }),
-    price: numeric("price", { precision: 14, scale: 2 }),
-    priceCurrency: varchar("price_currency", { length: 10 }).default("IDR"),
-    invoiceDate: date("invoice_date"),
-    site: varchar("site", { length: 255 }),
-
-    // P1: QR fields
-    qrToken: varchar("qr_token", { length: 100 }),
-    qrVersion: integer("qr_version").default(1),
-    qrGeneratedAt: timestamp("qr_generated_at"),
-    qrRevokedAt: timestamp("qr_revoked_at"),
-
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-    deletedAt: timestamp("deleted_at")
-  },
-  (table) => ({
-    collIdx: index("item_collection_idx").on(table.collectionId),
-    statusIdx: index("item_status_idx").on(table.status),
-    deletedAtIdx: index("item_deleted_at_idx").on(table.deletedAt),
-    locationIdx: index("item_location_idx").on(table.locationId),
-    itemCodeIdx: index("item_code_idx").on(table.itemCode),
-    qrTokenIdx: index("item_qr_token_idx").on(table.qrToken)
-  })
-);
+export const items = pgTable("items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
+  itemCode: varchar("item_code", { length: 50 }).notNull(),
+  inventoryCode: varchar("inventory_code", { length: 50 }),
+  callNumber: varchar("call_number", { length: 100 }),
+  collectionTypeId: integer("collection_type_id").references(() => collectionTypes.id),
+  locationId: integer("location_id").notNull().references(() => locations.id),
+  vendorId: integer("vendor_id").references(() => vendors.id),
+  receivedDate: date("received_date"),
+  orderNo: varchar("order_no", { length: 100 }),
+  orderDate: date("order_date"),
+  status: itemStatusEnum("status").notNull().default("available"),
+  site: varchar("site", { length: 255 }),
+  source: varchar("source", { length: 255 }),
+  invoice: varchar("invoice", { length: 255 }),
+  price: numeric("price", { precision: 14, scale: 2 }),
+  priceCurrency: varchar("price_currency", { length: 10 }).default("IDR"),
+  invoiceDate: date("invoice_date"),
+  qrToken: varchar("qr_token", { length: 100 }),
+  qrVersion: integer("qr_version").default(1),
+  qrGeneratedAt: timestamp("qr_generated_at"),
+  qrRevokedAt: timestamp("qr_revoked_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+}, (table) => ({
+  bibIdx: index("item_bibliography_idx").on(table.bibliographyId),
+  statusIdx: index("item_status_idx").on(table.status),
+  deletedAtIdx: index("item_deleted_at_idx").on(table.deletedAt),
+  locationIdx: index("item_location_idx").on(table.locationId),
+  itemCodeIdx: index("item_code_idx").on(table.itemCode),
+  qrTokenIdx: index("item_qr_token_idx").on(table.qrToken)
+}));
 
 // ==========================================
 // 7. LOANS, RESERVATIONS, FINES
 // ==========================================
 
-export const loans = pgTable(
-  "loans",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    memberId: uuid("member_id").notNull().references(() => members.id),
-    itemId: uuid("item_id").notNull().references(() => items.id),
-    loanDate: date("loan_date").notNull(),
-    dueDate: date("due_date").notNull(),
-    returnDate: date("return_date"),
-    status: loansStatusEnum("status").notNull(),
-    extendCount: integer("extend_count").default(0).notNull(),
-    approvedBy: text("approved_by").references(() => Users.id),
-    verificationToken: varchar("verification_token", { length: 100 }),
-    verificationExpiresAt: timestamp("verification_expires_at"),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-    deletedAt: timestamp("deleted_at")
-  },
-  (table) => ({
-    statusIdx: index("loan_status_idx").on(table.status),
-    deletedAtIdx: index("loan_deleted_at_idx").on(table.deletedAt),
-    memberIdx: index("loan_member_idx").on(table.memberId),
-    itemIdx: index("loan_item_idx").on(table.itemId),
-    activeLoanIdx: index("loan_active_idx").on(table.itemId, table.status),
-    tokenIdx: index("loan_verification_token_idx").on(table.verificationToken)
-  })
-);
+export const loans = pgTable("loans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberId: uuid("member_id").notNull().references(() => members.id),
+  itemId: uuid("item_id").notNull().references(() => items.id),
+  loanDate: date("loan_date").notNull(),
+  dueDate: date("due_date").notNull(),
+  returnDate: date("return_date"),
+  status: loansStatusEnum("status").notNull(),
+  extendCount: integer("extend_count").default(0).notNull(),
+  approvedBy: text("approved_by").references(() => Users.id),
+  verificationToken: varchar("verification_token", { length: 100 }),
+  verificationExpiresAt: timestamp("verification_expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+}, (table) => ({
+  statusIdx: index("loan_status_idx").on(table.status),
+  deletedAtIdx: index("loan_deleted_at_idx").on(table.deletedAt),
+  memberIdx: index("loan_member_idx").on(table.memberId),
+  itemIdx: index("loan_item_idx").on(table.itemId),
+  activeLoanIdx: index("loan_active_idx").on(table.itemId, table.status),
+  tokenIdx: index("loan_verification_token_idx").on(table.verificationToken)
+}));
 
 export const reservations = pgTable("reservations", {
   id: uuid("id").primaryKey().defaultRandom(),
   memberId: uuid("member_id").notNull().references(() => members.id),
-  collectionId: uuid("collection_id").notNull().references(() => collections.id),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
   status: reservationsStatusEnum("status").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -526,7 +426,7 @@ export const transactions = pgTable("transactions", {
 export const acquisitions = pgTable("acquisitions", {
   id: uuid("id").primaryKey().defaultRandom(),
   vendorId: integer("vendor_id").notNull().references(() => vendors.id),
-  collectionId: uuid("collection_id").notNull().references(() => collections.id),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
   quantity: integer("quantity"),
   acquiredAt: date("acquired_at"),
   createdAt: timestamp("created_at").defaultNow()
@@ -583,7 +483,7 @@ export const guestLogs = pgTable("guest_logs", {
 });
 
 // ==========================================
-// 9. P1: IMPORT STAGING TABLES
+// 9. IMPORT STAGING
 // ==========================================
 
 export const importBatches = pgTable("import_batches", {
@@ -630,141 +530,62 @@ export const userRelations = relations(Users, ({ one }) => ({
 }));
 
 export const memberRelations = relations(members, ({ one, many }) => ({
-  user: one(Users, {
-    fields: [members.userId],
-    references: [Users.id]
-  }),
+  user: one(Users, { fields: [members.userId], references: [Users.id] }),
   loans: many(loans)
 }));
 
-export const collectionRelations = relations(collections, ({ one, many }) => ({
-  category: one(categories, {
-    fields: [collections.categoryId],
-    references: [categories.id]
-  }),
-  publisher: one(publishers, {
-    fields: [collections.publisherId],
-    references: [publishers.id]
-  }),
-  language: one(languages, {
-    fields: [collections.languageId],
-    references: [languages.id]
-  }),
-  publicationPlace: one(publicationPlaces, {
-    fields: [collections.publicationPlaceId],
-    references: [publicationPlaces.id]
-  }),
-  gmd: one(gmds, {
-    fields: [collections.gmdId],
-    references: [gmds.id]
-  }),
-  collectionType: one(collectionTypes, {
-    fields: [collections.collectionTypeId],
-    references: [collectionTypes.id]
-  }),
+export const bibliographyRelations = relations(bibliographies, ({ one, many }) => ({
+  category: one(categories, { fields: [bibliographies.categoryId], references: [categories.id] }),
+  publisher: one(publishers, { fields: [bibliographies.publisherId], references: [publishers.id] }),
+  language: one(languages, { fields: [bibliographies.languageId], references: [languages.id] }),
+  publicationPlace: one(publicationPlaces, { fields: [bibliographies.publicationPlaceId], references: [publicationPlaces.id] }),
+  gmd: one(gmds, { fields: [bibliographies.gmdId], references: [gmds.id] }),
+  collectionType: one(collectionTypes, { fields: [bibliographies.collectionTypeId], references: [collectionTypes.id] }),
   items: many(items),
-  contents: many(collectionContents),
-  collectionAuthors: many(collectionAuthors),
-  collectionSubjects: many(collectionSubjects)
+  contents: many(bibliographyContents),
+  bibliographyAuthors: many(bibliographyAuthors),
+  bibliographySubjects: many(bibliographySubjects)
 }));
 
-export const collectionAuthorsRelations = relations(collectionAuthors, ({ one }) => ({
-  collection: one(collections, {
-    fields: [collectionAuthors.collectionId],
-    references: [collections.id]
-  }),
-  author: one(authors, {
-    fields: [collectionAuthors.authorId],
-    references: [authors.id]
-  })
+export const bibliographyAuthorsRelations = relations(bibliographyAuthors, ({ one }) => ({
+  bibliography: one(bibliographies, { fields: [bibliographyAuthors.bibliographyId], references: [bibliographies.id] }),
+  author: one(authors, { fields: [bibliographyAuthors.authorId], references: [authors.id] })
 }));
 
-export const collectionSubjectsRelations = relations(collectionSubjects, ({ one }) => ({
-  collection: one(collections, {
-    fields: [collectionSubjects.collectionId],
-    references: [collections.id]
-  }),
-  subject: one(subjects, {
-    fields: [collectionSubjects.subjectId],
-    references: [subjects.id]
-  })
+export const bibliographySubjectsRelations = relations(bibliographySubjects, ({ one }) => ({
+  bibliography: one(bibliographies, { fields: [bibliographySubjects.bibliographyId], references: [bibliographies.id] }),
+  subject: one(subjects, { fields: [bibliographySubjects.subjectId], references: [subjects.id] })
 }));
 
 export const itemRelations = relations(items, ({ one, many }) => ({
-  collection: one(collections, {
-    fields: [items.collectionId],
-    references: [collections.id]
-  }),
-  location: one(locations, {
-    fields: [items.locationId],
-    references: [locations.id]
-  }),
-  vendor: one(vendors, {
-    fields: [items.vendorId],
-    references: [vendors.id]
-  }),
-  collectionType: one(collectionTypes, {
-    fields: [items.collectionTypeId],
-    references: [collectionTypes.id]
-  }),
+  bibliography: one(bibliographies, { fields: [items.bibliographyId], references: [bibliographies.id] }),
+  location: one(locations, { fields: [items.locationId], references: [locations.id] }),
+  vendor: one(vendors, { fields: [items.vendorId], references: [vendors.id] }),
+  collectionType: one(collectionTypes, { fields: [items.collectionTypeId], references: [collectionTypes.id] }),
   loans: many(loans)
 }));
 
 export const loanRelations = relations(loans, ({ one }) => ({
-  member: one(members, {
-    fields: [loans.memberId],
-    references: [members.id]
-  }),
-  item: one(items, {
-    fields: [loans.itemId],
-    references: [items.id]
-  }),
-  authApproved: one(Users, {
-    fields: [loans.approvedBy],
-    references: [Users.id]
-  })
-}));
-
-export const recommendationRelations = relations(recommendations, ({ one }) => ({
-  dosen: one(Users, {
-    fields: [recommendations.dosenId],
-    references: [Users.id]
-  })
+  member: one(members, { fields: [loans.memberId], references: [members.id] }),
+  item: one(items, { fields: [loans.itemId], references: [items.id] }),
+  authApproved: one(Users, { fields: [loans.approvedBy], references: [Users.id] })
 }));
 
 export const reservationRelations = relations(reservations, ({ one }) => ({
-  member: one(members, {
-    fields: [reservations.memberId],
-    references: [members.id]
-  }),
-  collection: one(collections, {
-    fields: [reservations.collectionId],
-    references: [collections.id]
-  })
+  member: one(members, { fields: [reservations.memberId], references: [members.id] }),
+  bibliography: one(bibliographies, { fields: [reservations.bibliographyId], references: [bibliographies.id] })
 }));
 
 export const returnRequestRelations = relations(returnRequests, ({ one }) => ({
-  loan: one(loans, {
-    fields: [returnRequests.loanId],
-    references: [loans.id]
-  }),
-  processedByUser: one(Users, {
-    fields: [returnRequests.processedBy],
-    references: [Users.id]
-  })
+  loan: one(loans, { fields: [returnRequests.loanId], references: [loans.id] }),
+  processedByUser: one(Users, { fields: [returnRequests.processedBy], references: [Users.id] })
 }));
 
 export const importBatchRelations = relations(importBatches, ({ one, many }) => ({
-  creator: one(Users, {
-    fields: [importBatches.createdBy],
-    references: [Users.id]
-  }),
+  creator: one(Users, { fields: [importBatches.createdBy], references: [Users.id] }),
   rows: many(importRows)
 }));
 
 export const importRowRelations = relations(importRows, ({ one }) => ({
-  batch: one(importBatches, {
-    fields: [importRows.batchId],
-    references: [importBatches.id]
-  })
+  batch: one(importBatches, { fields: [importRows.batchId], references: [importBatches.id] })
 }));

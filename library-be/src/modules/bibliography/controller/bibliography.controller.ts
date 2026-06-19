@@ -37,7 +37,7 @@ export class BibliographyController {
       }
       const bib = await bibliographyService.create(validation.data);
       await auditService.createLog({
-        action: "create", entity: "collection", entityId: bib?.id,
+        action: "create", entity: "bibliography", entityId: bib?.id,
         userId: (req as any).user?.id, ipAddress: req.ip,
       });
       sendSuccess(res, "Bibliography created", bib, 201);
@@ -56,7 +56,7 @@ export class BibliographyController {
       }
       const bib = await bibliographyService.update(id, validation.data);
       await auditService.createLog({
-        action: "update", entity: "collection", entityId: id,
+        action: "update", entity: "bibliography", entityId: id,
         userId: (req as any).user?.id, ipAddress: req.ip,
       });
       sendSuccess(res, "Bibliography updated", bib);
@@ -71,7 +71,7 @@ export class BibliographyController {
 
       await bibliographyService.softDelete(id);
       await auditService.createLog({
-        action: "delete", entity: "collection", entityId: id,
+        action: "delete", entity: "bibliography", entityId: id,
         userId: (req as any).user?.id, ipAddress: req.ip,
       });
       sendSuccess(res, "Bibliography deleted", null);

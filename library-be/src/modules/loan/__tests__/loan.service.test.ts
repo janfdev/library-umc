@@ -22,7 +22,7 @@ vi.mock("../../../db/schema", () => ({
   items: Symbol("items"),
   members: Symbol("members"),
   fines: Symbol("fines"),
-  collections: Symbol("collections"),
+  bibliographies: Symbol("bibliographies"),
   reservations: Symbol("reservations"),
 }));
 
@@ -147,7 +147,7 @@ describe("LoanService Unit Tests", () => {
           dueDate: "2026-04-10",
           member: { user: { email: "user@example.com", name: "User" } },
           item: {
-            collection: { title: "Buku A", collectionId: "collection-1" },
+            bibliography: { title: "Buku A", bibliographyId: "bib-1" },
           },
         });
         tx.update = vi.fn().mockReturnValue({
@@ -183,7 +183,7 @@ describe("LoanService Unit Tests", () => {
         });
         tx.query.items.findFirst = vi.fn().mockResolvedValueOnce({
           id: "item-1",
-          collectionId: "collection-1",
+          bibliographyId: "bib-1",
         });
         tx.insert = vi.fn().mockImplementation(() => {
           insertCalled = true;
@@ -212,7 +212,7 @@ describe("LoanService Unit Tests", () => {
         });
         tx.query.items.findFirst = vi.fn().mockResolvedValueOnce({
           id: "item-1",
-          collectionId: "collection-1",
+          bibliographyId: "bib-1",
         });
         tx.insert = vi.fn().mockImplementation(() => ({
           values: vi.fn().mockImplementation((data: any) => {
@@ -225,9 +225,9 @@ describe("LoanService Unit Tests", () => {
 
       const result = await loanService.returnLoan("loan-1", "admin-1");
       expect(result.message).toContain("terlambat");
-      expect(insertedFine.amount).toBe("3000");
+      expect(insertedFine.amount).toBe("2500");
       expect(reservationService.fulfillNextReservation).toHaveBeenCalledWith(
-        "collection-1",
+        "bib-1",
       );
     });
   });
