@@ -24,14 +24,22 @@ export class ImportController {
   async parseBatch(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await importService.parseBatch(req.params.batchId as string);
-      sendSuccess(res, "Batch parsed", result);
+      sendSuccess(res, "Batch parsed and validated", result);
+    } catch (error) { next(error); }
+  }
+
+  async validateBatch(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await importService.validateBatch(req.params.batchId as string);
+      sendSuccess(res, "Batch validated", result);
     } catch (error) { next(error); }
   }
 
   async previewBatch(req: Request, res: Response, next: NextFunction) {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
-      const result = await importService.previewBatch(req.params.batchId as string, limit);
+      const offset = parseInt(req.query.offset as string) || 0;
+      const result = await importService.previewBatch(req.params.batchId as string, limit, offset);
       sendSuccess(res, "Preview retrieved", result);
     } catch (error) { next(error); }
   }
@@ -43,9 +51,23 @@ export class ImportController {
     } catch (error) { next(error); }
   }
 
-  async downloadErrors(req: Request, res: Response, next: NextFunction) {
+  async cancelBatch(req: Request, res: Response, next: NextFunction) {
     try {
-      const csv = await importService.downloadErrors(req.params.batchId as string);
+      const result = await importService.cancelBatch(req.params.batchId as string);
+      sendSuccess(res, "Batch cancelled", result);
+    } catch (error) { next(error); }
+  }
+
+  async getErrors(req: Request, res: Response, next: NextFunction) {
+    try {
+      const errors = await importService.getErrors(req.params.batchId as string);
+      sendSuccess(res, "Errors retrieved", errors);
+    } catch (error) { next(error); }
+  }
+
+  async downloadErrorsCsv(req: Request, res: Response, next: NextFunction) {
+    try {
+      const csv = await importService.downloadErrorsCsv(req.params.batchId as string);
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="errors-${req.params.batchId}.csv"`);
       res.send("\uFEFF" + csv);

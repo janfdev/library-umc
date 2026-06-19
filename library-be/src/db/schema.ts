@@ -52,7 +52,7 @@ export const returnRequestStatusEnum = pgEnum("return_request_status", [
   "pending", "approved"
 ]);
 export const importBatchStatusEnum = pgEnum("import_batch_status", [
-  "uploading", "parsing", "validating", "preview", "approved", "committed", "failed", "cancelled"
+  "uploading", "parsing", "validating", "preview", "approving", "committed", "failed", "cancelled"
 ]);
 export const importBatchTypeEnum = pgEnum("import_batch_type", [
   "bibliography", "item"
