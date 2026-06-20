@@ -649,6 +649,197 @@ const swaggerDefinition = {
         },
       },
     },
+    "/import/bibliographies/upload": {
+      post: {
+        summary: "Upload bibliography CSV",
+        description: "Upload a semicolon-delimited CSV file for staged bibliography import. Supports UTF-8 with optional BOM. Max 50MB.",
+        operationId: "uploadBibliography",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["file"],
+                properties: {
+                  file: { type: "string", format: "binary" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          "201": { description: "File uploaded successfully" },
+          "400": { description: "No file uploaded" },
+          "401": { description: "Unauthorized" },
+          "403": { description: "Forbidden" }
+        }
+      }
+    },
+    "/import/items/upload": {
+      post: {
+        summary: "Upload item CSV",
+        description: "Upload a semicolon-delimited CSV file for staged item import.",
+        operationId: "uploadItem",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["file"],
+                properties: {
+                  file: { type: "string", format: "binary" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          "201": { description: "File uploaded" },
+          "400": { description: "No file uploaded" },
+          "401": { description: "Unauthorized" },
+          "403": { description: "Forbidden" }
+        }
+      }
+    },
+    "/import/batches": {
+      get: {
+        summary: "List import batches",
+        description: "Returns all import batches ordered by creation date.",
+        operationId: "listBatches",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": { description: "Batches retrieved" }
+        }
+      }
+    },
+    "/import/batches/{batchId}": {
+      get: {
+        summary: "Get batch details",
+        operationId: "getBatch",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "batchId", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+        ],
+        responses: {
+          "200": { description: "Batch retrieved" },
+          "404": { description: "Not found" }
+        }
+      }
+    },
+    "/import/batches/{batchId}/parse": {
+      post: {
+        summary: "Parse uploaded CSV into staging",
+        description: "Reads CSV, parses rows, inserts into staging tables, validates.",
+        operationId: "parseBatch",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "batchId", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+        ],
+        responses: {
+          "200": { description: "Batch parsed" },
+          "400": { description: "Invalid state" }
+        }
+      }
+    },
+    "/import/batches/{batchId}/preview": {
+      get: {
+        summary: "Preview staging rows",
+        operationId: "previewBatch",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "batchId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } }
+        ],
+        responses: {
+          "200": { description: "Preview retrieved" }
+        }
+      }
+    },
+    "/import/batches/{batchId}/approve": {
+      post: {
+        summary: "Approve and commit staging rows",
+        description: "Commits valid rows in chunks. Idempotent. Returns progress with hasMore flag.",
+        operationId: "approveBatch",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "batchId", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+        ],
+        responses: {
+          "200": { description: "Chunk committed" },
+          "400": { description: "Invalid state" }
+        }
+      }
+    },
+    "/import/batches/{batchId}/cancel": {
+      post: {
+        summary: "Cancel import batch",
+        operationId: "cancelBatch",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "batchId", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+        ],
+        responses: {
+          "200": { description: "Batch cancelled" },
+          "400": { description: "Cannot cancel committed batch" }
+        }
+      }
+    },
+    "/import/batches/{batchId}/errors": {
+      get: {
+        summary: "Get import errors",
+        operationId: "getErrors",
+        tags: ["Import"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "batchId", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+        ],
+        responses: {
+          "200": { description: "Errors retrieved" }
+        }
+      }
+    },
+    "/export/bibliographies": {
+      get: {
+        summary: "Export bibliographies as Senayan CSV",
+        description: "Exports all bibliographies in exact Senayan format. Semicolon-delimited, UTF-8 with BOM.",
+        operationId: "exportBibliographies",
+        tags: ["Export"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "CSV file",
+            content: { "text/csv": { schema: { type: "string" } } }
+          }
+        }
+      }
+    },
+    "/export/items": {
+      get: {
+        summary: "Export items as Senayan CSV",
+        description: "Exports all items in exact Senayan format. Semicolon-delimited, UTF-8 with BOM.",
+        operationId: "exportItems",
+        tags: ["Export"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "CSV file",
+            content: { "text/csv": { schema: { type: "string" } } }
+          }
+        }
+      }
+    },
   },
 };
 
