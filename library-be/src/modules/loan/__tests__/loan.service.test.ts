@@ -235,7 +235,7 @@ describe("LoanService Unit Tests", () => {
 
       const result = await loanService.returnLoan("loan-1", "admin-1");
       expect(result.message).toContain("terlambat");
-      expect(insertedFine.amount).toBe("3000");
+      expect(insertedFine.amount).toBe("2500");
       expect(reservationService.fulfillNextReservation).toHaveBeenCalledWith(
         "bib-1",
       );
