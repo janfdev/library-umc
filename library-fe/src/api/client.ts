@@ -1,11 +1,4 @@
-/**
- * MUCILIB API Client
- * 
- * Typed client for all backend endpoints.
- * Uses cookie-based authentication (Better Auth).
- */
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { API_BASE_URL } from "@/utils/api-config";
 
 // ==========================================
 // Types
@@ -15,12 +8,6 @@ export interface ApiSuccessResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T;
-}
-
-export interface ApiErrorResponse {
-  success: boolean;
-  message: string;
-  data?: unknown;
 }
 
 export interface PaginationMeta {
@@ -149,7 +136,7 @@ async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<ApiSuccessResponse<T>> {
-  const url = `${API_BASE}${path}`;
+  const url = `${API_BASE_URL}${path}`;
   const response = await fetch(url, {
     ...options,
     credentials: "include",
@@ -166,13 +153,10 @@ async function apiFetch<T>(
   return response.json();
 }
 
-async function apiFetchBlob(
-  path: string,
-  filename: string
-): Promise<void> {
-  const url = `${API_BASE}${path}`;
+async function apiFetchBlob(path: string, filename: string): Promise<void> {
+  const url = `${API_BASE_URL}${path}`;
   const response = await fetch(url, { credentials: "include" });
-  
+
   if (!response.ok) {
     throw new Error(`Export failed: ${response.statusText}`);
   }
@@ -193,15 +177,7 @@ async function apiFetchBlob(
 // ==========================================
 
 export const bibliographyApi = {
-  list: (params?: {
-    q?: string;
-    page?: number;
-    limit?: string;
-    sort?: string;
-    order?: string;
-    gmdId?: number;
-    languageId?: number;
-  }) => {
+  list: (params?: Record<string, string | number | undefined>) => {
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -215,14 +191,14 @@ export const bibliographyApi = {
   getById: (id: string) =>
     apiFetch<Bibliography>(`/api/bibliographies/${id}`),
 
-  create: (data: Partial<Bibliography>) =>
+  create: (data: Record<string, unknown>) =>
     apiFetch<Bibliography>("/api/bibliographies", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
 
-  update: (id: string, data: Partial<Bibliography>) =>
+  update: (id: string, data: Record<string, unknown>) =>
     apiFetch<Bibliography>(`/api/bibliographies/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -230,9 +206,7 @@ export const bibliographyApi = {
     }),
 
   delete: (id: string) =>
-    apiFetch<null>(`/api/bibliographies/${id}`, {
-      method: "DELETE",
-    }),
+    apiFetch<null>(`/api/bibliographies/${id}`, { method: "DELETE" }),
 
   getItems: (id: string) =>
     apiFetch<Item[]>(`/api/bibliographies/${id}/items`),
@@ -246,24 +220,20 @@ export const itemApi = {
   getById: (id: string) =>
     apiFetch<Item>(`/api/items/${id}`),
 
-  create: (bibliographyId: string, data: Partial<Item>) =>
+  create: (bibliographyId: string, data: Record<string, unknown>) =>
     apiFetch<Item>(`/api/bibliographies/${bibliographyId}/items`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
 
-  bulkCreate: (bibliographyId: string, data: { items: Array<{ itemCode: string; locationId?: number }> }) =>
+  bulkCreate: (bibliographyId: string, data: { items: Array<Record<string, unknown>>; defaults?: Record<string, unknown> }) =>
     apiFetch<{ created: number; errors: unknown[] }>(
       `/api/bibliographies/${bibliographyId}/items/bulk`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }
     ),
 
-  update: (id: string, data: Partial<Item>) =>
+  update: (id: string, data: Record<string, unknown>) =>
     apiFetch<Item>(`/api/items/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -285,28 +255,19 @@ export const itemApi = {
     }),
 
   delete: (id: string) =>
-    apiFetch<null>(`/api/items/${id}`, {
-      method: "DELETE",
-    }),
+    apiFetch<null>(`/api/items/${id}`, { method: "DELETE" }),
 
-  getQrSvg: (id: string) =>
-    `${API_BASE}/api/items/${id}/qr?format=svg`,
-
-  getQrPng: (id: string) =>
-    `${API_BASE}/api/items/${id}/qr?format=png`,
+  getQrSvg: (id: string) => `${API_BASE_URL}/api/items/${id}/qr?format=svg`,
+  getQrPng: (id: string) => `${API_BASE_URL}/api/items/${id}/qr?format=png`,
 
   resolveQr: (token: string) =>
     apiFetch<Item>(`/api/qr/resolve/${token}`),
 
   regenerateQr: (id: string) =>
-    apiFetch<Item>(`/api/items/${id}/qr/regenerate`, {
-      method: "POST",
-    }),
+    apiFetch<Item>(`/api/items/${id}/qr/regenerate`, { method: "POST" }),
 
   revokeQr: (id: string) =>
-    apiFetch<Item>(`/api/items/${id}/qr/revoke`, {
-      method: "POST",
-    }),
+    apiFetch<Item>(`/api/items/${id}/qr/revoke`, { method: "POST" }),
 };
 
 // ==========================================
@@ -345,9 +306,7 @@ export const importApi = {
     ),
 
   preview: (batchId: string, limit = 20) =>
-    apiFetch<ImportPreviewResponse>(
-      `/api/import/batches/${batchId}/preview?limit=${limit}`
-    ),
+    apiFetch<ImportPreviewResponse>(`/api/import/batches/${batchId}/preview?limit=${limit}`),
 
   approve: (batchId: string) =>
     apiFetch<ImportApprovalResponse>(
@@ -361,8 +320,7 @@ export const importApi = {
       { method: "POST" }
     ),
 
-  list: () =>
-    apiFetch<ImportBatch[]>("/api/import/batches"),
+  list: () => apiFetch<ImportBatch[]>("/api/import/batches"),
 
   get: (batchId: string) =>
     apiFetch<ImportBatch>(`/api/import/batches/${batchId}`),
