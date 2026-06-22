@@ -25,28 +25,28 @@ export const ROLE_PERMISSIONS = {
     canRecommendBook: false, // Typo fixed
     canVerifyFines: false,
     canManageLoans: false,
-    canManageCollections: false, // CRUD Buku (Baru)
+    canManageBibliographies: false, // CRUD Buku (Baru)
   },
   [ROLES.LECTURER]: {
     canManageOtherUsers: false,
     canRecommendBook: true,
     canVerifyFines: false,
     canManageLoans: false,
-    canManageCollections: false,
+    canManageBibliographies: false,
   },
   [ROLES.STAFF]: {
     canManageOtherUsers: false,
     canRecommendBook: false,
     canVerifyFines: true,
     canManageLoans: true,
-    canManageCollections: true, // Staff bisa Tambah/Edit/Hapus Buku
+    canManageBibliographies: true, // Staff bisa Tambah/Edit/Hapus Buku
   },
   [ROLES.SUPER_ADMIN]: {
     canManageOtherUsers: true,
     canRecommendBook: true,
     canVerifyFines: true,
     canManageLoans: true,
-    canManageCollections: true,
+    canManageBibliographies: true,
   },
 } as const;
 

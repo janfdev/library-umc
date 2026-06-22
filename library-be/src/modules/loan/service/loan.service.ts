@@ -6,7 +6,7 @@ import {
   members,
   fines,
   reservations,
-  collections,
+  bibliographies,
   Users,
   returnRequests
 } from "../../../db/schema";
@@ -15,34 +15,18 @@ import qrcode from "qrcode";
 import { NotificationService } from "../../notification/service/notification.service";
 import reservationService from "../../reservation/service/reservation.service";
 import { ROLES } from "../../../utils/auth-types";
+import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 
 const notificationService = new NotificationService();
 
 export class LoanService {
-  private async syncCollectionAvailableStock(tx: any, collectionId: string) {
-    const [availableCount] = await tx
-      .select({ count: sql<number>`count(*)` })
-      .from(items)
-      .where(
-        and(
-          eq(items.collectionId, collectionId),
-          eq(items.status, "available"),
-          isNull(items.deletedAt)
-        )
-      );
-
-    await tx
-      .update(collections)
-      .set({ stock: Number(availableCount?.count ?? 0), updatedAt: new Date() })
-      .where(eq(collections.id, collectionId));
-  }
 
   /**
    * 1. Mahasiswa Request Pinjam Buku
    */
   async requestLoan(
     memberId: string,
-    collectionId: string,
+    bibliographyId: string,
     reqLoanDate?: string,
     reqDueDate?: string
   ) {
@@ -71,7 +55,7 @@ export class LoanService {
       .from(reservations)
       .where(
         and(
-          eq(reservations.collectionId, collectionId),
+          eq(reservations.bibliographyId, bibliographyId),
           eq(reservations.status, "waiting"),
           isNull(reservations.deletedAt)
         )
@@ -83,7 +67,7 @@ export class LoanService {
       .from(items)
       .where(
         and(
-          eq(items.collectionId, collectionId),
+          eq(items.bibliographyId, bibliographyId),
           eq(items.status, "available"),
           isNull(items.deletedAt)
         )
@@ -97,10 +81,10 @@ export class LoanService {
       );
     }
 
-    // Validasi item: Cari salinan pertama yang tersedia untuk collectionId ini
+    // Validasi item: Cari salinan pertama yang tersedia untuk bibliographyId ini
     const item = await db.query.items.findFirst({
       where: and(
-        eq(items.collectionId, collectionId),
+        eq(items.bibliographyId, bibliographyId),
         eq(items.status, "available"),
         isNull(items.deletedAt)
       )
@@ -154,7 +138,7 @@ export class LoanService {
       ),
       with: {
         member: { with: { user: true } },
-        item: { with: { collection: true } }
+        item: { with: { bibliography: true } }
       }
     });
 
@@ -179,7 +163,7 @@ export class LoanService {
         where: and(eq(loans.id, loanId), isNull(loans.deletedAt)),
         with: {
           member: { with: { user: true } },
-          item: { with: { collection: true } }
+          item: { with: { bibliography: true } }
         }
       });
 
@@ -204,7 +188,7 @@ export class LoanService {
         .set({ status: "loaned", updatedAt: new Date() })
         .where(eq(items.id, updatedLoan.itemId));
 
-      await this.syncCollectionAvailableStock(tx, loanData.item.collectionId);
+      await syncCollectionAvailableStock(tx, loanData.item.bibliographyId);
 
       return loanData;
     });
@@ -215,7 +199,7 @@ export class LoanService {
         await notificationService.sendLoansNotification(
           result.member.user.email,
           result.member.user.name,
-          result.item.collection.title ?? "Buku",
+          result.item.bibliography.title ?? "Buku",
           result.dueDate
         );
       } catch (error: any) {
@@ -265,7 +249,7 @@ export class LoanService {
         .set({ status: "available", updatedAt: new Date() })
         .where(eq(items.id, updatedLoan.itemId));
 
-      await this.syncCollectionAvailableStock(tx, loanData.item.collectionId);
+      await syncCollectionAvailableStock(tx, loanData.item.bibliographyId);
     });
 
     return {
@@ -300,13 +284,13 @@ export class LoanService {
 
       // Sync collection stock if needed
       const loanItem = await tx.query.items.findFirst({ where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)) });
-      if (loanItem?.collectionId) {
-        await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
+      if (loanItem?.bibliographyId) {
+        await syncCollectionAvailableStock(tx, loanItem.bibliographyId);
       }
 
       // Auto-fulfill next reservation if any
-      if (loanItem?.collectionId) {
-        void reservationService.fulfillNextReservation(loanItem.collectionId);
+      if (loanItem?.bibliographyId) {
+        void reservationService.fulfillNextReservation(loanItem.bibliographyId);
       }
 
       // Calculate late fine
@@ -382,13 +366,13 @@ export class LoanService {
 
       // Sync collection stock if needed
       const loanItem = await tx.query.items.findFirst({ where: and(eq(items.id, loan.itemId), isNull(items.deletedAt)) });
-      if (loanItem?.collectionId) {
-        await this.syncCollectionAvailableStock(tx, loanItem.collectionId);
+      if (loanItem?.bibliographyId) {
+        await syncCollectionAvailableStock(tx, loanItem.bibliographyId);
       }
 
       // Auto-fulfill next reservation if any
-      if (loanItem?.collectionId) {
-        void reservationService.fulfillNextReservation(loanItem.collectionId);
+      if (loanItem?.bibliographyId) {
+        void reservationService.fulfillNextReservation(loanItem.bibliographyId);
       }
 
       // Calculate late fine (same logic as returnLoan)
@@ -461,7 +445,7 @@ export class LoanService {
         loan: {
           with: {
             member: { with: { user: true } },
-            item: { with: { collection: true } }
+            item: { with: { bibliography: true } }
           }
         }
       }
@@ -504,7 +488,7 @@ export class LoanService {
       with: {
         item: {
           with: {
-            collection: true,
+            bibliography: true,
             location: true
           }
         },
@@ -592,7 +576,7 @@ export class LoanService {
         .from(reservations)
         .where(
           and(
-            eq(reservations.collectionId, loan.item.collectionId),
+            eq(reservations.bibliographyId, loan.item.bibliographyId),
             eq(reservations.status, "waiting"),
             isNull(reservations.deletedAt)
           )

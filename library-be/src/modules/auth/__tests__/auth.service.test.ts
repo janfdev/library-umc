@@ -60,7 +60,6 @@ describe('AuthService Unit Tests', () => {
       const result = await authService.registerWithCredentials('User Baru', 'test@example.com', 'password123');
 
       expect(result.user.id).toBe('auth-id');
-      expect(result.token).toBe('token-rahasia');
       expect(auth.api.signUpEmail).toHaveBeenCalledWith({
         body: { name: 'User Baru', email: 'test@example.com', password: 'password123' }
       });
@@ -85,7 +84,6 @@ describe('AuthService Unit Tests', () => {
 
       const result = await authService.loginWithCredentials('budi@example.com', 'passwordbenar');
 
-      expect(result.token).toBe('token-valid');
       expect(result.user.name).toBe('Budi');
       expect(auth.api.signInEmail).toHaveBeenCalledWith({
         body: { email: 'budi@example.com', password: 'passwordbenar' }

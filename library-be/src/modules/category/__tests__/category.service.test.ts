@@ -8,7 +8,7 @@ vi.mock('../../../db', () => ({
   db: {
     query: {
       categories: { findFirst: vi.fn() },
-      collections: { findFirst: vi.fn() }
+      bibliographies: { findFirst: vi.fn() }
     },
     insert: vi.fn().mockReturnValue({
       values: vi.fn().mockReturnValue({
@@ -99,12 +99,12 @@ describe('CategoryService Unit Tests', () => {
       // 1. Rekayasa DB: Kategori ditemukan
       (db.query.categories.findFirst as any).mockResolvedValueOnce({ id: 1, name: 'Fiksi' });
       // 2. Rekayasa DB: Koleksi buku yang memakai kategori ini ADA (Ditemukan)
-      (db.query.collections.findFirst as any).mockResolvedValueOnce({ id: 10, title: 'Harry Potter', categoryId: 1 });
+      (db.query.bibliographies.findFirst as any).mockResolvedValueOnce({ id: 10, title: 'Harry Potter', categoryId: 1 });
 
       const result = await categoryService.deleteCategory(1);
       
       expect(result.success).toBe(false);
-      expect(result.message).toContain('It is being used by one or more collections');
+      expect(result.message).toContain('It is being used by one or more bibliographies');
       expect(db.update).not.toHaveBeenCalled(); // Jangan sampai ke-delete
     });
   });

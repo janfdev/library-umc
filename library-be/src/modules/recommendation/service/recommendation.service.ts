@@ -1,5 +1,5 @@
 import { db } from "../../../db";
-import { recommendations, collections } from "../../../db/schema";
+import { recommendations, bibliographies } from "../../../db/schema";
 import { eq, and, isNull, desc, ilike } from "drizzle-orm";
 import { NotFoundError, BadRequestError } from "../../../exceptions/AppError";
 
@@ -19,10 +19,10 @@ class RecommendationService {
   ) {
     // Priority 1: Check by ISBN if provided (most reliable)
     if (data.isbn) {
-      const existingByISBN = await db.query.collections.findFirst({
+      const existingByISBN = await db.query.bibliographies.findFirst({
         where: and(
-          eq(collections.isbn, data.isbn),
-          isNull(collections.deletedAt)
+          eq(bibliographies.isbnIssn, data.isbn),
+          isNull(bibliographies.deletedAt)
         )
       });
 
@@ -34,11 +34,11 @@ class RecommendationService {
     }
 
     // Priority 2: Check by Title & Author if ISBN not found / not provided
-    const existingCollection = await db.query.collections.findFirst({
+    const existingCollection = await db.query.bibliographies.findFirst({
       where: and(
-        ilike(collections.title, `%${data.title}%`),
-        ilike(collections.author, `%${data.author}%`),
-        isNull(collections.deletedAt)
+        ilike(bibliographies.title, `%${data.title}%`),
+        ilike(bibliographies.sor, `%${data.author}%`),
+        isNull(bibliographies.deletedAt)
       )
     });
 

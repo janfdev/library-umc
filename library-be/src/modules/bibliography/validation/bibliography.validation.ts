@@ -1,0 +1,55 @@
+import z from "zod";
+
+export const createBibliographySchema = z.object({
+  title: z.string().min(1, "Title is required").max(500),
+  isbnIssn: z.string().max(255).optional().or(z.literal("")),
+  edition: z.string().max(100).optional().or(z.literal("")),
+  publisherId: z.coerce.number().int().positive().optional(),
+  publishYear: z.coerce.number().int().min(1000).max(9999).optional(),
+  collation: z.string().max(255).optional().or(z.literal("")),
+  seriesTitle: z.string().max(255).optional().or(z.literal("")),
+  callNumber: z.string().max(100).optional().or(z.literal("")),
+  languageId: z.coerce.number().int().positive().optional(),
+  publicationPlaceId: z.coerce.number().int().positive().optional(),
+  classification: z.string().max(100).optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
+  sor: z.string().optional().or(z.literal("")),
+  gmdId: z.coerce.number().int().positive().optional(),
+  collectionTypeId: z.coerce.number().int().positive().optional(),
+  categoryId: z.coerce.number().int().positive().optional(),
+  description: z.string().optional().or(z.literal("")),
+  image: z.string().optional().or(z.literal("")),
+  type: z.enum(["physical_book", "ebook", "journal", "thesis"]).optional(),
+  authors: z.array(z.object({
+    name: z.string().min(1),
+    role: z.string().default("primary")
+  })).optional(),
+  subjects: z.array(z.object({
+    name: z.string().min(1)
+  })).optional()
+});
+
+export const updateBibliographySchema = createBibliographySchema.partial();
+
+export const bibliographyQuerySchema = z.object({
+  q: z.string().optional(),
+  title: z.string().optional(),
+  isbnIssn: z.string().optional(),
+  author: z.string().optional(),
+  subject: z.string().optional(),
+  callNumber: z.string().optional(),
+  publisher: z.string().optional(),
+  gmdId: z.coerce.number().int().optional(),
+  languageId: z.coerce.number().int().optional(),
+  publishYearFrom: z.coerce.number().int().optional(),
+  publishYearTo: z.coerce.number().int().optional(),
+  hasAvailableItems: z.coerce.boolean().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  sort: z.enum(["title", "publishYear", "createdAt"]).default("title"),
+  order: z.enum(["asc", "desc"]).default("asc")
+});
+
+export type CreateBibliographyData = z.infer<typeof createBibliographySchema>;
+export type UpdateBibliographyData = z.infer<typeof updateBibliographySchema>;
+export type BibliographyQuery = z.infer<typeof bibliographyQuerySchema>;

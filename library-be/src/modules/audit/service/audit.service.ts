@@ -18,7 +18,7 @@ interface CreateLogPayload {
     | "fine"
     | "Users"
     | "category"
-    | "collection"
+    | "bibliography"
     | "reservation"
     | "auth";
   entityId?: string;
@@ -86,7 +86,7 @@ class AuditService {
               | "fine"
               | "Users"
               | "category"
-              | "collection"
+              | "bibliography"
               | "reservation"
               | "auth",
           ),

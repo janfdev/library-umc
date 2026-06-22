@@ -1,6 +1,6 @@
 import { db } from "../../../db";
 import {
-  collections,
+  bibliographies,
   items,
   loans,
   members,
@@ -154,10 +154,10 @@ export class ReportService {
    */
   async getDashboardStats() {
     try {
-      const [totalCollections] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(collections)
-        .where(isNull(collections.deletedAt));
+    const [totalBibliographies] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bibliographies)
+      .where(isNull(bibliographies.deletedAt));
 
       const [totalItems] = await db
         .select({ count: sql<number>`count(*)` })
@@ -201,7 +201,7 @@ export class ReportService {
       return {
         success: true,
         data: {
-          totalCollections: Number(totalCollections.count),
+          totalCollections: Number(totalBibliographies.count),
           totalItems: Number(totalItems.count),
           activeLoans: Number(activeLoans.count),
           overdueLoans: Number(overdueLoans.count),
@@ -223,17 +223,17 @@ export class ReportService {
     try {
       const result = await db
         .select({
-          id: collections.id,
-          title: collections.title,
-          author: collections.author,
-          image: collections.image,
+          id: bibliographies.id,
+          title: bibliographies.title,
+          author: bibliographies.sor,
+          image: bibliographies.image,
           loanCount: sql<number>`count(${loans.id})`
         })
-        .from(collections)
-        .innerJoin(items, eq(items.collectionId, collections.id))
+        .from(bibliographies)
+        .innerJoin(items, eq(items.bibliographyId, bibliographies.id))
         .innerJoin(loans, eq(loans.itemId, items.id))
-        .where(isNull(collections.deletedAt))
-        .groupBy(collections.id)
+        .where(isNull(bibliographies.deletedAt))
+        .groupBy(bibliographies.id)
         .orderBy(desc(sql`count(${loans.id})`))
         .limit(limit);
 
@@ -295,7 +295,7 @@ export class ReportService {
         where: conditions.length > 0 ? and(...conditions) : undefined,
         with: {
           member: { with: { user: true } },
-          item: { with: { collection: true } }
+          item: { with: { bibliography: true } }
         },
         orderBy: [desc(loans.createdAt)]
       });
@@ -326,14 +326,14 @@ export class ReportService {
           paidAt: transactions.paidAt,
           memberName: Users.name,
           memberEmail: Users.email,
-          bookTitle: collections.title
+          bookTitle: bibliographies.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
         .leftJoin(members, eq(loans.memberId, members.id))
         .leftJoin(Users, eq(members.userId, Users.id))
         .leftJoin(items, eq(loans.itemId, items.id))
-        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(bibliographies, eq(items.bibliographyId, bibliographies.id))
         .leftJoin(transactions, eq(transactions.fineId, fines.id))
         .where(and(...conditions))
         .orderBy(desc(fines.createdAt));
@@ -383,14 +383,14 @@ export class ReportService {
           paidAt: transactions.paidAt,
           memberName: Users.name,
           memberEmail: Users.email,
-          bookTitle: collections.title
+          bookTitle: bibliographies.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
         .leftJoin(members, eq(loans.memberId, members.id))
         .leftJoin(Users, eq(members.userId, Users.id))
         .leftJoin(items, eq(loans.itemId, items.id))
-        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(bibliographies, eq(items.bibliographyId, bibliographies.id))
         .leftJoin(transactions, eq(transactions.fineId, fines.id))
         .where(and(...conditions))
         .orderBy(

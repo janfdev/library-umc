@@ -33,7 +33,7 @@ vi.mock('../../db/schema', () => ({
   items:        Symbol('items'),
   members:      Symbol('members'),
   Users:        Symbol('Users'),
-  collections:  Symbol('collections'),
+      bibliographies:  Symbol('bibliographies'),
 }));
 
 const { mockSendFinesNotification } = vi.hoisted(() => {

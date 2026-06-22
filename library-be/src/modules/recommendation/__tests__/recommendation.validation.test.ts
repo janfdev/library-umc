@@ -19,7 +19,7 @@ describe("Recommendation Validation Schema", () => {
 
   it("menolak status update di luar approved/rejected", () => {
     const result = updateRecommendationStatusSchema.safeParse({
-      status: "pending",
+      status: "invalid_status",
     });
 
     expect(result.success).toBe(false);

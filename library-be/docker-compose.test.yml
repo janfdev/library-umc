@@ -1,0 +1,20 @@
+services:
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: mucilib-postgres-test
+    environment:
+      POSTGRES_USER: mucilib_test
+      POSTGRES_PASSWORD: mucilib_test_password
+      POSTGRES_DB: mucilib_test
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mucilib_test -d mucilib_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - mucilib_postgres_test_data:/var/lib/postgresql/data
+
+volumes:
+  mucilib_postgres_test_data:

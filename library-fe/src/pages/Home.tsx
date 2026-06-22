@@ -58,13 +58,14 @@ export default function Home() {
         <div
           className="flex w-full h-screen items-center justify-center text-center"
           style={{
-            backgroundImage: `url(${Background})`, // Fixed: missing closing parenthesis
+            backgroundImage: `url(${Background})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat"
           }}
         >
-          <div className="space-y-3 sm:space-y-4 px-4 sm:px-6">
+          {/* Perbaikan: Menambahkan flex, flex-col, dan items-center di sini */}
+          <div className="flex flex-col items-center space-y-3 sm:space-y-4 px-4 sm:px-6 w-full">
             <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white space-y-2">
               <h1>
                 Perpustakaan
@@ -75,8 +76,8 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Search Bar */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mt-6 w-full sm:max-w-2xl">
+            {/* Search Bar - Sekarang dijamin 100% presisi di tengah */}
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mt-6 w-full sm:max-w-2xl text-left">
               <div className="flex flex-col space-y-3 sm:space-y-4">
                 {/* Input Search & Dropdown */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
@@ -116,13 +117,15 @@ export default function Home() {
                   </select>
                 </div>
 
-                {/* Tombol Telusuri Koleksi */}
-                <button
-                  onClick={handleSearch}
-                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 font-medium py-2.5 sm:py-3 px-6 rounded-full transition-colors duration-200 text-sm sm:text-base"
-                >
-                  Telusuri Koleksi
-                </button>
+                {/* Tombol Telusuri Koleksi - Diubah agar selalu full */}
+                <div className="w-full pt-2">
+                  <button
+                    onClick={handleSearch}
+                    className="w-full bg-red-600 hover:bg-red-700 font-medium py-2.5 sm:py-3 px-6 rounded-full transition-colors duration-200 text-sm sm:text-base text-white"
+                  >
+                    Telusuri Koleksi
+                  </button>
+                </div>
               </div>
             </div>
           </div>

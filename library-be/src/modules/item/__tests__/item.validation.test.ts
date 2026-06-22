@@ -8,10 +8,11 @@ import {
 describe("Item Validation Schema", () => {
   it("menerima create item yang valid", () => {
     const result = createItemSchema.safeParse({
-      collectionId: "550e8400-e29b-41d4-a716-446655440000",
+      bibliographyId: "550e8400-e29b-41d4-a716-446655440000",
       locationId: 1,
       barcode: "BC-001",
       uniqueCode: "UC-001",
+      itemCode: "ITEM-001",
     });
 
     expect(result.success).toBe(true);
@@ -27,7 +28,7 @@ describe("Item Validation Schema", () => {
 
   it("menerima update item partial", () => {
     const result = updateItemSchema.safeParse({
-      status: "damaged",
+      barcode: "NEW-001",
     });
 
     expect(result.success).toBe(true);
