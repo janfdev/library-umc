@@ -9,7 +9,7 @@ vi.mock("@/api/client", () => ({
 describe("CirculationSection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
+    vi.stubGlobal("fetch", vi.fn());
   });
 
   it("renders scan form with default inputs", () => {
@@ -33,10 +33,10 @@ describe("CirculationSection", () => {
   });
 
   it("shows error on failed lookup", async () => {
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({ success: false, message: "Item not found" }),
-    });
+    } as any);
 
     render(<CirculationSection />);
     const input = screen.getByPlaceholderText(/kode item/i);
@@ -49,7 +49,7 @@ describe("CirculationSection", () => {
   });
 
   it("shows Item result after successful lookup", async () => {
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({
         success: true,
@@ -59,7 +59,7 @@ describe("CirculationSection", () => {
           allowedActions: ["loan"],
         },
       }),
-    });
+    } as any);
 
     render(<CirculationSection />);
     const input = screen.getByPlaceholderText(/kode item/i);

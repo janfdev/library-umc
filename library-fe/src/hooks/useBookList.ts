@@ -38,7 +38,7 @@ export function useBookList(
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const fetchCollections = async () => {
-    const response = await fetch(`${apiUrl}/api/bibliographies`);
+    const response = await fetch(`${apiUrl}/api/bibliographies?limit=100`);
 
     if (!response.ok) {
       let apiMessage = "";
@@ -59,17 +59,40 @@ export function useBookList(
 
     const json = await response.json();
 
-    if (!json.success || !Array.isArray(json.data)) {
+    if (!json.success) {
       throw new Error("Respons API tidak valid");
     }
 
-    setCollections(json.data);
+    // Handle paginated response: { items: [...], total, page, ... }
+    const rawItems = json.data?.items ?? (Array.isArray(json.data) ? json.data : []);
+
+    // Map Bibliography API shape → Collection shape expected by BookList
+    const mapped: Collection[] = rawItems.map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      author: Array.isArray(item.authors)
+        ? item.authors.map((a: any) => a.name).join(", ")
+        : item.author || "",
+      publisher: typeof item.publisher === "object"
+        ? item.publisher?.name || ""
+        : item.publisher || "",
+      publicationYear: String(item.publishYear ?? ""),
+      isbn: item.isbnIssn || item.isbn || "",
+      type: item.type || "physical_book",
+      categoryId: item.categoryId ?? item.category?.id,
+      image: item.image || null,
+      stock: item.stock ?? item.totalItems ?? 0,
+      items: item.items || [],
+      category: item.category,
+    }));
+
+    setCollections(mapped);
   };
 
   const fetchMyReservations = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/reservations/my`, {
-        credentials: "include" // kirim cookie session better-auth
+        credentials: "include"
       });
 
       if (!response.ok) return;
@@ -79,12 +102,10 @@ export function useBookList(
         setUserReservations(json.data);
       }
     } catch {
-      // Reservasi gagal diambil, tidak perlu crash — bisa jadi belum login
       console.warn("[useBookList] Gagal mengambil reservasi user");
     }
   };
 
-  // Gunakan primitive (userId) sebagai dep bukan object, supaya tidak trigger loop
   const userId = currentUser?.id;
 
   const fetchAll = useCallback(async () => {
@@ -105,7 +126,7 @@ export function useBookList(
     } finally {
       setLoading(false);
     }
-  }, [userId]); // userId adalah string primitive, aman sebagai dependency
+  }, [userId]);
 
   useEffect(() => {
     fetchAll();

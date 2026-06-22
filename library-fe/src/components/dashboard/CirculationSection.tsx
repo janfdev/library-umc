@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, AlertCircle, QrCode, Package, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { Loader2, AlertCircle, QrCode, CheckCircle, ArrowLeft } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 
 interface ItemResult {
