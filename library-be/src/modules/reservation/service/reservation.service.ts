@@ -1,6 +1,6 @@
 import { db } from "../../../db";
 import { eq, and, isNull, desc, asc, sql } from "drizzle-orm";
-import { reservations, items, collections } from "../../../db/schema";
+import { reservations, items, bibliographies } from "../../../db/schema";
 import {
   BadRequestError,
   NotFoundError,
@@ -18,20 +18,18 @@ class ReservationService {
    *   2. Cek masih ada item AVAILABLE — jika ada, tolak (suruh pinjam langsung)
    *   3. Cek member belum punya reservasi waiting untuk koleksi yang sama
    */
-  async createReservation(memberId: string, collectionId: string) {
+  async createReservation(memberId: string, bibliographyId: string) {
     try {
-      // 1. Cek koleksi ada
-      const collection = await db.query.collections.findFirst({
-        where: eq(collections.id, collectionId),
+      const bib = await db.query.bibliographies.findFirst({
+        where: eq(bibliographies.id, bibliographyId),
       });
-      if (!collection) {
-        throw new NotFoundError("Koleksi buku tidak ditemukan.");
+      if (!bib) {
+        throw new NotFoundError("Bibliografi tidak ditemukan.");
       }
 
-      // 2. Cek apakah masih ada item yang tersedia (available)
       const availableItem = await db.query.items.findFirst({
         where: and(
-          eq(items.collectionId, collectionId),
+          eq(items.bibliographyId, bibliographyId),
           eq(items.status, "available"),
           isNull(items.deletedAt),
         ),
@@ -42,11 +40,10 @@ class ReservationService {
         );
       }
 
-      // 3. Cek member sudah punya reservasi aktif (waiting) untuk koleksi ini
       const existingReservation = await db.query.reservations.findFirst({
         where: and(
           eq(reservations.memberId, memberId),
-          eq(reservations.collectionId, collectionId),
+          eq(reservations.bibliographyId, bibliographyId),
           eq(reservations.status, "waiting"),
           isNull(reservations.deletedAt),
         ),
@@ -76,7 +73,7 @@ class ReservationService {
 
       const [reservation] = await db
         .insert(reservations)
-        .values({ memberId, collectionId, status: "waiting" })
+        .values({ memberId, bibliographyId, status: "waiting" })
         .returning();
 
       return {
@@ -114,13 +111,13 @@ class ReservationService {
         conditions.push(eq(reservations.memberId, filters.memberId));
       }
       if (filters.collectionId) {
-        conditions.push(eq(reservations.collectionId, filters.collectionId));
+        conditions.push(eq(reservations.bibliographyId, filters.collectionId));
       }
 
       const result = await db.query.reservations.findMany({
         where: and(...conditions),
         with: {
-          collection: true,
+          bibliography: true,
           member: { with: { user: true } },
         },
         limit: filters.limit || 50,
@@ -149,7 +146,7 @@ class ReservationService {
           eq(reservations.memberId, memberId),
           isNull(reservations.deletedAt),
         ),
-        with: { collection: true },
+        with: { bibliography: true },
         orderBy: [desc(reservations.createdAt)],
       });
 
@@ -212,19 +209,18 @@ class ReservationService {
    * DIPANGGIL INTERNAL dari LoanService.returnLoan() — BUKAN dari HTTP request.
    * Ambil reservasi waiting PALING LAMA (FIFO) untuk collectionId ini.
    */
-  async fulfillNextReservation(collectionId: string): Promise<void> {
+  async fulfillNextReservation(bibliographyId: string): Promise<void> {
     try {
-      // Ambil reservasi waiting tertua untuk koleksi ini (FIFO — ORDER BY createdAt ASC)
       const oldestReservation = await db.query.reservations.findFirst({
         where: and(
-          eq(reservations.collectionId, collectionId),
+          eq(reservations.bibliographyId, bibliographyId),
           eq(reservations.status, "waiting"),
           isNull(reservations.deletedAt),
         ),
         orderBy: [asc(reservations.createdAt)],
         with: {
           member: { with: { user: true } },
-          collection: true,
+          bibliography: true,
         },
       });
 
@@ -241,7 +237,7 @@ class ReservationService {
 
       // Kirim email notifikasi ke member (fire-and-forget)
       const memberUser = oldestReservation.member?.user;
-      const bookTitle = oldestReservation.collection?.title ?? "Buku";
+      const bookTitle = oldestReservation.bibliography?.title ?? "Buku";
       if (memberUser?.email && memberUser?.name) {
         void notificationService.sendReservationFulfilledNotification(
           memberUser.email,

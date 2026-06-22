@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { loans, fines, items, collections, Users, members } from "../db/schema";
+import { loans, fines, items, bibliographies, Users, members } from "../db/schema";
 import { eq, lt, and, isNull, sql } from "drizzle-orm";
 import { NotificationService } from "../modules/notification/service/notification.service";
 
@@ -131,14 +131,14 @@ export async function checkAndUpdateFines(): Promise<void> {
         loanStatus: loans.status,
         userEmail: Users.email,
         userName: Users.name,
-        bookTitle: collections.title
+        bookTitle: bibliographies.title
       })
       .from(fines)
       .innerJoin(loans, eq(fines.loanId, loans.id))
       .leftJoin(members, eq(loans.memberId, members.id))
       .leftJoin(Users, eq(members.userId, Users.id))
       .leftJoin(items, eq(loans.itemId, items.id))
-      .leftJoin(collections, eq(items.collectionId, collections.id))
+      .leftJoin(bibliographies, eq(items.bibliographyId, bibliographies.id))
       .where(
         and(
           eq(fines.status, "unpaid"),

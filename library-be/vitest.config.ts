@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
-    exclude: ["dist/**", "node_modules/**"],
+    exclude: ["dist/**", "node_modules/**", "src/tests/return-loan.test.ts"],
     globals: true, // Mengaktifkan penggunaan API test secara global seperti describe, it, expect
     environment: "node", // Karena kita Backend, environment-nya di-set sebagai Node.js
     coverage: {

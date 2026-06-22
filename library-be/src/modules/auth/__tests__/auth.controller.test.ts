@@ -4,6 +4,12 @@ import request from 'supertest';
 import { AuthController } from '../controller/auth.controller';
 import { AuthService } from '../service/auth.service';
 
+vi.mock('../../audit/service/audit.service', () => ({
+  default: {
+    createLog: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 const app = express();
 app.use(express.json());
 

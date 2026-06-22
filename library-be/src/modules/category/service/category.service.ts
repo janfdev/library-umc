@@ -1,5 +1,5 @@
 import { db } from "../../../db";
-import { categories, collections } from "../../../db/schema";
+import { categories, bibliographies } from "../../../db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import auditService from "../../audit/service/audit.service";
 
@@ -247,16 +247,16 @@ export class CategoryService {
         };
       }
 
-      // Check if category is used by any collections
-      const usedByCollections = await db.query.collections.findFirst({
-        where: eq(collections.categoryId, id),
+      // Check if category is used by any bibliographies
+      const usedByBibliographies = await db.query.bibliographies.findFirst({
+        where: eq(bibliographies.categoryId, id),
       });
 
-      if (usedByCollections) {
+      if (usedByBibliographies) {
         return {
           success: false,
           message:
-            "Cannot delete category. It is being used by one or more collections",
+            "Cannot delete category. It is being used by one or more bibliographies",
           data: null,
         };
       }

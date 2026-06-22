@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1768578005721,
+      "tag": "0000_real_captain_britain",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768580937573,
+      "tag": "0001_breezy_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769483576951,
+      "tag": "0002_ancient_tinkerer",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770242183410,
+      "tag": "0003_tricky_sprite",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770243934068,
+      "tag": "0004_glossy_monster_badoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1774889044340,
+      "tag": "0005_high_jack_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1774900000000,
+      "tag": "0006_security_logs_enhancements",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1774910000000,
+      "tag": "0007_extend_count_and_isbn",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774920000000,
+      "tag": "0008_member_card_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1774930000000,
+      "tag": "0009_fine_notification_daily_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1774940000000,
+      "tag": "0010_acquisitions_created_at_timestamp",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1774950000000,
+      "tag": "0011_missing_indexes",
+      "breakpoints": true
+    }
+  ]
+}

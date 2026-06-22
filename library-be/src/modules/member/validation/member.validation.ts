@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const updateProfileSchema = z.object({
-  nimNidn: z.string().max(50).optional().or(z.literal("")),
+  nimNidn: z.string().min(4, "NIM/NIDN minimal 4 karakter").max(50).optional().or(z.literal("")),
   faculty: z.string().max(200).optional().or(z.literal("")),
   originRegion: z.string().max(255).optional().or(z.literal("")),
   institution: z.string().max(200).optional().or(z.literal("")),

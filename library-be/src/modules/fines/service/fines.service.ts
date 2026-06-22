@@ -2,7 +2,7 @@ import { and, eq, isNull, lt, sql, type SQL } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   Users,
-  collections,
+  bibliographies,
   fines,
   items,
   loans,
@@ -120,14 +120,14 @@ class FinesService {
           memberId: members.id,
           memberName: Users.name,
           memberEmail: Users.email,
-          collectionTitle: collections.title
+          collectionTitle: bibliographies.title
         })
         .from(fines)
         .innerJoin(loans, eq(fines.loanId, loans.id))
         .leftJoin(members, eq(loans.memberId, members.id))
         .leftJoin(Users, eq(members.userId, Users.id))
         .leftJoin(items, eq(loans.itemId, items.id))
-        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(bibliographies, eq(items.bibliographyId, bibliographies.id))
         .where(and(...conditions))
         .limit(limit)
         .offset(offset);
@@ -223,14 +223,14 @@ class FinesService {
           memberName: Users.name,
           memberEmail: Users.email,
 
-          title: collections.title
+          title: bibliographies.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
         .leftJoin(members, eq(loans.memberId, members.id))
         .leftJoin(Users, eq(members.userId, Users.id))
         .leftJoin(items, eq(loans.itemId, items.id))
-        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(bibliographies, eq(items.bibliographyId, bibliographies.id))
         .where(and(...conditions))
         .limit(limit)
         .offset(offset);
@@ -284,14 +284,14 @@ class FinesService {
           memberName: Users.name,
           memberEmail: Users.email,
 
-          title: collections.title
+          title: bibliographies.title
         })
         .from(fines)
         .leftJoin(loans, eq(fines.loanId, loans.id))
         .leftJoin(members, eq(loans.memberId, members.id))
         .leftJoin(Users, eq(members.userId, Users.id))
         .leftJoin(items, eq(loans.itemId, items.id))
-        .leftJoin(collections, eq(items.collectionId, collections.id))
+        .leftJoin(bibliographies, eq(items.bibliographyId, bibliographies.id))
         .where(and(eq(fines.id, id), isNull(fines.deletedAt)))
         .limit(1);
 
