@@ -1,652 +1,280 @@
-import { useState, useCallback } from "react";
-import {
-  ScanLine,
-  LayoutGrid,
-  Barcode,
-  User,
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Loader,
-  Camera,
-  Upload,
-} from "lucide-react";
-import { Scanner } from "@yudiel/react-qr-scanner";
-import jsQR from "jsqr";
+import { useState } from "react";
+import { Loader2, AlertCircle, QrCode, Package, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
 
-// ─── Types ─────────────────────────────────────────────────────────────────
-interface VerifiedLoan {
-  id: string;
-  status: string;
-  dueDate: string;
-  loanDate: string;
-  member: {
-    nimNidn?: string;
-    user: { name: string; email: string };
-  };
+interface ItemResult {
   item: {
-    barcode?: string;
-    collection: { title: string; author?: string };
+    id: string;
+    itemCode: string;
+    title: string;
+    status: string;
+    location: string;
   };
+  activeLoan: any;
+  allowedActions: string[];
+}
+
+interface LoanResult {
+  loan: {
+    id: string;
+    loanCode: string;
+    memberId: string;
+    itemId: string;
+    status: string;
+    loanDate: string;
+    dueDate: string;
+  };
+  message: string;
 }
 
 interface ReturnResult {
   success: boolean;
   message: string;
+  fine?: {
+    id: string;
+    overdueDays: number;
+    assessedAmount: string;
+    status: string;
+  };
 }
 
-// ─── Toast Component ────────────────────────────────────────────────────────
-function Toast({
-  message,
-  type,
-  onClose,
-}: {
-  message: string;
-  type: "success" | "error" | "warning";
-  onClose: () => void;
-}) {
-  const colors = {
-    success: "bg-green-50 border-green-200 text-green-800",
-    error: "bg-red-50 border-red-200 text-red-800",
-    warning: "bg-orange-50 border-orange-200 text-orange-800",
-  };
-  const icons = {
-    success: <CheckCircle size={18} className="text-green-600" />,
-    error: <XCircle size={18} className="text-red-600" />,
-    warning: <AlertTriangle size={18} className="text-orange-600" />,
-  };
-  return (
-    <div
-      className={`flex items-start gap-3 p-4 rounded-xl border ${colors[type]} mb-4 animate-slide-up`}
-    >
-      {icons[type]}
-      <p className="text-sm font-semibold flex-1">{message}</p>
-      <button
-        onClick={onClose}
-        className="text-slate-400 hover:text-slate-600 transition-colors ml-2"
-      >
-        ×
-      </button>
-    </div>
-  );
-}
-
-// ─── Main Component ─────────────────────────────────────────────────────────
 export default function CirculationSection() {
-  const [activeTab, setActiveTab] = useState<"borrow" | "return">("borrow");
-  const [bookCode, setBookCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-
-  // Borrow flow state
-  const [verifiedLoan, setVerifiedLoan] = useState<VerifiedLoan | null>(null);
-
-  // Return flow state
+  const [mode, setMode] = useState<"scan" | "result" | "loan" | "return" | "fine">("scan");
+  const [scanInput, setScanInput] = useState("");
+  const [scanType, setScanType] = useState<"qr" | "code">("code");
+  const [intent, setIntent] = useState<"inspect" | "loan" | "return">("inspect");
+  const [itemResult, setItemResult] = useState<ItemResult | null>(null);
+  const [loanResult, setLoanResult] = useState<LoanResult | null>(null);
   const [returnResult, setReturnResult] = useState<ReturnResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Toast state
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "warning";
-  } | null>(null);
-
-  // QR Scanner state
-  const [isScanning, setIsScanning] = useState(false);
-  const [facingMode, setFacingMode] = useState<"environment" | "user">(
-    "environment",
-  );
-
-  const showToast = (
-    message: string,
-    type: "success" | "error" | "warning",
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
-  };
-
-  // ─── Handler: Scan Token (Mode Peminjaman Baru) ─────────────────────────
-  const handleVerifyToken = async (tokenOverride?: string) => {
-    const token = (tokenOverride || bookCode).trim();
-    if (!token) return;
+  const handleScan = async () => {
+    if (!scanInput.trim()) return;
     setLoading(true);
-    setVerifiedLoan(null);
-    setReturnResult(null);
-
+    setError(null);
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/loans/verify/${token}`,
-        {
-          credentials: "include",
-        },
-      );
-      const data = await response.json();
+      const endpoint = scanType === "qr" ? "/api/qr/scan" : "/api/qr/lookup";
+      const body = scanType === "qr"
+        ? { token: scanInput.trim(), intent }
+        : { itemCode: scanInput.trim(), intent };
 
-      if (data.success) {
-        if (tokenOverride) setBookCode(tokenOverride);
-        setVerifiedLoan(data.data);
-      } else {
-        showToast(
-          data.message || "Token tidak valid atau sudah kadaluarsa.",
-          "error",
-        );
-      }
-    } catch {
-      showToast("Gagal terhubung ke server. Periksa koneksi Anda.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Handler: Approve Loan (setelah verifikasi token) ───────────────────
-  const handleApproveLoan = async (loanId: string) => {
-    setProcessingId(loanId);
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/loans/${loanId}/approve`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({}),
-        },
-      );
-      const data = await response.json();
-
-      if (data.message?.toLowerCase().includes("disetujui") || data.success) {
-        showToast(
-          "✅ Peminjaman berhasil disetujui! Email notifikasi dikirim ke mahasiswa.",
-          "success",
-        );
-        setVerifiedLoan(null);
-        setBookCode("");
-      } else {
-        showToast(data.message || "Gagal menyetujui peminjaman.", "error");
-      }
-    } catch {
-      showToast("Terjadi kesalahan saat menyetujui peminjaman.", "error");
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // ─── Handler: Reject Loan ────────────────────────────────────────────────
-  const handleRejectLoan = async (loanId: string) => {
-    setProcessingId(loanId);
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/loans/${loanId}/reject`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            reason: "Ditolak oleh pustakawan melalui sirkulasi",
-          }),
-        },
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        showToast("Peminjaman telah ditolak.", "warning");
-        setVerifiedLoan(null);
-        setBookCode("");
-      } else {
-        showToast(data.message || "Gagal menolak peminjaman.", "error");
-      }
-    } catch {
-      showToast("Terjadi kesalahan saat menolak peminjaman.", "error");
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // ─── Handler: Return Book (Mode Pengembalian) ────────────────────────────
-  const handleReturnBook = async (idOverride?: string) => {
-    const loanId = (idOverride || bookCode).trim();
-    if (!loanId) return;
-
-    // Pada mode pengembalian, input adalah loanId langsung
-    setLoading(true);
-    setReturnResult(null);
-    setVerifiedLoan(null);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/loans/${loanId}/return`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({}),
-        },
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        if (idOverride) setBookCode(idOverride);
-        setReturnResult(data);
-        const isLate = data.message?.toLowerCase().includes("terlambat");
-        showToast(data.message, isLate ? "warning" : "success");
-        setBookCode("");
-      } else {
-        showToast(data.message || "Gagal memproses pengembalian.", "error");
-      }
-    } catch {
-      showToast("Terjadi kesalahan saat memproses pengembalian.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Handler: tombol Cari (dispatch ke flow yang sesuai) ─────────────────
-  const handleSearch = () => {
-    if (activeTab === "borrow") {
-      handleVerifyToken();
-    } else {
-      handleReturnBook();
-    }
-  };
-
-  // ─── Tab switch → reset state ────────────────────────────────────────────
-  const handleTabChange = (tab: "borrow" | "return") => {
-    setActiveTab(tab);
-    setBookCode("");
-    setVerifiedLoan(null);
-    setReturnResult(null);
-    setToast(null);
-  };
-
-  const handleScan = useCallback(
-    (result: string | { rawValue: string }[]) => {
-      if (loading) return;
-      const scannedValue = Array.isArray(result) ? result[0]?.rawValue : result;
-      if (scannedValue) {
-        setIsScanning(false);
-        // Wait for state cleanup then search
-        setTimeout(() => {
-          if (activeTab === "borrow") {
-            void handleVerifyToken(scannedValue);
-          } else {
-            void handleReturnBook(scannedValue);
-          }
-        }, 100);
-      }
-    },
-    [loading, activeTab],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleUploadQrImage = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const imageBitmap = await createImageBitmap(file);
-      const canvas = document.createElement("canvas");
-      canvas.width = imageBitmap.width;
-      canvas.height = imageBitmap.height;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        showToast("Gagal membaca gambar QR.", "error");
-        return;
-      }
-
-      ctx.drawImage(imageBitmap, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const decoded = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: "dontInvert",
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
       });
+      const data = await res.json();
 
-      if (!decoded?.data) {
-        showToast(
-          "QR tidak terdeteksi pada gambar. Coba gambar lain yang lebih jelas.",
-          "warning",
-        );
+      if (!data.success) {
+        setError(data.message || "Item not found");
         return;
       }
-
-      const scannedValue = decoded.data.trim();
-      setBookCode(scannedValue);
-
-      if (activeTab === "borrow") {
-        await handleVerifyToken(scannedValue);
-      } else {
-        await handleReturnBook(scannedValue);
-      }
-    } catch {
-      showToast("Gagal memproses gambar QR yang diupload.", "error");
+      setItemResult(data.data);
+      setMode("result");
+    } catch (err: any) {
+      setError(err.message || "Network error");
     } finally {
-      e.target.value = "";
+      setLoading(false);
     }
+  };
+
+  const handleLoan = async () => {
+    if (!itemResult) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/loans/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ memberId: "current-user", bibliographyId: itemResult.item.id }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || "Loan failed");
+        return;
+      }
+      setLoanResult(data.data ? { loan: data.data, message: data.message } : { loan: null, message: data.message });
+      setMode("loan");
+    } catch (err: any) {
+      setError(err.message || "Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReturn = async (condition: string) => {
+    if (!itemResult) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const loanId = itemResult.activeLoan?.id || "current-loan";
+      const res = await fetch(`${API_BASE_URL}/api/loans/${loanId}/return`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ condition }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || "Return failed");
+        return;
+      }
+      setReturnResult(data);
+      setMode("fine");
+    } catch (err: any) {
+      setError(err.message || "Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => {
+    setMode("scan");
+    setScanInput("");
+    setItemResult(null);
+    setLoanResult(null);
+    setReturnResult(null);
+    setError(null);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center pt-8 w-full max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-[32px] font-extrabold text-[#0F172A] tracking-tight">
-          Sirkulasi
-        </h2>
-        <p className="text-slate-400 font-medium text-[15px]">
-          Masukkan Token / Barcode / Loan ID untuk memproses peminjaman dan
-          pengembalian.
-        </p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900">Sirkulasi</h2>
+        <p className="mt-1 text-sm text-slate-500">QR Scan, Peminjaman, dan Pengembalian</p>
       </div>
 
-      {/* Toast Notification */}
-      {toast && (
-        <div className="w-full max-w-[900px]">
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="size-4 text-red-500" />
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
         </div>
       )}
 
-      {/* Tabs / Switch */}
-      <div className="flex items-center bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100 w-full max-w-[500px]">
-        <button
-          id="tab-borrow"
-          onClick={() => handleTabChange("borrow")}
-          className={`flex-1 py-3.5 text-sm font-bold rounded-xl transition-all duration-300 ${
-            activeTab === "borrow"
-              ? "bg-white text-[#9a1b1b] shadow-sm ring-1 ring-slate-900/5"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Peminjaman Baru
-        </button>
-        <button
-          id="tab-return"
-          onClick={() => handleTabChange("return")}
-          className={`flex-1 py-3.5 text-sm font-bold rounded-xl transition-all duration-300 ${
-            activeTab === "return"
-              ? "bg-white text-[#9a1b1b] shadow-sm ring-1 ring-slate-900/5"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Pengembalian Buku
-        </button>
-      </div>
-
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full min-h-[450px]">
-        {/* Left Card: Input Mode */}
-        <div className="bg-white rounded-[32px] p-10 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-          <div className="w-24 h-24 bg-[#B91C1C] rounded-[24px] flex items-center justify-center text-white mb-6 shadow-lg shadow-red-900/20 hover:scale-105 transition-transform duration-300">
-            <ScanLine size={48} strokeWidth={1.5} />
-          </div>
-
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3">
-            Mode {activeTab === "borrow" ? "Peminjaman" : "Pengembalian"}
-          </h3>
-          <p className="text-slate-400 font-medium text-sm leading-relaxed max-w-xs mb-10">
-            {activeTab === "borrow"
-              ? "Masukkan token/QR code yang ditampilkan di aplikasi mahasiswa."
-              : "Masukkan Loan ID dari pinjaman yang ingin dikembalikan."}
-          </p>
-
-          <div className="w-full relative mt-auto">
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300">
-              <Barcode size={24} />
+      {mode === "scan" && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-4 text-sm font-semibold text-slate-700">Scan / Lookup Item</h3>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-3">
+              <select
+                value={scanType}
+                onChange={(e) => setScanType(e.target.value as "qr" | "code")}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              >
+                <option value="code">Item Code</option>
+                <option value="qr">QR Token</option>
+              </select>
+              <select
+                value={intent}
+                onChange={(e) => setIntent(e.target.value as "inspect" | "loan" | "return")}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              >
+                <option value="inspect">Inspect</option>
+                <option value="loan">Loan</option>
+                <option value="return">Return</option>
+              </select>
             </div>
-            <input
-              id="circulation-input"
-              type="text"
-              value={bookCode}
-              onChange={(e) => setBookCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder={
-                activeTab === "borrow"
-                  ? "Masukkan token/QR code..."
-                  : "Masukkan Loan ID..."
-              }
-              className="w-full pl-14 pr-28 py-4 bg-white border border-[#B91C1C]/40 focus:border-[#B91C1C] focus:ring-4 focus:ring-[#B91C1C]/10 rounded-[20px] text-slate-800 placeholder:text-slate-400 font-semibold transition-all outline-none"
-            />
-            <button
-              id="btn-circulation-search"
-              onClick={handleSearch}
-              disabled={loading || !bookCode.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#B91C1C] hover:bg-[#991b1b] disabled:bg-slate-300 text-white px-6 py-2.5 rounded-[14px] font-bold text-sm transition-colors shadow-sm flex items-center gap-2"
-            >
-              {loading ? <Loader size={14} className="animate-spin" /> : null}
-              {loading ? "..." : "Cari"}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder={scanType === "qr" ? "Masukkan QR token..." : "Masukkan kode item..."}
+                value={scanInput}
+                onChange={(e) => setScanInput(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <button
+                onClick={handleScan}
+                disabled={loading || !scanInput.trim()}
+                className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <QrCode className="size-4" />}
+                {scanType === "qr" ? "Scan" : "Lookup"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mode === "result" && itemResult && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-700">Item Found</h3>
+            <button onClick={reset} className="text-sm text-slate-500 hover:text-slate-700">
+              <ArrowLeft className="size-4 inline mr-1" /> Kembali
             </button>
           </div>
-
-          <button
-            onClick={() => setIsScanning(true)}
-            className="mt-6 flex items-center justify-center gap-2 w-full max-w-[300px] border-2 border-dashed border-red-200 hover:border-[#B91C1C] text-[#B91C1C] hover:bg-red-50 font-bold px-6 py-3 rounded-2xl transition-all"
-          >
-            <Camera size={18} /> Buka Kamera (Scan QR)
-          </button>
-
-          <label
-            htmlFor="qr-image-upload"
-            className="mt-3 flex items-center justify-center gap-2 w-full max-w-[300px] border border-slate-200 hover:border-[#B91C1C] text-slate-600 hover:text-[#B91C1C] hover:bg-slate-50 font-bold px-6 py-3 rounded-2xl transition-all cursor-pointer"
-          >
-            <Upload size={18} /> Upload Gambar QR
-          </label>
-          <input
-            id="qr-image-upload"
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
-            onChange={handleUploadQrImage}
-            className="hidden"
-          />
-        </div>
-
-        {/* Right Card: Result */}
-        <div className="bg-white rounded-[32px] p-8 border border-slate-100/50 shadow-sm flex flex-col">
-          {/* Loading State */}
-          {loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-              <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-slate-200 border-t-[#B91C1C] mb-4" />
-              <p className="font-medium text-sm">Memverifikasi...</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && !verifiedLoan && !returnResult && (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-300 animate-pulse">
-              <LayoutGrid
-                size={64}
-                strokeWidth={1}
-                className="mb-6 opacity-60"
-              />
-              <p className="text-slate-400 font-medium tracking-wide">
-                Menunggu data pindaian...
-              </p>
-            </div>
-          )}
-
-          {/* ── BORROW: Verified Loan Card ── */}
-          {!loading && verifiedLoan && activeTab === "borrow" && (
-            <div className="flex-1 flex flex-col">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle size={16} className="text-green-600" />
-                </div>
-                <p className="text-sm font-bold text-green-700">
-                  Token Valid — Data Ditemukan
-                </p>
-              </div>
-
-              {/* Book Info */}
-              <div className="bg-slate-50 rounded-2xl p-5 space-y-4 mb-6 border border-slate-100">
-                <div className="flex items-start gap-3">
-                  <BookOpen
-                    size={18}
-                    className="text-[#B91C1C] mt-0.5 shrink-0"
-                  />
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Judul Buku
-                    </p>
-                    <p className="font-extrabold text-slate-900 text-[15px]">
-                      {verifiedLoan.item.collection.title}
-                    </p>
-                    {verifiedLoan.item.collection.author && (
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {verifiedLoan.item.collection.author}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="h-px bg-slate-200" />
-
-                <div className="flex items-start gap-3">
-                  <User size={18} className="text-[#B91C1C] mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Peminjam
-                    </p>
-                    <p className="font-bold text-slate-900 text-[14px]">
-                      {verifiedLoan.member.user.name}
-                    </p>
-                    {verifiedLoan.member.nimNidn && (
-                      <p className="text-xs font-medium text-slate-400">
-                        {verifiedLoan.member.nimNidn}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="h-px bg-slate-200" />
-
-                <div className="flex items-start gap-3">
-                  <Calendar
-                    size={18}
-                    className="text-[#B91C1C] mt-0.5 shrink-0"
-                  />
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Batas Kembali
-                    </p>
-                    <p className="font-bold text-[#B91C1C] text-[14px]">
-                      {new Date(verifiedLoan.dueDate).toLocaleDateString(
-                        "id-ID",
-                        { day: "numeric", month: "long", year: "numeric" },
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 mt-auto">
-                <button
-                  id="btn-approve-loan"
-                  onClick={() => handleApproveLoan(verifiedLoan.id)}
-                  disabled={processingId === verifiedLoan.id}
-                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-3 rounded-xl font-bold text-sm transition-colors shadow-md shadow-green-600/20 flex items-center justify-center gap-2"
-                >
-                  {processingId === verifiedLoan.id ? (
-                    <Loader size={14} className="animate-spin" />
-                  ) : null}
-                  {processingId === verifiedLoan.id
-                    ? "Memproses..."
-                    : "✓ Setujui Peminjaman"}
-                </button>
-                <button
-                  id="btn-reject-loan"
-                  onClick={() => handleRejectLoan(verifiedLoan.id)}
-                  disabled={processingId === verifiedLoan.id}
-                  className="px-4 py-3 bg-white border border-slate-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 disabled:opacity-50 text-slate-500 rounded-xl font-bold text-sm transition-colors"
-                >
-                  Tolak
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── RETURN: Result Card ── */}
-          {!loading && returnResult && activeTab === "return" && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center">
-              {returnResult.message?.toLowerCase().includes("terlambat") ? (
-                <>
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                    <AlertTriangle size={32} className="text-orange-500" />
-                  </div>
-                  <h4 className="text-[18px] font-extrabold text-slate-900 mb-2">
-                    Pengembalian Terlambat
-                  </h4>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-xs">
-                    {returnResult.message}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <CheckCircle size={32} className="text-green-500" />
-                  </div>
-                  <h4 className="text-[18px] font-extrabold text-slate-900 mb-2">
-                    Buku Dikembalikan!
-                  </h4>
-                  <p className="text-sm text-slate-600 font-medium">
-                    {returnResult.message}
-                  </p>
-                </>
-              )}
-              <button
-                onClick={() => {
-                  setReturnResult(null);
-                  setToast(null);
-                }}
-                className="mt-6 px-6 py-2.5 bg-[#B91C1C] hover:bg-[#991b1b] text-white rounded-xl font-bold text-sm transition-colors"
-              >
-                Proses Lagi
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* QR Scanner Modal */}
-      {isScanning && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden relative shadow-2xl">
-            <div className="flex justify-between items-center p-4 bg-slate-900 text-white border-b border-slate-800">
-              <h3 className="font-bold text-sm text-center flex-1">
-                Scan QR Code
-              </h3>
-              <button
-                onClick={() => setIsScanning(false)}
-                className="text-slate-400 hover:text-red-400 transition-colors"
-              >
-                <XCircle size={24} />
-              </button>
-            </div>
-
-            <div className="aspect-square bg-slate-900 w-full relative">
-              <Scanner
-                onScan={handleScan}
-                components={{ finder: true }}
-                constraints={{ facingMode }}
-              />
-            </div>
-
-            <div className="p-4 bg-slate-900 flex justify-center">
-              <button
-                onClick={() =>
-                  setFacingMode((prev) =>
-                    prev === "environment" ? "user" : "environment",
-                  )
-                }
-                className="px-6 py-2.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2"
-              >
-                <Camera size={14} /> Ganti Kamera (
-                {facingMode === "environment" ? "Belakang" : "Depan"})
-              </button>
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div><dt className="text-xs text-slate-400">Item Code</dt><dd className="text-sm font-medium">{itemResult.item.itemCode}</dd></div>
+            <div><dt className="text-xs text-slate-400">Title</dt><dd className="text-sm font-medium">{itemResult.item.title}</dd></div>
+            <div><dt className="text-xs text-slate-400">Status</dt><dd className="text-sm font-medium">{itemResult.item.status}</dd></div>
+            <div><dt className="text-xs text-slate-400">Location</dt><dd className="text-sm font-medium">{itemResult.item.location}</dd></div>
           </div>
+          <div className="mt-4 flex gap-2">
+            {itemResult.allowedActions.includes("loan") && (
+              <button onClick={handleLoan} disabled={loading}
+                className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50">
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle className="size-4" />}
+                Pinjam
+              </button>
+            )}
+            {itemResult.allowedActions.includes("return") && (
+              <>
+                <button onClick={() => handleReturn("good")} disabled={loading}
+                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
+                  Kembalikan (Baik)
+                </button>
+                <button onClick={() => handleReturn("damaged")} disabled={loading}
+                  className="flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50">
+                  Kembalikan (Rusak)
+                </button>
+                <button onClick={() => handleReturn("lost")} disabled={loading}
+                  className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+                  Kembalikan (Hilang)
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {mode === "loan" && loanResult && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+          <h3 className="mb-2 text-sm font-semibold text-emerald-700">Peminjaman Berhasil</h3>
+          <p className="text-sm text-emerald-600">{loanResult.message}</p>
+          {loanResult.loan && (
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div><dt className="text-xs text-slate-400">Status</dt><dd className="text-sm font-medium">{loanResult.loan.status}</dd></div>
+              <div><dt className="text-xs text-slate-400">Jatuh Tempo</dt><dd className="text-sm font-medium">{loanResult.loan.dueDate}</dd></div>
+            </div>
+          )}
+          <button onClick={reset} className="mt-4 text-sm text-emerald-700 hover:underline">
+            <ArrowLeft className="size-4 inline mr-1" /> Kembali ke scan
+          </button>
+        </div>
+      )}
+
+      {mode === "fine" && returnResult && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
+          <h3 className="mb-2 text-sm font-semibold text-blue-700">Pengembalian Berhasil</h3>
+          <p className="text-sm text-blue-600">{returnResult.message}</p>
+          {returnResult.fine && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-semibold text-amber-700">Denda</p>
+              <div className="grid gap-2 sm:grid-cols-3 mt-2">
+                <div><dt className="text-xs text-slate-400">Hari Terlambat</dt><dd className="text-sm font-medium">{returnResult.fine.overdueDays}</dd></div>
+                <div><dt className="text-xs text-slate-400">Jumlah</dt><dd className="text-sm font-medium">Rp {returnResult.fine.assessedAmount}</dd></div>
+                <div><dt className="text-xs text-slate-400">Status</dt><dd className="text-sm font-medium">{returnResult.fine.status}</dd></div>
+              </div>
+            </div>
+          )}
+          <button onClick={reset} className="mt-4 text-sm text-blue-700 hover:underline">
+            <ArrowLeft className="size-4 inline mr-1" /> Kembali ke scan
+          </button>
         </div>
       )}
     </div>

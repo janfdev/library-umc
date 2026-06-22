@@ -65,10 +65,14 @@ const jsonOrThrow = async (res: Response) => {
 
 export const dashboardDataService = {
   async getCollections(): Promise<CollectionItem[]> {
-    const res = await fetch(`${API_BASE_URL}/api/collections`, {
+    const res = await fetch(`${API_BASE_URL}/api/bibliographies`, {
       credentials: "include"
     });
     const data = await jsonOrThrow(res);
+    // Bibliographies API returns paginated { items, total, ... }
+    if (data.success && data.data?.items && Array.isArray(data.data.items)) {
+      return data.data.items;
+    }
     return data.success && Array.isArray(data.data) ? data.data : [];
   },
 
@@ -179,7 +183,7 @@ export const dashboardDataService = {
   },
 
   async deleteCollection(id: string) {
-    const res = await fetch(`${API_BASE_URL}/api/collections/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/bibliographies/${id}`, {
       method: "DELETE",
       credentials: "include"
     });

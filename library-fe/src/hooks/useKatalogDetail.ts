@@ -33,7 +33,7 @@ export function useKatalogDetail(
         setLoading(true);
 
         const collectionResponse = await fetch(
-          `${API_BASE_URL}/api/collections/${id}`,
+          `${API_BASE_URL}/api/bibliographies/${id}`,
         );
         if (!collectionResponse.ok)
           throw new Error(`HTTP error! status: ${collectionResponse.status}`);
@@ -98,7 +98,7 @@ export function useKatalogDetail(
     const fetchSimilarBooks = async (categoryId: number) => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/collections?categoryId=${categoryId}&limit=4`,
+          `${API_BASE_URL}/api/bibliographies?categoryId=${categoryId}&limit=4`,
         );
         const data = await response.json();
         if (data.success) {

@@ -13,7 +13,10 @@ import {
   Users,
   Wallet,
   BookMarked,
-  CheckCircle
+  CheckCircle,
+  FileUp,
+  FileDown,
+  Package
 } from "lucide-react";
 
 import Logo from "@/assets/logo_umc.png";
@@ -21,7 +24,10 @@ import AuditLogsSection from "@/components/dashboard/AuditLogsSection";
 import CardApprovalsSection from "@/components/dashboard/CardApprovalsSection";
 import CategoriesSection from "@/components/dashboard/CategoriesSection";
 import CirculationSection from "@/components/dashboard/CirculationSection";
-import CollectionsSection from "@/components/dashboard/CollectionsSection";
+import BibliographySection from "@/components/dashboard/BibliographySection";
+import ItemSection from "@/components/dashboard/ItemSection";
+import ImportSection from "@/components/dashboard/ImportSection";
+import ExportSection from "@/components/dashboard/ExportSection";
 import DashboardSection from "@/components/dashboard/DashboardSection";
 import FinesSection from "@/components/dashboard/FinesSection";
 import GuestsSection from "@/components/dashboard/GuestsSection";
@@ -53,7 +59,6 @@ import {
   SidebarTrigger
 } from "@/components/ui/sidebar";
 import { useCategoriesData } from "@/hooks/dashboard/useCategoriesData";
-import { useCollectionsData } from "@/hooks/dashboard/useCollectionsData";
 import { useDashboardStatsLazy } from "@/hooks/dashboard/useDashboardStatsLazy";
 import { useGuestsData } from "@/hooks/dashboard/useGuestsData";
 import { cn } from "@/lib/utils";
@@ -63,7 +68,10 @@ import { authClient } from "@/utils/auth-client";
 type ActiveMenu =
   | "dashboard"
   | "circulation"
-  | "collections"
+  | "bibliographies"
+  | "items"
+  | "importData"
+  | "exportData"
   | "guests"
   | "loans"
   | "categories"
@@ -80,12 +88,16 @@ type MenuConfig = {
   label: string;
   icon: typeof Home;
   superAdminOnly?: boolean;
+  group?: string;
 };
 
 const MENU_CONFIG: MenuConfig[] = [
   { key: "dashboard", label: "Dashboard", icon: Home },
   { key: "circulation", label: "Sirkulasi & Scan", icon: ScanLine },
-  { key: "collections", label: "Data Koleksi", icon: Book },
+  { key: "bibliographies", label: "Bibliografi", icon: Book, group: "Manajemen Koleksi" },
+  { key: "items", label: "Item / Eksemplar", icon: Package, group: "Manajemen Koleksi" },
+  { key: "importData", label: "Import Data", icon: FileUp, group: "Manajemen Koleksi" },
+  { key: "exportData", label: "Export Data", icon: FileDown, group: "Manajemen Koleksi" },
   { key: "guests", label: "Data Pengunjung", icon: Users },
   { key: "loans", label: "Peminjaman & Persetujuan", icon: BookOpen },
   { key: "returnApprovals", label: "Konfirmasi Pengembalian", icon: CheckCircle, superAdminOnly: true },
@@ -139,26 +151,47 @@ function DashboardSidebar({
 
       <SidebarContent className="bg-[#0F172A] px-3 py-2">
         <SidebarMenu className="space-y-1">
-          {menus.map(({ key, label, icon: Icon }) => (
-            <SidebarMenuItem key={key}>
-              <SidebarMenuButton
-                onClick={() => onMenuChange(key)}
-                isActive={activeMenu === key}
-                tooltip={label}
-                className={cn(
-                  "h-11 rounded-xl px-4 text-sm font-medium group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!",
-                  activeMenu === key
-                    ? "bg-white text-[#B91C1C] shadow-lg shadow-red-900/20"
-                    : "text-white/90 hover:bg-[#B91C1C] hover:text-white"
-                )}
-              >
-                <Icon className="size-5" />
-                <span className="group-data-[collapsible=icon]:hidden">
-                  {label}
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {(() => {
+            const items: React.ReactNode[] = [];
+            let currentGroup = "";
+            
+            menus.forEach(({ key, label, icon: Icon, group }) => {
+              if (group && group !== currentGroup) {
+                currentGroup = group;
+                items.push(
+                  <div key={`group-${group}`} className="pt-3 pb-1 px-4">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 group-data-[collapsible=icon]:hidden">
+                      {group}
+                    </span>
+                  </div>
+                );
+              }
+              if (!group) {
+                currentGroup = "";
+              }
+              items.push(
+                <SidebarMenuItem key={key}>
+                  <SidebarMenuButton
+                    onClick={() => onMenuChange(key)}
+                    isActive={activeMenu === key}
+                    tooltip={label}
+                    className={cn(
+                      "h-11 rounded-xl px-4 text-sm font-medium group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!",
+                      activeMenu === key
+                        ? "bg-white text-[#B91C1C] shadow-lg shadow-red-900/20"
+                        : "text-white/90 hover:bg-[#B91C1C] hover:text-white"
+                    )}
+                  >
+                    <Icon className="size-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {label}
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            });
+            return items;
+          })()}
         </SidebarMenu>
       </SidebarContent>
 
@@ -224,12 +257,6 @@ export default function SuperAdminDashboard() {
   } = useDashboardStatsLazy(activeMenu === "dashboard");
 
   const {
-    collections,
-    loading: collectionsLoading,
-    refetch: refetchCollections
-  } = useCollectionsData(activeMenu === "collections");
-
-  const {
     categories,
     loading: categoriesLoading,
     refetch: refetchCategories
@@ -244,14 +271,12 @@ export default function SuperAdminDashboard() {
 
   const activeLoading = useMemo(() => {
     if (activeMenu === "dashboard") return statsLoading;
-    if (activeMenu === "collections") return collectionsLoading;
     if (activeMenu === "categories") return categoriesLoading;
     if (activeMenu === "guests") return guestsLoading;
     return false;
   }, [
     activeMenu,
     statsLoading,
-    collectionsLoading,
     categoriesLoading,
     guestsLoading
   ]);
@@ -278,16 +303,6 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleDeleteCollection = async (id: string, title: string) => {
-    if (!confirm(`Hapus koleksi "${title}"?`)) return;
-    try {
-      await dashboardDataService.deleteCollection(id);
-      await Promise.all([refetchCollections(), refetchStats()]);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleDeleteGuest = async (id: string, name: string) => {
     if (!confirm(`Hapus log pengunjung "${name}"?`)) return;
     try {
@@ -302,18 +317,19 @@ export default function SuperAdminDashboard() {
     switch (activeMenu) {
       case "dashboard":
         return <DashboardSection stats={stats} />;
-      case "collections":
+      case "bibliographies":
         return (
-          <CollectionsSection
-            collections={collections}
+          <BibliographySection
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            onDelete={handleDeleteCollection}
-            onRefresh={() =>
-              void Promise.all([refetchCollections(), refetchStats()])
-            }
           />
         );
+      case "items":
+        return <ItemSection />;
+      case "importData":
+        return <ImportSection />;
+      case "exportData":
+        return <ExportSection />;
       case "categories":
         return (
           <CategoriesSection

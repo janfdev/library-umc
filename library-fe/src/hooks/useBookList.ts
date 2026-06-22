@@ -38,8 +38,7 @@ export function useBookList(
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const fetchCollections = async () => {
-    // const response = await fetch(`${API_BASE_URL}/api/collections`);
-    const response = await fetch(`${apiUrl}/api/collections`);
+    const response = await fetch(`${apiUrl}/api/bibliographies`);
 
     if (!response.ok) {
       let apiMessage = "";

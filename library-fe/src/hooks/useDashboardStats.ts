@@ -33,7 +33,7 @@ export function useDashboardStats() {
           fetch(`${API_BASE_URL}/api/categories?limit=50`, {
             credentials: "include",
           }).catch(() => null),
-          fetch(`${API_BASE_URL}/api/collections?limit=50`, {
+          fetch(`${API_BASE_URL}/api/bibliographies?limit=50`, {
             credentials: "include",
           }).catch(() => null),
         ]);
