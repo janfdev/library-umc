@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { CheckCircle, Clock, BookOpen,} from "lucide-react";
+import { useState, useEffect, Fragment } from "react";
+import { CheckCircle, Clock, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import loanService from "@/services/loanService";
 import { useToast } from "@/hooks/useToast";
 
@@ -7,6 +7,8 @@ export default function ReturnApprovalsSection() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const toast = useToast();
 
   const fetchRequests = async () => {
@@ -41,6 +43,12 @@ export default function ReturnApprovalsSection() {
     }
   };
 
+  const totalPages = Math.max(1, Math.ceil(requests.length / itemsPerPage));
+  const paginatedRequests = requests.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (loading) {
     return (
       <div className="py-12 text-center text-slate-400 font-medium animate-pulse">
@@ -68,8 +76,9 @@ export default function ReturnApprovalsSection() {
           <p className="text-sm text-slate-400 mt-2">Semua buku yang dikembalikan telah diproses.</p>
         </div>
       ) : (
+        <>
         <div className="grid gap-4">
-          {requests.map((req) => (
+          {paginatedRequests.map((req) => (
             <div key={req.id} className="bg-white border border-slate-200 rounded-[20px] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4 flex-1">
                 <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
@@ -98,6 +107,63 @@ export default function ReturnApprovalsSection() {
             </div>
           ))}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+            <p className="text-xs text-slate-400 font-medium">
+              Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, requests.length)}–
+              {Math.min(currentPage * itemsPerPage, requests.length)} dari {requests.length} data
+            </p>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+              >
+                <ChevronLeft size={16} /> Prev
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(
+                  (p) =>
+                    p === 1 ||
+                    p === totalPages ||
+                    Math.abs(p - currentPage) <= 1
+                )
+                .map((p, idx, arr) => {
+                  const showDot = idx > 0 && arr[idx - 1] !== p - 1;
+                  return (
+                    <Fragment key={p}>
+                      {showDot && (
+                        <span className="px-2 text-slate-300">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                          currentPage === p
+                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </Fragment>
+                  );
+                })}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

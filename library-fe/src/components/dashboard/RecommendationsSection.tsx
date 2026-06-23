@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   BookMarked,
   Clock,
@@ -7,6 +7,8 @@ import {
   Search,
   User,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileText
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/api-config";
@@ -37,6 +39,8 @@ export default function RecommendationsSection() {
   const [filter, setFilter] = useState<FilterStatus>("pending");
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const toast = useToast();
 
@@ -97,6 +101,12 @@ export default function RecommendationsSection() {
     (item.dosen?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const getStatusBadge = (status: string) => {
     const config = {
       pending: { color: "bg-yellow-100 text-yellow-700", icon: Clock, text: "Menunggu" },
@@ -127,7 +137,7 @@ export default function RecommendationsSection() {
             <div className="relative">
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as FilterStatus)}
+                onChange={(e) => { setFilter(e.target.value as FilterStatus); setCurrentPage(1); }}
                 className="appearance-none bg-[#F8FAFC] border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-slate-600 focus:ring-2 focus:ring-red-500/10 cursor-pointer min-w-[160px]"
               >
                 <option value="pending">Menunggu</option>
@@ -145,7 +155,7 @@ export default function RecommendationsSection() {
                 placeholder="Cari buku atau dosen..."
                 className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-[#F8FAFC] border-none rounded-xl text-[13px] font-medium text-slate-600 focus:ring-2 focus:ring-red-500/10"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
             </div>
           </div>
@@ -172,8 +182,9 @@ export default function RecommendationsSection() {
               <p className="text-sm font-bold">Tidak ada data rekomendasi</p>
             </div>
           ) : (
+            <>
             <div className="space-y-4">
-              {filteredData.map((item) => (
+              {paginatedData.map((item) => (
                 <div 
                   key={item.id} 
                   className="bg-[#F8FAFC] rounded-[20px] p-6 border border-slate-100 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
@@ -238,7 +249,64 @@ export default function RecommendationsSection() {
                 </div>
               ))}
             </div>
-          )}
+
+            {totalPages > 1 && (
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                <p className="text-xs text-slate-400 font-medium">
+                  Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)}–
+                  {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                  >
+                    <ChevronLeft size={16} /> Prev
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(
+                      (p) =>
+                        p === 1 ||
+                        p === totalPages ||
+                        Math.abs(p - currentPage) <= 1
+                    )
+                    .map((p, idx, arr) => {
+                      const showDot = idx > 0 && arr[idx - 1] !== p - 1;
+                      return (
+                        <Fragment key={p}>
+                          {showDot && (
+                            <span className="px-2 text-slate-300">...</span>
+                          )}
+                          <button
+                            onClick={() => setCurrentPage(p)}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                              currentPage === p
+                                ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        </Fragment>
+                      );
+                    })}
+
+                  <button
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                  >
+                    Next <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
         </div>
       </div>
     </div>

@@ -285,34 +285,34 @@ export default function FinesSection() {
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   {activeTab === "unpaid" ? (
                     <>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         NAMA MAHASISWA
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         BUKU &amp; KETERLAMBATAN
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         STATUS BUKU
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         TOTAL DENDA
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap text-right">
                         AKSI
                       </th>
                     </>
                   ) : (
                     <>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         NAMA MAHASISWA
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         BUKU
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                         JATUH TEMPO
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap text-right">
+                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap text-right">
                         NOMINAL LUNAS
                       </th>
                     </>

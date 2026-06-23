@@ -4,7 +4,6 @@ import {
   Users,
   BookCheck,
   DollarSign,
-  ChevronDown,
   TrendingUp,
   DownloadCloud,
   UploadCloud
@@ -47,6 +46,11 @@ const dayLabels = [
   "Sabtu"
 ];
 
+const monthLabels = [
+  "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+  "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
+];
+
 export default function ReportsSection({
   className = ""
 }: ReportsSectionProps) {
@@ -55,6 +59,7 @@ export default function ReportsSection({
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [chartRange, setChartRange] = useState<"day" | "week" | "month">("week");
 
   const [stats, setStats] = useState({
     totalVisitors: 0,
@@ -88,7 +93,7 @@ export default function ReportsSection({
             `${API_BASE_URL}/api/reports/fines/revenue?month=${selectedMonth}&year=${selectedYear}`,
             { credentials: "include" }
           ),
-          fetch(`${API_BASE_URL}/api/reports/guest-stats`, {
+          fetch(`${API_BASE_URL}/api/reports/guest-stats?range=${chartRange}`, {
             credentials: "include"
           }),
           fetch(`${API_BASE_URL}/api/reports/popular-books?limit=5`, {
@@ -131,31 +136,62 @@ export default function ReportsSection({
             mapByDate.set(row.date, Number(row.count) || 0);
           });
 
-          const last7Days = Array.from({ length: 7 }, (_, index) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (6 - index));
-            
-            // Format to local YYYY-MM-DD to avoid timezone shifting
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const dd = String(d.getDate()).padStart(2, "0");
-            const key = `${yyyy}-${mm}-${dd}`;
-            
-            const count = mapByDate.get(key) ?? 0;
-            visitsPastWeek += count;
-            return {
-              day: dayLabels[d.getDay()],
-              visits: count
-            };
-          });
-
-          setChartData(last7Days);
-        } else {
-          setChartData(
-            Array.from({ length: 7 }, (_, index) => {
+          if (chartRange === "day") {
+            const hourly = Array.from({ length: 24 }, (_, h) => {
+              const label = `${String(h).padStart(2, "0")}:00`;
+              const count = mapByDate.get(label) ?? 0;
+              visitsPastWeek += count;
+              return { day: label, visits: count };
+            });
+            setChartData(hourly);
+          } else if (chartRange === "month") {
+            const last30Days = Array.from({ length: 30 }, (_, index) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (29 - index));
+              const yyyy = d.getFullYear();
+              const mm = String(d.getMonth() + 1).padStart(2, "0");
+              const dd = String(d.getDate()).padStart(2, "0");
+              const key = `${yyyy}-${mm}-${dd}`;
+              const count = mapByDate.get(key) ?? 0;
+              visitsPastWeek += count;
+              return {
+                day: `${d.getDate()} ${monthLabels[d.getMonth()]}`,
+                visits: count
+              };
+            });
+            setChartData(last30Days);
+          } else {
+            const last7Days = Array.from({ length: 7 }, (_, index) => {
               const d = new Date();
               d.setDate(d.getDate() - (6 - index));
-              return { day: dayLabels[d.getDay()], visits: 0 };
+              const yyyy = d.getFullYear();
+              const mm = String(d.getMonth() + 1).padStart(2, "0");
+              const dd = String(d.getDate()).padStart(2, "0");
+              const key = `${yyyy}-${mm}-${dd}`;
+              const count = mapByDate.get(key) ?? 0;
+              visitsPastWeek += count;
+              return {
+                day: dayLabels[d.getDay()],
+                visits: count
+              };
+            });
+            setChartData(last7Days);
+          }
+        } else {
+          const fallbackLength = chartRange === "day" ? 24 : chartRange === "month" ? 30 : 7;
+          setChartData(
+            Array.from({ length: fallbackLength }, (_, index) => {
+              if (chartRange === "day") {
+                return { day: `${String(index).padStart(2, "0")}:00`, visits: 0 };
+              }
+              const d = new Date();
+              d.setDate(d.getDate() - (fallbackLength - 1 - index));
+              return {
+                day: chartRange === "month"
+                  ? `${d.getDate()} ${monthLabels[d.getMonth()]}`
+                  : dayLabels[d.getDay()],
+                visits: 0
+              };
             })
           );
         }
@@ -200,7 +236,7 @@ export default function ReportsSection({
     };
 
     fetchStats();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, chartRange]);
 
   const monthOptions = [
     { value: 1, label: "Januari" },
@@ -457,7 +493,7 @@ export default function ReportsSection({
             <Users className="w-7 h-7 text-[#2563EB]" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
               TOTAL PENGUNJUNG
             </p>
             <p className="text-3xl font-black text-slate-900 mt-2">
@@ -476,7 +512,7 @@ export default function ReportsSection({
             <BookCheck className="w-7 h-7 text-[#059669]" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
               PEMINJAMAN SUKSES
             </p>
             <p className="text-3xl font-black text-slate-900 mt-2">
@@ -495,7 +531,7 @@ export default function ReportsSection({
             <DollarSign className="w-7 h-7 text-[#DC2626]" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
               PENDAPATAN DENDA ({selectedMonthLabel.toUpperCase()}{" "}
               {selectedYear})
             </p>
@@ -517,15 +553,24 @@ export default function ReportsSection({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bar Chart Section */}
         <div className="lg:col-span-2 bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm flex flex-col">
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <h3 className="text-[15px] font-extrabold text-[#0F172A]">
-              Grafik kunjungan terakhir
+              Grafik Kunjungan
             </h3>
-            <div className="flex items-center gap-1 cursor-pointer">
-              <span className="text-[15px] font-extrabold text-[#0F172A]">
-                (7 Hari Terakhir)
-              </span>
-              <ChevronDown className="w-5 h-5 text-slate-900" strokeWidth={3} />
+            <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+              {(["day", "week", "month"] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setChartRange(range)}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                    chartRange === range
+                      ? "bg-[#B91C1C] text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {range === "day" ? "Hari" : range === "week" ? "Minggu" : "Bulan"}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -537,6 +582,7 @@ export default function ReportsSection({
               minHeight={1}
             >
               <BarChart
+                key={chartRange}
                 data={chartData}
                 margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
                 barSize={50}
@@ -585,7 +631,8 @@ export default function ReportsSection({
 
           <div className="border-t-2 border-slate-100 pt-5">
             <p className="text-center text-sm font-bold text-[#64748B]">
-              Total : {stats.visitsPastWeek} pengunjung minggu ini
+              Total : {stats.visitsPastWeek} pengunjung{" "}
+              {chartRange === "day" ? "hari ini" : chartRange === "month" ? "bulan ini" : "minggu ini"}
             </p>
           </div>
         </div>

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { BadgeCheck, RefreshCw, UserCheck, UserX, IdCard } from "lucide-react";
+import { useEffect, useState, Fragment } from "react";
+import { BadgeCheck, RefreshCw, UserCheck, UserX, IdCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -13,6 +13,8 @@ export default function CardApprovalsSection() {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadRequests = async () => {
     try {
@@ -41,6 +43,17 @@ export default function CardApprovalsSection() {
       (item.nimNidn || "").toLowerCase().includes(q)
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedItems = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
 
   const handleApprove = async (item: PendingMemberCardRequest) => {
     setActionId(item.id);
@@ -110,7 +123,7 @@ export default function CardApprovalsSection() {
           <div className="relative w-full sm:w-[360px]">
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cari nama, email, atau NIM/NIDN..."
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none"
             />
@@ -136,8 +149,9 @@ export default function CardApprovalsSection() {
             <p className="font-semibold">Tidak ada pengajuan kartu pending</p>
           </div>
         ) : (
+          <>
           <div className="divide-y divide-slate-50">
-            {filtered.map((item) => (
+            {paginatedItems.map((item) => (
               <div
                 key={item.id}
                 className="p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 hover:bg-slate-50/40 transition-colors"
@@ -192,6 +206,63 @@ export default function CardApprovalsSection() {
               </div>
             ))}
           </div>
+
+          {totalPages > 1 && (
+            <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs text-slate-400 font-medium">
+                Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)}–
+                {Math.min(currentPage * itemsPerPage, filtered.length)} dari {filtered.length} data
+              </p>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                >
+                  <ChevronLeft size={16} /> Prev
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (p) =>
+                      p === 1 ||
+                      p === totalPages ||
+                      Math.abs(p - currentPage) <= 1
+                  )
+                  .map((p, idx, arr) => {
+                    const showDot = idx > 0 && arr[idx - 1] !== p - 1;
+                    return (
+                      <Fragment key={p}>
+                        {showDot && (
+                          <span className="px-2 text-slate-300">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                            currentPage === p
+                              ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </Fragment>
+                    );
+                  })}
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

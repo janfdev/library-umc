@@ -163,7 +163,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
           <h2 className="text-2xl font-bold text-slate-900">
             Ringkasan Sistem
           </h2>
-          <p className="text-slate-400 text-sm font-medium mt-1">
+          <p className="text-slate-500 text-sm font-medium mt-1">
             Pantau aktivitas perpustakaan hari ini.
           </p>
         </div>
@@ -267,7 +267,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
               {stat.icon}
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                 {stat.label}
               </p>
               <p className="text-2xl font-black text-slate-900 leading-none">

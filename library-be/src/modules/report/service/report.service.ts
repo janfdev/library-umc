@@ -245,10 +245,34 @@ export class ReportService {
   }
 
   /**
-   * Get guest visit statistics for the last 7 days
+   * Get guest visit statistics with configurable range
+   * @param range - "day" (per hour, today), "week" (per day, 7 days), "month" (per day, 30 days)
    */
-  async getGuestStats() {
+  async getGuestStats(range: "day" | "week" | "month" = "week") {
     try {
+      if (range === "day") {
+        const result = await db
+          .select({
+            date: sql<string>`TO_CHAR(DATE_TRUNC('hour', ${guestLogs.visitDate}), 'HH24:00')`,
+            count: sql<number>`count(*)::int`
+          })
+          .from(guestLogs)
+          .where(
+            and(
+              sql`DATE(${guestLogs.visitDate}) = CURRENT_DATE`,
+              isNull(guestLogs.deletedAt)
+            )
+          )
+          .groupBy(sql`DATE_TRUNC('hour', ${guestLogs.visitDate})`)
+          .orderBy(sql`DATE_TRUNC('hour', ${guestLogs.visitDate})`);
+
+        return { success: true, data: result };
+      }
+
+      const intervalCondition = range === "month"
+        ? sql`${guestLogs.visitDate} >= CURRENT_DATE - INTERVAL '30 days'`
+        : sql`${guestLogs.visitDate} >= CURRENT_DATE - INTERVAL '7 days'`;
+
       const result = await db
         .select({
           date: sql<string>`TO_CHAR(DATE(${guestLogs.visitDate}), 'YYYY-MM-DD')`,
@@ -257,7 +281,7 @@ export class ReportService {
         .from(guestLogs)
         .where(
           and(
-            sql`${guestLogs.visitDate} >= CURRENT_DATE - INTERVAL '7 days'`,
+            intervalCondition,
             isNull(guestLogs.deletedAt)
           )
         )

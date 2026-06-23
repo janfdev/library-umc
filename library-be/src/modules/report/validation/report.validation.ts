@@ -47,6 +47,10 @@ export const finesRevenueSummaryQuerySchema = z.object({
     .optional()
 });
 
+export const guestStatsQuerySchema = z.object({
+  range: z.enum(["day", "week", "month"]).optional().default("week")
+});
+
 export const webTrafficQuerySchema = z.object({
   days: z.string().regex(/^\d+$/, "days harus berupa angka").optional()
 });

@@ -6,6 +6,7 @@ import {
   exportLoansQuerySchema,
   exportFinesQuerySchema,
   finesRevenueSummaryQuerySchema,
+  guestStatsQuerySchema,
   webTrafficQuerySchema,
   trackWebTrafficBodySchema
 } from "../validation/report.validation";
@@ -56,10 +57,16 @@ class ReportController {
     }
   }
 
-  // GET /reports/guest-stats
+  // GET /reports/guest-stats?range=day|week|month
   async getGuestStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await reportService.getGuestStats();
+      const validation = guestStatsQuerySchema.safeParse(req.query);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+
+      const { range } = validation.data;
+      const result = await reportService.getGuestStats(range);
       res.status(200).json(result);
     } catch (error) {
       next(error);

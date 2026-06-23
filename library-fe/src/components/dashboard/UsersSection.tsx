@@ -347,22 +347,22 @@ export default function UsersSection() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                       User
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                       Role
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                       Kartu
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                       Terdaftar
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">
+                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">
                       Aksi
                     </th>
                   </tr>
