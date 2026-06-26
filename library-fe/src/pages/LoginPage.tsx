@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { authClient } from "@/utils/auth-client";
-import { Mail, Lock, LogIn, UserCircle2, UserPlus } from "lucide-react";
+import { Mail, Lock, LogIn, UserCircle2, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 
 const LoginPage = () => {
@@ -9,6 +9,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { success, error, info, loading, removeToast } = useToast();
 
@@ -166,14 +167,22 @@ const LoginPage = () => {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 h-10 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B21F24]/10 focus:border-[#B21F24] outline-none text-xs text-gray-900 placeholder-gray-400 transition-all"
+                  className="w-full pl-10 pr-10 h-10 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B21F24]/10 focus:border-[#B21F24] outline-none text-xs text-gray-900 placeholder-gray-400 transition-all"
                   required
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
               </div>
             </div>
 

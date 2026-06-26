@@ -585,7 +585,7 @@ export default function ReportsSection({
                 key={chartRange}
                 data={chartData}
                 margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
-                barSize={50}
+                barSize={chartRange === "week" ? 50 : chartRange === "day" ? 14 : 16}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <Tooltip
@@ -607,6 +607,7 @@ export default function ReportsSection({
                   tick={{ fill: "#0F172A", fontSize: 12, fontWeight: 700 }}
                   tickMargin={15}
                   height={40}
+                  interval={chartRange === "month" ? 4 : chartRange === "day" ? 2 : 0}
                 />
 
                 <YAxis
@@ -621,8 +622,8 @@ export default function ReportsSection({
                 <Bar
                   dataKey="visits"
                   fill="#9a1b1b"
-                  radius={[8, 8, 8, 8]}
-                  background={{ fill: "#F1F5F9", radius: 8 }}
+                  radius={[4, 4, 0, 0]}
+                  background={{ fill: "#F1F5F9", radius: 4 }}
                   name="Kunjungan"
                 />
               </BarChart>
