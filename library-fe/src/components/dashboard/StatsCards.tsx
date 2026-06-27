@@ -1,20 +1,20 @@
 import { Book, Users, TrendingUp, Layers } from "lucide-react";
 
 interface StatsCardsProps {
-  totalCollections: number;
+  totalBibliographies: number;
   totalItems: number;
   loanedCount: number;
 }
 
 export default function StatsCards({
-  totalCollections,
+  totalBibliographies,
   totalItems,
   loanedCount,
 }: StatsCardsProps) {
   const stats = [
     {
       label: "Total Judul",
-      value: totalCollections,
+      value: totalBibliographies,
       icon: Book,
       color: "text-blue-600",
       bg: "bg-blue-50",

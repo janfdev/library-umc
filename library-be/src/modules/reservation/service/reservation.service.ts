@@ -97,7 +97,7 @@ class ReservationService {
     filters: {
       status?: "waiting" | "fulfilled" | "canceled";
       memberId?: string;
-      collectionId?: string;
+      bibliographyId?: string;
       limit?: number;
       offset?: number;
     } = {},
@@ -110,8 +110,8 @@ class ReservationService {
       if (filters.memberId) {
         conditions.push(eq(reservations.memberId, filters.memberId));
       }
-      if (filters.collectionId) {
-        conditions.push(eq(reservations.bibliographyId, filters.collectionId));
+      if (filters.bibliographyId) {
+        conditions.push(eq(reservations.bibliographyId, filters.bibliographyId));
       }
 
       const result = await db.query.reservations.findMany({

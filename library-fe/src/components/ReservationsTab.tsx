@@ -89,24 +89,24 @@ const ReservationCard = ({ reservation }: { reservation: Reservation }) => {
   return (
     <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col md:flex-row items-center gap-5 hover:bg-slate-50/50 transition-all group shadow-sm shadow-slate-100/50">
       <div className="shrink-0 w-16 h-22 rounded-xl bg-slate-100 overflow-hidden shadow-sm group-hover:rotate-3 transition-transform duration-500">
-        {reservation.collection?.image ? (
-          <img src={reservation.collection.image} alt={reservation.collection.title} className="w-full h-full object-cover" />
+        {reservation.bibliography?.image ? (
+          <img src={reservation.bibliography.image} alt={reservation.bibliography.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-red-900 flex items-center justify-center text-white text-[8px] font-black p-2 text-center">
-            {reservation.collection?.title}
+            {reservation.bibliography?.title}
           </div>
         )}
       </div>
       
       <div className="flex-1 text-center md:text-left">
         <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
-            <h4 className="font-black text-slate-800 tracking-tight text-lg">{reservation.collection?.title || 'Buku Tidak Diketahui'}</h4>
+            <h4 className="font-black text-slate-800 tracking-tight text-lg">{reservation.bibliography?.title || 'Buku Tidak Diketahui'}</h4>
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${status.bg} ${status.text} border ${status.border} mx-auto md:mx-0 shadow-sm shadow-slate-100`}>
                 {status.icon}
                 {status.label}
             </span>
         </div>
-        <p className="text-xs text-slate-400 font-bold mb-4 uppercase tracking-widest">PENULIS: <span className="text-red-700">{reservation.collection?.author || 'ANONYMOUS'}</span></p>
+        <p className="text-xs text-slate-400 font-bold mb-4 uppercase tracking-widest">PENULIS: <span className="text-red-700">{reservation.bibliography?.author || 'ANONYMOUS'}</span></p>
         
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
             <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 uppercase tracking-tighter">

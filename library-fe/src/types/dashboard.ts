@@ -1,4 +1,4 @@
-export type { Collection } from "./collection";
+export type { Bibliography } from "./bibliography";
 
 export interface Category {
   id: number;
@@ -53,7 +53,7 @@ export interface Loan {
 }
 
 export interface DashboardStats {
-  totalCollections: number;
+  totalBibliographies: number;
   totalCategories: number;
   totalGuests: number;
   activeBorrowings?: number;
@@ -63,7 +63,7 @@ export interface DashboardStats {
 
 export type ActiveMenu =
   | "dashboard"
-  | "collections"
+  | "bibliographies"
   | "categories"
   | "guests"
   | "loans"

@@ -25,7 +25,7 @@ interface UnpaidFine {
     status?: "pending" | "approved" | "returned" | "extended" | "rejected";
     returnDate?: string | null;
     member: { user: { name: string; email: string } };
-    item: { collection: { title: string } };
+    item: { bibliography: { title: string } };
   };
 }
 
@@ -39,7 +39,7 @@ interface PaidFine {
     status?: "pending" | "approved" | "returned" | "extended" | "rejected";
     returnDate?: string | null;
     member: { user: { name: string; email: string } };
-    item: { collection: { title: string } };
+    item: { bibliography: { title: string } };
   };
 }
 
@@ -364,7 +364,7 @@ export default function FinesSection() {
                         <td className="px-8 py-5">
                           <div>
                             <p className="text-[14px] font-bold text-slate-900 truncate max-w-[200px]">
-                              {fine.loan.item.collection.title}
+                              {fine.loan.item.bibliography.title}
                             </p>
                             {lateDays > 0 && (
                               <p className="text-[12px] font-medium text-red-500 mt-0.5">
@@ -432,7 +432,7 @@ export default function FinesSection() {
                       </td>
                       <td className="px-8 py-5">
                         <p className="text-[14px] font-bold text-slate-900 truncate max-w-[200px]">
-                          {fine.loan.item.collection.title}
+                          {fine.loan.item.bibliography.title}
                         </p>
                       </td>
                       <td className="px-8 py-5">

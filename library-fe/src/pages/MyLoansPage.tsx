@@ -85,9 +85,9 @@ interface LoanCardProps {
 }
 
 function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCardProps) {
-  const title = loan.item?.collection?.title ?? loan.collectionTitle ?? "Judul tidak tersedia";
-  const author = loan.item?.collection?.author ?? loan.collectionAuthor ?? "Penulis tidak tersedia";
-  const image = loan.item?.collection?.image;
+  const title = loan.item?.bibliography?.title ?? loan.bibliographyTitle ?? "Judul tidak tersedia";
+  const author = loan.item?.bibliography?.author ?? loan.bibliographyAuthor ?? "Penulis tidak tersedia";
+  const image = loan.item?.bibliography?.image;
   const lateDays = calcLateDays(loan.dueDate);
 
   return (
@@ -194,8 +194,8 @@ interface DetailModalProps {
 }
 
 function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailModalProps) {
-  const title = loan.item?.collection?.title ?? loan.collectionTitle ?? "Judul tidak tersedia";
-  const author = loan.item?.collection?.author ?? loan.collectionAuthor ?? "Penulis tidak tersedia";
+  const title = loan.item?.bibliography?.title ?? loan.bibliographyTitle ?? "Judul tidak tersedia";
+  const author = loan.item?.bibliography?.author ?? loan.bibliographyAuthor ?? "Penulis tidak tersedia";
   const lateDays = calcLateDays(loan.dueDate);
 
   return (
@@ -215,8 +215,8 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
             <div className="flex gap-4">
               <div className="w-16 h-24 rounded-xl overflow-hidden shrink-0 bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center">
-                {loan.item?.collection?.image ? (
-                  <img src={loan.item.collection.image} alt={title} className="w-full h-full object-cover" />
+                {loan.item?.bibliography?.image ? (
+                  <img src={loan.item.bibliography.image} alt={title} className="w-full h-full object-cover" />
                 ) : (
                   <BookOpen className="w-6 h-6 text-slate-400" />
                 )}
@@ -395,8 +395,8 @@ export default function MyLoansPage() {
   }));
 
   const filteredLoans = loansWithStatus.filter(({ loan, status }) => {
-    const title = (loan.item?.collection?.title ?? loan.collectionTitle ?? "").toLowerCase();
-    const author = (loan.item?.collection?.author ?? loan.collectionAuthor ?? "").toLowerCase();
+    const title = (loan.item?.bibliography?.title ?? loan.bibliographyTitle ?? "").toLowerCase();
+    const author = (loan.item?.bibliography?.author ?? loan.bibliographyAuthor ?? "").toLowerCase();
     const q = searchTerm.toLowerCase();
     const matchesSearch = title.includes(q) || author.includes(q);
     if (filterStatus === "all") return matchesSearch;

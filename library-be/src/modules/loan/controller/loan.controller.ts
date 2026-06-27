@@ -38,7 +38,7 @@ export class LoanController {
 
       const result = await loanService.requestLoan(
         eligibility.data.memberId,
-        validation.data.collectionId,
+        validation.data.bibliographyId,
         validation.data.loanDate,
         validation.data.dueDate
       );

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "@/utils/api-config";
 
 export interface DashboardStats {
-  totalCollections: number;
+  totalBibliographies: number;
   totalItems: number;
   totalCategories: number;
   totalGuests: number;
@@ -21,7 +21,7 @@ interface WebTrafficSummaryResponse {
   };
 }
 
-export interface CollectionItem {
+export interface BibliographyItem {
   id: string;
   title: string;
   author: string;
@@ -64,7 +64,7 @@ const jsonOrThrow = async (res: Response) => {
 };
 
 export const dashboardDataService = {
-  async getCollections(): Promise<CollectionItem[]> {
+  async getBibliographies(): Promise<BibliographyItem[]> {
     const res = await fetch(`${API_BASE_URL}/api/bibliographies`, {
       credentials: "include"
     });
@@ -94,7 +94,7 @@ export const dashboardDataService = {
 
   async getStats(): Promise<DashboardStats> {
     const [
-      collections,
+      bibliographies,
       categories,
       guests,
       loansRes,
@@ -102,7 +102,7 @@ export const dashboardDataService = {
       paidFinesRes,
       webTrafficRes
     ] = await Promise.all([
-      this.getCollections(),
+      this.getBibliographies(),
       this.getCategories(),
       this.getGuests().catch(() => []),
       fetch(`${API_BASE_URL}/api/loans?status=approved&limit=200`, {
@@ -170,8 +170,8 @@ export const dashboardDataService = {
     }
 
     return {
-      totalCollections: collections.length,
-      totalItems: collections.reduce((sum, item) => sum + (Number(item.stock) || 0), 0),
+      totalBibliographies: bibliographies.length,
+      totalItems: bibliographies.reduce((sum, item) => sum + (Number(item.stock) || 0), 0),
       totalCategories: categories.length,
       totalGuests: guests.length,
       webVisits,
@@ -182,7 +182,7 @@ export const dashboardDataService = {
     };
   },
 
-  async deleteCollection(id: string) {
+  async deleteBibliography(id: string) {
     const res = await fetch(`${API_BASE_URL}/api/bibliographies/${id}`, {
       method: "DELETE",
       credentials: "include"

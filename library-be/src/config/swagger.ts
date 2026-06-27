@@ -137,7 +137,7 @@ const swaggerDefinition = {
           locationId: { type: "integer" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
-          collection: { $ref: "#/components/schemas/Bibliography" },
+          bibliography: { $ref: "#/components/schemas/Bibliography" },
           location: { $ref: "#/components/schemas/Location" },
         },
       },
@@ -174,7 +174,7 @@ const swaggerDefinition = {
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
           member: { $ref: "#/components/schemas/Member" },
-          collection: { $ref: "#/components/schemas/Bibliography" },
+          bibliography: { $ref: "#/components/schemas/Bibliography" },
         },
       },
       Fine: {
@@ -249,14 +249,16 @@ const swaggerDefinition = {
     { name: "Auth", description: "Authentication endpoints" },
     { name: "Members", description: "Member profile management" },
     { name: "Categories", description: "Book category management" },
-    {
-      name: "Guests",
-      description: "Guest/Visitor log management (Admin only)",
-    },
-    {
-        name: "Bibliographies",
-        description: "Book & Bibliography management",
-    },
+    { name: "Guests", description: "Guest/Visitor log management (Admin only)" },
+    { name: "Bibliographies", description: "Book & Bibliography management" },
+    { name: "Items", description: "Physical copy management" },
+    { name: "Loans", description: "Loan management" },
+    { name: "Reservations", description: "Reservation management" },
+    { name: "Fines", description: "Fine management" },
+    { name: "Locations", description: "Location/room/rack management" },
+    { name: "Recommendations", description: "Book recommendation from lecturers" },
+    { name: "Import", description: "CSV import (bibliographies & items)" },
+    { name: "Export", description: "CSV export (bibliographies & items)" },
   ],
   paths: {
     "/auth/users": {
@@ -580,23 +582,199 @@ const swaggerDefinition = {
         },
       },
     },
+    "/bibliographies/{id}": {
+      get: {
+        summary: "Get Bibliography By ID",
+        description: "Retrieve a specific bibliography by its ID.",
+        tags: ["Bibliographies"],
+        security: [],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "Bibliography details", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          404: { description: "Not found" },
+        },
+      },
+      patch: {
+        summary: "Update Bibliography",
+        description: "Update bibliography data (Admin/Staff only).",
+        tags: ["Bibliographies"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  author: { type: "string" },
+                  publisher: { type: "string" },
+                  publicationYear: { type: "string" },
+                  isbn: { type: "string" },
+                  type: { type: "string", enum: ["physical_book", "ebook", "journal", "thesis"] },
+                  categoryId: { type: "integer" },
+                  description: { type: "string" },
+                  cover: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Bibliography updated", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          400: { description: "Validation Error" },
+          404: { description: "Not found" },
+        },
+      },
+      delete: {
+        summary: "Soft Delete Bibliography",
+        description: "Soft delete a bibliography (Super Admin only).",
+        tags: ["Bibliographies"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "Bibliography deleted" },
+          403: { description: "Forbidden" },
+          404: { description: "Not found" },
+        },
+      },
+    },
+    "/bibliographies/{id}/items": {
+      get: {
+        summary: "Get Items Under Bibliography",
+        description: "Retrieve all items (copies) for a specific bibliography.",
+        tags: ["Bibliographies"],
+        security: [],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "List of items", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          404: { description: "Bibliography not found" },
+        },
+      },
+    },
+    "/bibliographies/{bibliographyId}/items/bulk": {
+      post: {
+        summary: "Bulk Create Items",
+        description: "Create up to 1000 items (copies) at once under a bibliography. Use `defaults` to set shared values for all items.",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "bibliographyId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["items"],
+                properties: {
+                  items: {
+                    type: "array",
+                    minItems: 1,
+                    maxItems: 1000,
+                    items: {
+                      type: "object",
+                      required: ["itemCode"],
+                      properties: {
+                        itemCode: { type: "string", maxLength: 50, description: "Unique item code" },
+                        barcode: { type: "string", maxLength: 50 },
+                        locationId: { type: "integer" },
+                        callNumber: { type: "string", maxLength: 100 },
+                        inventoryCode: { type: "string", maxLength: 50 },
+                      },
+                    },
+                  },
+                  defaults: {
+                    type: "object",
+                    description: "Default values applied when item-level field is empty",
+                    properties: {
+                      locationId: { type: "integer" },
+                      source: { type: "string" },
+                      priceCurrency: { type: "string" },
+                      collectionTypeId: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Items created", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          400: { description: "Validation Error" },
+        },
+      },
+    },
     "/items": {
       get: {
         summary: "Get All Items",
-        description: "Retrieve a list of all items (physical copies).",
+        description: "Retrieve a list of all items. Filter by ?bibliographyId=uuid.",
         tags: ["Items"],
         security: [],
+        parameters: [
+          { in: "query", name: "bibliographyId", schema: { type: "string", format: "uuid" }, description: "Filter by bibliography" },
+        ],
         responses: {
           200: {
             description: "List of items",
             content: {
               "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/ApiResponse",
+                schema: { $ref: "#/components/schemas/ApiResponse" },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        summary: "Create New Item",
+        description: "Create a single item (physical copy) under a bibliography (Admin/Staff only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["bibliographyId", "locationId", "itemCode"],
+                properties: {
+                  bibliographyId: { type: "string", format: "uuid" },
+                  locationId: { type: "integer" },
+                  itemCode: { type: "string", maxLength: 50 },
+                  barcode: { type: "string", maxLength: 50 },
+                  uniqueCode: { type: "string", maxLength: 30 },
+                  inventoryCode: { type: "string", maxLength: 50 },
+                  callNumber: { type: "string", maxLength: 100 },
+                  collectionTypeId: { type: "integer" },
+                  vendorId: { type: "integer" },
+                  receivedDate: { type: "string", format: "date" },
+                  orderNo: { type: "string" },
+                  orderDate: { type: "string", format: "date" },
+                  source: { type: "string" },
+                  invoice: { type: "string" },
+                  price: { type: "number" },
+                  priceCurrency: { type: "string", default: "IDR" },
+                  invoiceDate: { type: "string", format: "date" },
+                  site: { type: "string" },
+                  status: { type: "string", enum: ["available", "loaned", "damaged", "lost"], default: "available" },
                 },
               },
             },
           },
+        },
+        responses: {
+          201: { description: "Item created", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          400: { description: "Validation Error" },
         },
       },
     },
@@ -607,45 +785,215 @@ const swaggerDefinition = {
         tags: ["Items"],
         security: [],
         parameters: [
-          {
-            name: "id",
-            in: "path",
-            required: true,
-            description: "Item ID",
-            schema: { type: "string" },
-          },
+          { name: "id", in: "path", required: true, description: "Item ID", schema: { type: "string" } },
         ],
         responses: {
-          200: {
-            description: "Item details",
-            content: {
-              "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/ApiResponse",
+          200: { description: "Item details", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          404: { description: "Not found" },
+        },
+      },
+      patch: {
+        summary: "Update Item",
+        description: "Update item fields (Admin/Staff only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  locationId: { type: "integer" },
+                  barcode: { type: "string" },
+                  uniqueCode: { type: "string" },
+                  inventoryCode: { type: "string" },
+                  callNumber: { type: "string" },
+                  collectionTypeId: { type: "integer" },
+                  vendorId: { type: "integer" },
+                  receivedDate: { type: "string" },
+                  orderNo: { type: "string" },
+                  orderDate: { type: "string" },
+                  source: { type: "string" },
+                  invoice: { type: "string" },
+                  price: { type: "number" },
+                  priceCurrency: { type: "string" },
+                  invoiceDate: { type: "string" },
+                  site: { type: "string" },
                 },
               },
             },
           },
+        },
+        responses: {
+          200: { description: "Item updated", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          400: { description: "Validation Error" },
+          404: { description: "Not found" },
+        },
+      },
+      delete: {
+        summary: "Soft Delete Item",
+        description: "Soft delete an item (Admin/Staff only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "Item deleted" },
+          400: { description: "Cannot delete" },
+        },
+      },
+    },
+    "/items/{id}/status": {
+      patch: {
+        summary: "Update Item Status",
+        description: "Change item status: available, loaned, damaged, lost (Admin/Staff only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status"],
+                properties: {
+                  status: { type: "string", enum: ["available", "loaned", "damaged", "lost"] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Status updated" },
+          400: { description: "Invalid status" },
+        },
+      },
+    },
+    "/items/{id}/location": {
+      patch: {
+        summary: "Update Item Location",
+        description: "Move item to a different location (Admin/Staff only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["locationId"],
+                properties: {
+                  locationId: { type: "integer", description: "Target location ID" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Location updated" },
+          400: { description: "Invalid location" },
+        },
+      },
+    },
+    "/items/{id}/qr": {
+      get: {
+        summary: "Get Item QR Code",
+        description: "Get QR code for an item. ?format=svg (default) or ?format=png.",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+          { name: "format", in: "query", schema: { type: "string", enum: ["svg", "png"], default: "svg" } },
+        ],
+        responses: {
+          200: { description: "QR code image (SVG or PNG)" },
+          404: { description: "Item not found" },
+        },
+      },
+    },
+    "/items/{id}/qr/regenerate": {
+      post: {
+        summary: "Regenerate Item QR",
+        description: "Generate new QR token for item (Super Admin only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "QR regenerated" },
+        },
+      },
+    },
+    "/items/{id}/qr/revoke": {
+      post: {
+        summary: "Revoke Item QR",
+        description: "Revoke/disable QR token for item (Super Admin only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "QR revoked" },
+        },
+      },
+    },
+    "/qr/resolve/{token}": {
+      get: {
+        summary: "Resolve QR Token to Item",
+        description: "Lookup item by QR token (Admin/Staff only).",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Item found" },
+          404: { description: "QR not found or revoked" },
+        },
+      },
+    },
+    "/items/bulk-labels": {
+      get: {
+        summary: "Get Bulk Label Data",
+        description: "Get label data for multiple items. ?ids=uuid1,uuid2,uuid3.",
+        tags: ["Items"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "ids", in: "query", required: true, schema: { type: "string" }, description: "Comma-separated item UUIDs" },
+        ],
+        responses: {
+          200: { description: "Label data retrieved" },
+          400: { description: "No IDs provided" },
         },
       },
     },
     "/loans": {
       get: {
         summary: "Get All Loans",
-        description: "Retrieve a list of all loans.",
+        description: "Retrieve a list of all loans (Admin/Staff only).",
         tags: ["Loans"],
-        security: [],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { in: "query", name: "status", schema: { type: "string", enum: ["pending", "approved", "returned", "extended", "rejected"] }, description: "Filter by status" },
+          { in: "query", name: "memberId", schema: { type: "string" }, description: "Filter by member ID" },
+        ],
         responses: {
-          200: {
-            description: "List of loans",
-            content: {
-              "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/ApiResponse",
-                },
-              },
-            },
-          },
+          200: { description: "List of loans", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiResponse" } } } },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
         },
       },
     },
@@ -845,7 +1193,7 @@ const swaggerDefinition = {
 
 const options = {
   swaggerDefinition,
-  apis: ["./src/routes/*.ts"], // Tetap include jika mau pakai comment di file route nanti
+  apis: ["./src/routes/*.ts", "./src/modules/*/route/*.ts"],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);

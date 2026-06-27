@@ -5,11 +5,11 @@ import { API_BASE_URL } from '@/utils/api-config';
 export interface Reservation {
   id: string;
   memberId: string;
-  collectionId: string;
+  bibliographyId: string;
   status: 'waiting' | 'fulfilled' | 'canceled';
   createdAt: string;
   updatedAt: string;
-  collection?: {
+  bibliography?: {
     id: string;
     title: string;
     author: string;
@@ -40,12 +40,12 @@ class ReservationService {
   }
 
   // POST /reservations — buat reservasi baru
-  async createReservation(collectionId: string): Promise<Reservation> {
+  async createReservation(bibliographyId: string): Promise<Reservation> {
     const response = await fetch(`${this.baseUrl}/api/reservations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ collectionId }),
+      body: JSON.stringify({ bibliographyId }),
     });
     const result = await response.json();
     if (!result.success) throw new Error(result.message || 'Gagal membuat reservasi');

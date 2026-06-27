@@ -3,11 +3,11 @@ import { useNavigate } from "react-router";
 import loanService from "@/services/loanService";
 import reservationService from "@/services/reservationService";
 import { useToast } from "@/hooks/useToast";
-import type { Collection, LibraryUser, LoanRequest } from "@/types";
+import type { Bibliography, LibraryUser, LoanRequest } from "@/types";
 import type { Reservation } from "@/services/reservationService";
 
 interface UseKatalogActionsProps {
-  collection: Collection | null;
+  bibliography: Bibliography | null;
   currentUser: LibraryUser | null;
   userLoans: LoanRequest[];
   pendingRequests: LoanRequest[];
@@ -17,7 +17,7 @@ interface UseKatalogActionsProps {
 }
 
 export function useKatalogActions({
-  collection,
+  bibliography,
   currentUser,
   userLoans,
   pendingRequests,
@@ -44,15 +44,15 @@ export function useKatalogActions({
   });
 
   const getBookStatus = (): "available" | "borrowed" | "reserved" | "empty" => {
-    if (collection?.items && collection.items.length > 0) {
-      const availableItems = collection.items.filter(
+    if (bibliography?.items && bibliography.items.length > 0) {
+      const availableItems = bibliography.items.filter(
         (i) => i.status === "available",
       );
       return availableItems.length > 0 ? "available" : "empty";
     }
 
-    if (typeof collection?.stock === "number") {
-      return collection.stock > 0 ? "available" : "empty";
+    if (typeof bibliography?.stock === "number") {
+      return bibliography.stock > 0 ? "available" : "empty";
     }
 
     return "available";
@@ -85,16 +85,16 @@ export function useKatalogActions({
   };
 
   const handleReserve = async () => {
-    if (!currentUser || !collection?.id) return;
+    if (!currentUser || !bibliography?.id) return;
 
     setBorrowLoading(true);
-    const collectionId = collection.id;
+    const bibliographyId = bibliography.id;
     const loadingId = toast.loading(
       "Memproses",
       "Mendaftarkan ke antrian reservasi...",
     );
     try {
-      await reservationService.createReservation(collectionId);
+      await reservationService.createReservation(bibliographyId);
       toast.removeToast(loadingId);
       toast.success(
         "Berhasil",
@@ -105,7 +105,7 @@ export function useKatalogActions({
       setUserReservation({
         id: "new",
         memberId: currentUser.memberId || "",
-        collectionId: collectionId,
+        bibliographyId: bibliographyId,
         status: "waiting",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -165,7 +165,7 @@ export function useKatalogActions({
       return;
     }
 
-    if (!collection?.id) {
+    if (!bibliography?.id) {
       toast.error("Error", "Data buku tidak ditemukan");
       return;
     }
@@ -212,7 +212,7 @@ export function useKatalogActions({
     try {
       const loan = await loanService.requestLoan({
         memberId: currentUser.memberId,
-        collectionId: collection.id,
+        bibliographyId: bibliography.id,
         loanDate: loanFormData.loanDate,
         dueDate: loanFormData.dueDate,
         notes: loanFormData.notes,

@@ -35,12 +35,12 @@ const router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - collectionId
+ *               - bibliographyId
  *             properties:
- *               collectionId:
+ *               bibliographyId:
  *                 type: string
  *                 format: uuid
- *                 description: ID koleksi (judul buku) yang ingin direservasi
+ *                 description: ID bibliografi (judul buku) yang ingin direservasi
  *     responses:
  *       201:
  *         description: Reservasi berhasil dibuat, status = waiting
@@ -137,7 +137,7 @@ router.patch(
  *         schema:
  *           type: string
  *       - in: query
- *         name: collectionId
+ *         name: bibliographyId
  *         schema:
  *           type: string
  *       - in: query

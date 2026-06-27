@@ -9,7 +9,7 @@ export interface Fine {
     dueDate: string;
     loanDate: string;
     item: {
-      collection: {
+      bibliography: {
         title: string;
       };
     };

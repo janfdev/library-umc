@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/utils/api-config";
 
 export interface DashboardStats {
-  totalCollections: number;
+  totalBibliographies: number;
   totalCategories: number;
   totalGuests: number;
   activeBorrowings: number;
@@ -12,7 +12,7 @@ export interface DashboardStats {
 
 export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats>({
-    totalCollections: 0,
+    totalBibliographies: 0,
     totalCategories: 0,
     totalGuests: 0,
     activeBorrowings: 0,
@@ -28,8 +28,8 @@ export function useDashboardStats() {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        // Fetch Categories & Collections (Asli/Mock jika dibutuhkan)
-        const [catRes, colRes] = await Promise.all([
+        // Fetch Categories & Bibliographies
+        const [catRes, bibRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/categories?limit=50`, {
             credentials: "include",
           }).catch(() => null),
@@ -39,9 +39,9 @@ export function useDashboardStats() {
         ]);
 
         const catData = catRes ? await catRes.json().catch(() => null) : null;
-        const colData = colRes ? await colRes.json().catch(() => null) : null;
+        const bibData = bibRes ? await bibRes.json().catch(() => null) : null;
         const totalCategories = catData?.data?.length || 0;
-        const totalCollections = colData?.data?.length || 0;
+        const totalBibliographies = bibData?.data?.length || 0;
 
         // Fetch Guests
         let totalGuests = 0;
@@ -100,7 +100,7 @@ export function useDashboardStats() {
 
         if (isMounted) {
           setStats({
-            totalCollections,
+            totalBibliographies,
             totalCategories,
             totalGuests,
             activeBorrowings,

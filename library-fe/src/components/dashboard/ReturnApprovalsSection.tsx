@@ -85,7 +85,7 @@ export default function ReturnApprovalsSection() {
                   <BookOpen size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-[15px]">{req.loan?.item?.collection?.title}</h4>
+                  <h4 className="font-bold text-slate-900 text-[15px]">{req.loan?.item?.bibliography?.title}</h4>
                   <p className="text-[13px] font-medium text-slate-500 mt-1">
                     Oleh: {req.loan?.member?.user?.name}
                   </p>

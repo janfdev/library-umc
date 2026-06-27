@@ -34,7 +34,7 @@ class ReservationController {
       }
 
       const memberId = await this.getMemberId(req.user.id);
-      const result = await reservationService.createReservation(memberId, validation.data.collectionId);
+      const result = await reservationService.createReservation(memberId, validation.data.bibliographyId);
 
       res.status(201).json(result);
     } catch (error) {
@@ -87,11 +87,11 @@ class ReservationController {
         return sendValidationError(res, validation.error.flatten());
       }
 
-      const { status, memberId, collectionId, limit, offset } = validation.data;
+      const { status, memberId, bibliographyId, limit, offset } = validation.data;
       const result = await reservationService.getAllReservations({
         status: status as "waiting" | "fulfilled" | "canceled" | undefined,
         memberId,
-        collectionId,
+        bibliographyId,
         limit: limit ? Number(limit) : undefined,
         offset: offset ? Number(offset) : undefined,
       });

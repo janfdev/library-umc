@@ -7,8 +7,8 @@ export interface Loan {
   memberId: string;
   memberName?: string;
   memberNim?: string;
-  collectionTitle?: string;
-  collectionAuthor?: string;
+  bibliographyTitle?: string;
+  bibliographyAuthor?: string;
   loanDate: string;
   dueDate: string;
   returnDate?: string;
@@ -25,9 +25,9 @@ export interface Loan {
   member?: Record<string, unknown>;
   item?: {
     id: string;
-    collectionId: string;
+    bibliographyId: string;
     status: string;
-    collection: {
+    bibliography: {
       id: string;
       title: string;
       author: string;
@@ -42,7 +42,7 @@ class LoanService {
   // POST /loans/request - Request a book loan (Member)
   async requestLoan(data: {
     memberId: string;
-    collectionId: string;
+    bibliographyId: string;
     loanDate: string;
     dueDate: string;
     notes?: string;

@@ -1,12 +1,12 @@
 export type { AuthUser, AuthSession, LibraryUser } from "./auth";
 export type {
-  Collection,
-  CollectionType,
-  CollectionCategory,
+  Bibliography,
+  BibliographyType,
+  BibliographyCategory,
   Reservation,
   ReservationStatus,
   LoanRequest,
-} from "./collection";
+} from "./bibliography";
 export type {
   Category,
   GuestLog,

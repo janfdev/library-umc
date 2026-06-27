@@ -25,11 +25,12 @@ const loanController = new LoanController();
  *           schema:
  *             type: object
  *             required:
- *               - itemId
+ *               - bibliographyId
  *             properties:
- *               itemId:
+ *               bibliographyId:
  *                 type: string
- *                 description: ID of the item (book copy) to borrow
+ *                 format: uuid
+ *                 description: ID of the bibliography (book) to borrow
  *     responses:
  *       200:
  *         description: Loan requested successfully

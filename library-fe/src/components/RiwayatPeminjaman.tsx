@@ -110,7 +110,7 @@ const RiwayatPeminjaman = ({ type, view = "grid" }: RiwayatPeminjamanProps) => {
 };
 
 const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
-  const collection = loan.item?.collection;
+  const bibliography = loan.item?.bibliography;
   const dueDate = loan.dueDate ? new Date(loan.dueDate) : null;
   const formattedDate = dueDate?.toLocaleDateString("id-ID", {
     weekday: "long",
@@ -168,10 +168,10 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
   return (
     <div className="bg-white rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-100 flex gap-5 group hover:shadow-lg transition-all">
       <div className="shrink-0 w-24 h-32 bg-slate-200 rounded-2xl overflow-hidden flex items-center justify-center text-slate-400">
-        {collection?.image ? (
+        {bibliography?.image ? (
           <img
-            src={collection.image}
-            alt={collection.title}
+            src={bibliography.image}
+            alt={bibliography.title}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -181,10 +181,10 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
       <div className="flex-1 flex flex-col justify-between py-1">
         <div>
           <h4 className="font-bold text-slate-900 text-sm mb-1 line-clamp-2 leading-tight">
-            {collection?.title || "Unknown Title"}
+            {bibliography?.title || "Unknown Title"}
           </h4>
           <p className="text-[10px] font-medium text-slate-400 mb-2">
-            {collection?.author || "Unknown Author"}
+            {bibliography?.author || "Unknown Author"}
           </p>
 
           {/* Status jatuh tempo */}
@@ -244,7 +244,7 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
 };
 
 const HistoryTableRow = ({ loan }: { loan: LoanData }) => {
-  const collection = loan.item?.collection;
+  const bibliography = loan.item?.bibliography;
   const borrowDate = loan.loanDate ? new Date(loan.loanDate) : null;
   const returnDate = loan.returnDate ? new Date(loan.returnDate) : null;
 
@@ -268,7 +268,7 @@ const HistoryTableRow = ({ loan }: { loan: LoanData }) => {
 
   return (
     <tr className="text-[11px] font-bold text-slate-600 hover:bg-slate-50/50 transition-colors">
-      <td className="px-6 py-4">{collection?.title || "Unknown Title"}</td>
+      <td className="px-6 py-4">{bibliography?.title || "Unknown Title"}</td>
       <td className="px-6 py-4">
         {borrowDate?.toLocaleDateString("id-ID", {
           day: "numeric",

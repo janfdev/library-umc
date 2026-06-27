@@ -106,7 +106,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
   const statCards = [
     {
       label: "Total Judul",
-      value: displayStats.totalCollections,
+      value: displayStats.totalBibliographies,
       icon: <Book />,
       color: "text-blue-600",
       bg: "bg-blue-50"

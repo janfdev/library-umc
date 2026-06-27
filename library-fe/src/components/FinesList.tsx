@@ -75,7 +75,7 @@ const FinesList = () => {
           <tbody className="divide-y divide-slate-50">
             {fines.map((fine) => {
               const bookTitle =
-                fine.loan?.item?.collection?.title || "Unknown Title";
+                fine.loan?.item?.bibliography?.title || "Unknown Title";
               const borrowDate = fine.loan?.loanDate
                 ? new Date(fine.loan.loanDate).toLocaleDateString("id-ID", {
                     day: "numeric",

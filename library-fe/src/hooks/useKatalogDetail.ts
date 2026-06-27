@@ -4,14 +4,14 @@ import loanService from "@/services/loanService";
 import reservationService, {
   type Reservation,
 } from "@/services/reservationService";
-import type { Collection, LibraryUser, LoanRequest } from "@/types";
+import type { Bibliography, LibraryUser, LoanRequest } from "@/types";
 
 export function useKatalogDetail(
   id: string | undefined,
   currentUser: LibraryUser | null,
   sessionLoading: boolean,
 ) {
-  const [collection, setCollection] = useState<Collection | null>(null);
+  const [bibliography, setBibliography] = useState<Bibliography | null>(null);
   const [userLoans, setUserLoans] = useState<LoanRequest[]>([]);
   const [pendingRequests, setPendingRequests] = useState<LoanRequest[]>([]);
   const [userReservation, setUserReservation] = useState<Reservation | null>(
@@ -20,11 +20,11 @@ export function useKatalogDetail(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [similarBooks, setSimilarBooks] = useState<Collection[]>([
-    { id: "1", title: "Bulan", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2015", publisher: "Gramedia", type: "physical_book" } as unknown as Collection,
-    { id: "2", title: "Matahari", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2016", publisher: "Gramedia", type: "physical_book" } as unknown as Collection,
-    { id: "3", title: "Bintang", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2017", publisher: "Gramedia", type: "physical_book" } as unknown as Collection,
-    { id: "4", title: "Ceros dan Batozar", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2018", publisher: "Gramedia", type: "physical_book" } as unknown as Collection,
+  const [similarBooks, setSimilarBooks] = useState<Bibliography[]>([
+    { id: "1", title: "Bulan", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2015", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
+    { id: "2", title: "Matahari", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2016", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
+    { id: "3", title: "Bintang", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2017", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
+    { id: "4", title: "Ceros dan Batozar", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2018", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
   ]);
 
   useEffect(() => {
@@ -32,33 +32,33 @@ export function useKatalogDetail(
       try {
         setLoading(true);
 
-        const collectionResponse = await fetch(
+        const bibResponse = await fetch(
           `${API_BASE_URL}/api/bibliographies/${id}`,
         );
-        if (!collectionResponse.ok)
-          throw new Error(`HTTP error! status: ${collectionResponse.status}`);
-        const collectionJson = await collectionResponse.json();
+        if (!bibResponse.ok)
+          throw new Error(`HTTP error! status: ${bibResponse.status}`);
+        const bibJson = await bibResponse.json();
 
-        if (collectionJson.success && collectionJson.data) {
-          setCollection(collectionJson.data);
+        if (bibJson.success && bibJson.data) {
+          setBibliography(bibJson.data);
 
           const memberId = currentUser?.memberId;
           if (memberId) {
             try {
               const myLoans = await loanService.getMyLoanHistory();
-              const loansForCollection = myLoans.filter(
+              const loansForBib = myLoans.filter(
                 (loan: unknown) => {
-                  const l = loan as { item?: { collection?: { id?: string } } };
-                  return l?.item?.collection?.id === id;
+                  const l = loan as { item?: { bibliography?: { id?: string } } };
+                  return l?.item?.bibliography?.id === id;
                 },
               ) as LoanRequest[];
 
               setPendingRequests(
-                loansForCollection.filter((loan) => loan.status === "pending"),
+                loansForBib.filter((loan) => loan.status === "pending"),
               );
 
               setUserLoans(
-                loansForCollection.filter(
+                loansForBib.filter(
                   (loan) =>
                     loan.status === "approved" || loan.status === "extended",
                 ),
@@ -72,7 +72,7 @@ export function useKatalogDetail(
             try {
               const reservations = await reservationService.getMyReservations();
               const activeRes = reservations.find(
-                (r) => r.collectionId === id && r.status === "waiting",
+                (r) => r.bibliographyId === id && r.status === "waiting",
               );
               setUserReservation(activeRes || null);
             } catch (err) {
@@ -80,11 +80,11 @@ export function useKatalogDetail(
             }
           }
 
-          if (collectionJson.data.categoryId) {
-            fetchSimilarBooks(collectionJson.data.categoryId);
+          if (bibJson.data.categoryId) {
+            fetchSimilarBooks(bibJson.data.categoryId);
           }
         } else {
-          throw new Error(collectionJson.message || "Data tidak ditemukan");
+          throw new Error(bibJson.message || "Data tidak ditemukan");
         }
       } catch (err) {
         setError(
@@ -114,7 +114,7 @@ export function useKatalogDetail(
   }, [id, sessionLoading, currentUser?.memberId]);
 
   return {
-    collection,
+    bibliography,
     userLoans,
     pendingRequests,
     userReservation,

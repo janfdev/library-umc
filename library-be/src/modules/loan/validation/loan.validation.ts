@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const createLoanSchema = z.object({
-  collectionId: z.string().min(1, "Collection ID wajib diisi"),
+  bibliographyId: z.string().min(1, "Bibliography ID wajib diisi"),
   loanDate: z.string().optional(),
   dueDate: z.string().optional(),
 });

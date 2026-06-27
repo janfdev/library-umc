@@ -201,16 +201,16 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
                     <div className="flex gap-4">
                       {/* Book Cover */}
                       <div className="w-16 h-20 rounded-lg bg-slate-200 overflow-hidden shrink-0">
-                        {res.collection?.image ? (
+                        {res.bibliography?.image ? (
                           <img 
-                            src={res.collection.image} 
-                            alt={res.collection.title} 
+                            src={res.bibliography.image} 
+                            alt={res.bibliography.title} 
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full bg-emerald-900 flex items-center justify-center text-white p-1 text-center">
                             <span className="text-[8px] font-bold">
-                              {res.collection?.title || 'No Cover'}
+                              {res.bibliography?.title || 'No Cover'}
                             </span>
                           </div>
                         )}
@@ -221,10 +221,10 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <h3 className="font-bold text-slate-900 text-sm mb-1 truncate">
-                              {res.collection?.title || 'Judul tidak tersedia'}
+                              {res.bibliography?.title || 'Judul tidak tersedia'}
                             </h3>
                             <p className="text-xs text-slate-400 mb-2 truncate">
-                              {res.collection?.author || 'Penulis tidak tersedia'}
+                              {res.bibliography?.author || 'Penulis tidak tersedia'}
                             </p>
                           </div>
                           {getStatusBadge(res.status)}
@@ -237,14 +237,14 @@ const ReservationList = ({ isOpen, onClose, memberId }: ReservationListProps) =>
                             <span>Reservasi: {formatDate(res.createdAt)}</span>
                           </div>
                           
-                          {res.collection && (
+                          {res.bibliography && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               <span className="px-2 py-0.5 bg-white rounded-full text-[8px] font-medium text-slate-500">
-                                {res.collection.type === 'physical_book' ? '📚 Buku Fisik' : '📱 E-Book'}
+                                {res.bibliography.type === 'physical_book' ? '📚 Buku Fisik' : '📱 E-Book'}
                               </span>
-                              {res.collection.publisher && (
+                              {res.bibliography.publisher && (
                                 <span className="px-2 py-0.5 bg-white rounded-full text-[8px] font-medium text-slate-500">
-                                  {res.collection.publisher}
+                                  {res.bibliography.publisher}
                                 </span>
                               )}
                             </div>

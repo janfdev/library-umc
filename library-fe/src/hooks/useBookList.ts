@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { API_BASE_URL } from "../utils/api-config";
-import type { Collection, Reservation } from "../types";
+import type { Bibliography, Reservation } from "../types";
 
-export type { Collection, Reservation } from "../types";
+export type { Bibliography, Reservation } from "../types";
 
 // ==========================================
 // INTERNAL TYPES (milik hook ini saja)
@@ -16,7 +16,7 @@ interface CurrentUser {
 }
 
 interface UseBookListReturn {
-  collections: Collection[];
+  bibliographies: Bibliography[];
   userReservations: Reservation[];
   loading: boolean;
   error: string | null;
@@ -30,14 +30,14 @@ interface UseBookListReturn {
 export function useBookList(
   currentUser?: CurrentUser | null
 ): UseBookListReturn {
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const [bibliographies, setBibliographies] = useState<Bibliography[]>([]);
   const [userReservations, setUserReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const fetchCollections = async () => {
+  const fetchBibliographies = async () => {
     const response = await fetch(`${apiUrl}/api/bibliographies?limit=100`);
 
     if (!response.ok) {
@@ -66,8 +66,8 @@ export function useBookList(
     // Handle paginated response: { items: [...], total, page, ... }
     const rawItems = json.data?.items ?? (Array.isArray(json.data) ? json.data : []);
 
-    // Map Bibliography API shape → Collection shape expected by BookList
-    const mapped: Collection[] = rawItems.map((item: any) => ({
+    // Map Bibliography API shape → Bibliography shape expected by BookList
+    const mapped: Bibliography[] = rawItems.map((item: any) => ({
       id: item.id,
       title: item.title,
       author: Array.isArray(item.authors)
@@ -86,7 +86,7 @@ export function useBookList(
       category: item.category,
     }));
 
-    setCollections(mapped);
+    setBibliographies(mapped);
   };
 
   const fetchMyReservations = async () => {
@@ -113,7 +113,7 @@ export function useBookList(
       setLoading(true);
       setError(null);
 
-      await fetchCollections();
+      await fetchBibliographies();
 
       if (userId) {
         await fetchMyReservations();
@@ -133,7 +133,7 @@ export function useBookList(
   }, [fetchAll]);
 
   return {
-    collections,
+    bibliographies,
     userReservations,
     loading,
     error,

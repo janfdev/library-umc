@@ -5,7 +5,7 @@ import {
 } from "@/services/dashboard/dashboardDataService";
 
 const DEFAULT_STATS: DashboardStats = {
-  totalCollections: 0,
+  totalBibliographies: 0,
   totalItems: 0,
   totalCategories: 0,
   totalGuests: 0,

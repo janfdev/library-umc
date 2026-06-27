@@ -44,7 +44,7 @@ const KatalogDetail = () => {
     : null;
 
   const {
-    collection,
+    bibliography,
     userLoans,
     pendingRequests,
     userReservation,
@@ -72,7 +72,7 @@ const KatalogDetail = () => {
     handleSubmitLoan,
     handleCheckLoans,
   } = useKatalogActions({
-    collection,
+    bibliography,
     currentUser,
     userLoans,
     pendingRequests,
@@ -117,9 +117,9 @@ const KatalogDetail = () => {
               {/* Info Buku */}
               <div className="p-4 bg-slate-50 rounded-xl">
                 <p className="font-medium text-slate-900">
-                  {collection?.title}
+                  {bibliography?.title}
                 </p>
-                <p className="text-sm text-slate-600">{collection?.author}</p>
+                <p className="text-sm text-slate-600">{bibliography?.author}</p>
               </div>
 
               <div>
@@ -207,7 +207,7 @@ const KatalogDetail = () => {
           </Link>
           <ChevronRight size={12} />
           <span className="text-gray-800 font-bold truncate">
-            {collection?.title}
+            {bibliography?.title}
           </span>
         </nav>
 
@@ -216,16 +216,16 @@ const KatalogDetail = () => {
           {/* Sisi Kiri - Visual */}
           <div className="md:w-[35%] bg-[#F8FAFC] p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100">
             <div className="w-52 h-72 rounded-xl overflow-hidden shadow-2xl bg-white mb-8">
-              {collection?.image ? (
+              {bibliography?.image ? (
                 <img
-                  src={collection.image}
-                  alt={collection.title}
+                  src={bibliography.image}
+                  alt={bibliography.title}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-emerald-900 flex items-center justify-center text-white p-4 text-center">
                   <span className="font-bold text-lg italic">
-                    {collection?.title}
+                    {bibliography?.title}
                   </span>
                 </div>
               )}
@@ -301,32 +301,32 @@ const KatalogDetail = () => {
               )}
 
               <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
-                {collection?.type === "physical_book" ? "Buku Fisik" : "E-Book"}
+                {bibliography?.type === "physical_book" ? "Buku Fisik" : "E-Book"}
               </span>
 
-              {collection?.items ? (
+              {bibliography?.items ? (
                 <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
                   Stok:{" "}
                   {
-                    collection.items.filter((i) => i.status === "available")
+                    bibliography.items.filter((i) => i.status === "available")
                       .length
                   }{" "}
                   Fisik Tersedia
                 </span>
-              ) : collection?.stock !== undefined ? (
+              ) : bibliography?.stock !== undefined ? (
                 <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-bold">
-                  Stok: {collection.stock}
+                  Stok: {bibliography.stock}
                 </span>
               ) : null}
             </div>
 
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-1 tracking-tight">
-              {collection?.title}
+              {bibliography?.title}
             </h1>
             <p className="text-md text-slate-400 font-medium mb-8">
               Oleh{" "}
               <span className="text-red-600 font-bold">
-                {collection?.author}
+                {bibliography?.author}
               </span>
             </p>
 
@@ -336,7 +336,7 @@ const KatalogDetail = () => {
                   ISBN
                 </p>
                 <p className="text-xs font-bold text-slate-700">
-                  {collection?.isbn || "-"}
+                  {bibliography?.isbn || "-"}
                 </p>
               </div>
               <div>
@@ -344,7 +344,7 @@ const KatalogDetail = () => {
                   Penerbit
                 </p>
                 <p className="text-xs font-bold text-slate-700">
-                  {collection?.publisher || "-"}
+                  {bibliography?.publisher || "-"}
                 </p>
               </div>
               <div>
@@ -352,7 +352,7 @@ const KatalogDetail = () => {
                   Tahun
                 </p>
                 <p className="text-xs font-bold text-slate-700">
-                  {collection?.publicationYear || "-"}
+                  {bibliography?.publicationYear || "-"}
                 </p>
               </div>
             </div>

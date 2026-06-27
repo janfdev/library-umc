@@ -1,20 +1,20 @@
-// src/types/collection.ts
-// Tipe-tipe yang berkaitan dengan koleksi buku (public catalog & reservasi)
+// src/types/bibliography.ts
+// Tipe-tipe yang berkaitan dengan bibliografi buku (public catalog & reservasi)
 
 // ==========================================
-// COLLECTION
+// BIBLIOGRAPHY
 // ==========================================
 
-export type CollectionType = "physical_book" | "ebook" | "journal" | "thesis";
+export type BibliographyType = "physical_book" | "ebook" | "journal" | "thesis";
 
-export interface CollectionCategory {
+export interface BibliographyCategory {
   id: number;
   name: string;
   description?: string;
 }
 
-/** Struktur koleksi yang dikembalikan dari GET /api/collections */
-export interface Collection {
+/** Struktur bibliografi yang dikembalikan dari GET /api/bibliographies */
+export interface Bibliography {
   id: string;
   title: string;
   author: string;
@@ -22,7 +22,7 @@ export interface Collection {
   /** Tahun terbit — backend mengembalikan sebagai string (varchar) */
   publicationYear: string;
   isbn?: string;
-  type: CollectionType;
+  type: BibliographyType;
   categoryId?: number;
   description?: string;
   /** URL gambar cover (Cloudinary) */
@@ -34,7 +34,7 @@ export interface Collection {
     id: string;
     status: string;
   }[];
-  category?: CollectionCategory;
+  category?: BibliographyCategory;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -49,7 +49,7 @@ export type ReservationStatus = "waiting" | "fulfilled" | "canceled";
 export interface Reservation {
   id: string;
   memberId: string;
-  collectionId: string;
+  bibliographyId: string;
   status: ReservationStatus;
   createdAt: string;
   updatedAt: string;

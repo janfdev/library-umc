@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { PerspectiveBook } from "./perspective-book";
 import { BookOpen } from "lucide-react";
 import { useBookList } from "../hooks/useBookList";
-import type { Collection, LibraryUser } from "../types";
+import type { Bibliography, LibraryUser } from "../types";
 import { generateColorFromSeed } from "@/utils/format";
 
 interface BookListProps {
@@ -24,7 +24,7 @@ const BookList = ({
   const navigate = useNavigate();
 
   // ✅ Semua fetching dipindahkan ke custom hook
-  const { collections, userReservations, loading, error } = useBookList(
+  const { bibliographies, userReservations, loading, error } = useBookList(
     currentUser ?? null,
   );
   const [activeTab, setActiveTab] = useState(0);
@@ -37,10 +37,10 @@ const BookList = ({
   }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab]);
 
   // Helper: Cek apakah user sedang meminjam buku ini
-  const isUserBorrowing = (collectionId: string): boolean => {
+  const isUserBorrowing = (bibliographyId: string): boolean => {
     return userReservations.some(
       (res) =>
-        res.collectionId === collectionId &&
+        res.bibliographyId === bibliographyId &&
         (res.status === "fulfilled" || res.status === "waiting"),
     );
   };
@@ -51,34 +51,34 @@ const BookList = ({
   };
 
   // Filter berdasarkan tab
-  const filteredByTab = collections.filter((collection) => {
+  const filteredByTab = bibliographies.filter((bibliography) => {
     if (activeTab === 0) {
-      return collection.type === "physical_book";
+      return bibliography.type === "physical_book";
     } else {
-      return collection.type === "ebook";
+      return bibliography.type === "ebook";
     }
   });
 
   // Filter berdasarkan search query
-  const filteredBySearch = filteredByTab.filter((collection) => {
+  const filteredBySearch = filteredByTab.filter((bibliography) => {
     if (!searchQuery.trim()) return true;
 
     const query = searchQuery.toLowerCase();
 
     switch (searchType) {
       case "title":
-        return collection.title.toLowerCase().includes(query);
+        return bibliography.title.toLowerCase().includes(query);
       case "author":
-        return collection.author.toLowerCase().includes(query);
+        return bibliography.author.toLowerCase().includes(query);
       case "isbn":
-        return collection.isbn?.toLowerCase().includes(query);
+        return bibliography.isbn?.toLowerCase().includes(query);
       case "all":
       default:
         return (
-          collection.title.toLowerCase().includes(query) ||
-          collection.author.toLowerCase().includes(query) ||
-          collection.isbn?.toLowerCase().includes(query) ||
-          collection.publisher.toLowerCase().includes(query)
+          bibliography.title.toLowerCase().includes(query) ||
+          bibliography.author.toLowerCase().includes(query) ||
+          bibliography.isbn?.toLowerCase().includes(query) ||
+          bibliography.publisher.toLowerCase().includes(query)
         );
     }
   });
@@ -93,10 +93,10 @@ const BookList = ({
       : filteredBySearch;
 
   // Filter berdasarkan tahun terbit
-  const filteredByYear = filteredByAvailability.filter((collection) => {
+  const filteredByYear = filteredByAvailability.filter((bibliography) => {
     if (!yearRange.start && !yearRange.end) return true;
 
-    const year = collection.publicationYear;
+    const year = bibliography.publicationYear;
     const start = yearRange.start ? parseInt(yearRange.start) : 0;
     const end = yearRange.end ? parseInt(yearRange.end) : 9999;
 
@@ -116,10 +116,10 @@ const BookList = ({
   };
 
   // Helper: Status label
-  const getStatusLabel = (collection: Collection) => {
-    if (currentUser && isUserBorrowing(collection.id)) {
+  const getStatusLabel = (bibliography: Bibliography) => {
+    if (currentUser && isUserBorrowing(bibliography.id)) {
       const reservation = userReservations.find(
-        (r) => r.collectionId === collection.id,
+        (r) => r.bibliographyId === bibliography.id,
       );
       if (reservation?.status === "waiting") {
         return "Menunggu Konfirmasi";
@@ -131,10 +131,10 @@ const BookList = ({
   };
 
   // Helper: Status badge style
-  const getStatusBadge = (collection: Collection) => {
-    if (currentUser && isUserBorrowing(collection.id)) {
+  const getStatusBadge = (bibliography: Bibliography) => {
+    if (currentUser && isUserBorrowing(bibliography.id)) {
       const reservation = userReservations.find(
-        (r) => r.collectionId === collection.id,
+        (r) => r.bibliographyId === bibliography.id,
       );
       if (reservation?.status === "waiting") {
         return "px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium";
@@ -146,8 +146,8 @@ const BookList = ({
   };
 
   // Navigasi ke detail
-  const handleBookClick = (collectionId: string) => {
-    navigate(`/katalog/${collectionId}`);
+  const handleBookClick = (bibliographyId: string) => {
+    navigate(`/katalog/${bibliographyId}`);
   };
 
   if (loading) {
@@ -255,28 +255,28 @@ const BookList = ({
             </p>
           </div>
         ) : (
-          currentItems.map((collection) => (
+          currentItems.map((bibliography) => (
             <div
-              key={collection.id}
-              onClick={() => handleBookClick(collection.id)}
+              key={bibliography.id}
+              onClick={() => handleBookClick(bibliography.id)}
               className="flex flex-col items-center gap-2 cursor-pointer group"
             >
               <PerspectiveBook
                 size="sm"
-                className={generateColorFromSeed(collection.id)}
+                className={generateColorFromSeed(bibliography.id)}
               >
                 <div className="flex flex-col h-full gap-1.5">
                   <p className="font-semibold capitalize leading-4 text-white text-xs line-clamp-3">
-                    {collection.title}
+                    {bibliography.title}
                   </p>
                   <div className="mt-auto flex flex-col gap-1">
                     <span className="text-white/70 text-[10px] leading-tight line-clamp-1">
-                      {collection.author}
+                      {bibliography.author}
                     </span>
                     <div className="flex items-center gap-1">
                       <BookOpen className="size-3 text-white/70" />
                       <span className="text-white/60 text-[9px]">
-                        {collection.publicationYear ?? ""}
+                        {bibliography.publicationYear ?? ""}
                       </span>
                     </div>
                   </div>
@@ -286,12 +286,12 @@ const BookList = ({
               <div className="text-center max-w-[120px] sm:max-w-[150px]">
                 <div className="flex flex-wrap justify-center gap-1 mt-1">
                   <span className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded">
-                    {collection.type === "physical_book" ? "Fisik" : "E-Book"}
+                    {bibliography.type === "physical_book" ? "Fisik" : "E-Book"}
                   </span>
                   <span
-                    className={`px-1.5 py-0.5 text-[9px] rounded ${getStatusBadge(collection)}`}
+                    className={`px-1.5 py-0.5 text-[9px] rounded ${getStatusBadge(bibliography)}`}
                   >
-                    {getStatusLabel(collection)}
+                    {getStatusLabel(bibliography)}
                   </span>
                 </div>
               </div>

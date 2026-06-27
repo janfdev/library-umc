@@ -20,7 +20,7 @@ const ENTITY_OPTIONS = [
   "fine",
   "Users",
   "category",
-  "collection",
+  "bibliography",
   "reservation",
   "auth",
 ];

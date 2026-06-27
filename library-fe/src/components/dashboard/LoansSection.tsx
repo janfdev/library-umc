@@ -35,7 +35,7 @@ interface Loan {
   approvedDate?: string;
   rejectReason?: string;
   item?: {
-    collection?: {
+    bibliography?: {
       title?: string;
     };
   };
@@ -247,7 +247,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     ? loans.filter(loan => {
         if (!loan) return false;
         
-        const bookTitle = loan.item?.collection?.title?.toLowerCase() || '';
+        const bookTitle = loan.item?.bibliography?.title?.toLowerCase() || '';
         const borrowerName = loan.member?.user?.name?.toLowerCase() || '';
         const borrowerNim = loan.member?.nimNidn?.toString() || '';
         const searchLower = searchTerm.toLowerCase();
@@ -409,7 +409,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                         <BookOpen className="text-slate-400 group-hover:text-[#B91C1C] transition-colors" size={20} />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-[#0F172A] text-[15px] leading-snug hover:text-[#B91C1C] transition-colors">{loan.item?.collection?.title || 'Judul tidak tersedia'}</h4>
+                        <h4 className="font-extrabold text-[#0F172A] text-[15px] leading-snug hover:text-[#B91C1C] transition-colors">{loan.item?.bibliography?.title || 'Judul tidak tersedia'}</h4>
                         <div className="flex items-center gap-2 mt-1.5">
                           <User size={13} className="text-slate-400" />
                           <span className="text-[13px] font-bold text-slate-600">{loan.member?.user?.name || 'Nama tidak tersedia'}</span>
@@ -562,7 +562,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
               <div className="p-4 bg-slate-50 rounded-xl space-y-3 border border-slate-100">
                 <p className="text-[13px] text-slate-600 flex justify-between">
                   <span className="font-bold text-slate-400">Buku</span>
-                  <span className="font-bold text-slate-900 text-right">{selectedLoan.item?.collection?.title}</span>
+                  <span className="font-bold text-slate-900 text-right">{selectedLoan.item?.bibliography?.title}</span>
                 </p>
                 <div className="h-px bg-slate-200"></div>
                 <p className="text-[13px] text-slate-600 flex justify-between">
@@ -640,7 +640,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 <div className="p-4 bg-slate-50 rounded-xl space-y-3 border border-slate-100 mb-6">
                   <p className="text-[13px] text-slate-600 flex justify-between">
                     <span className="font-bold text-slate-400">Buku</span>
-                    <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">{returnModalLoan.item?.collection?.title}</span>
+                    <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">{returnModalLoan.item?.bibliography?.title}</span>
                   </p>
                   <div className="h-px bg-slate-200"></div>
                   <p className="text-[13px] text-slate-600 flex justify-between">

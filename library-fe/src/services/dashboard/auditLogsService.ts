@@ -17,7 +17,7 @@ export interface AuditLog {
     | "fine"
     | "Users"
     | "category"
-    | "collection"
+    | "bibliography"
     | "reservation"
     | "auth";
   entityId?: string | null;

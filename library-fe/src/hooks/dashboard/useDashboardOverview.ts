@@ -54,7 +54,7 @@ export function useDashboardOverview(stats: DashboardStats) {
           (loan.member?.user as { name?: string } | undefined)?.name ||
           "Member";
         const bookTitle =
-          loan.collectionTitle || loan.item?.collection?.title || "Buku";
+          loan.bibliographyTitle || loan.item?.bibliography?.title || "Buku";
         const createdAt = loan.createdAt || loan.loanDate;
 
         return {
