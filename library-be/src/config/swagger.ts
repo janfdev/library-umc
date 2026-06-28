@@ -997,6 +997,337 @@ const swaggerDefinition = {
         },
       },
     },
+    "/loans/request": {
+      post: {
+        summary: "Request a Book Loan",
+        description: "Member requests to borrow a book. System generates a verification token.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["bibliographyId"],
+                properties: {
+                  bibliographyId: { type: "string", format: "uuid", description: "ID of the bibliography (book) to borrow" },
+                  loanDate: { type: "string", format: "date" },
+                  dueDate: { type: "string", format: "date" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Loan requested successfully" },
+          400: { description: "Item not available or validation error" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/loans/history": {
+      get: {
+        summary: "Get My Loan History",
+        description: "Member views their own loan history.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "My loan history" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/loans/verify/{token}": {
+      get: {
+        summary: "Verify Loan Token",
+        description: "Admin scans QR code/token to verify loan request validity.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Token verified, returns loan data" },
+          400: { description: "Invalid or expired token" },
+        },
+      },
+    },
+    "/loans/{requestId}/approve": {
+      post: {
+        summary: "Approve Loan",
+        description: "Admin approves the loan request after verification. Item status becomes 'loaned'.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "requestId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Loan approved" },
+          404: { description: "Loan request not found" },
+        },
+      },
+    },
+    "/loans/{requestId}/reject": {
+      post: {
+        summary: "Reject Loan",
+        description: "Admin rejects the loan request.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "requestId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", properties: { reason: { type: "string" } } } } },
+        },
+        responses: {
+          200: { description: "Loan rejected" },
+          404: { description: "Loan request not found" },
+        },
+      },
+    },
+    "/loans/{loanId}/return-request": {
+      post: {
+        summary: "Create Return Request",
+        description: "Member creates a return request for a loan.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "loanId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "Return request created" },
+          400: { description: "Cannot create return request" },
+        },
+      },
+    },
+    "/loans/return-requests/pending": {
+      get: {
+        summary: "Get Pending Return Requests",
+        description: "Admin gets all pending return requests (Super Admin only).",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Pending return requests" },
+        },
+      },
+    },
+    "/loans/return-requests/{requestId}/approve": {
+      post: {
+        summary: "Approve Return Request",
+        description: "Admin approves a return request (Super Admin only).",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "requestId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Return approved" },
+        },
+      },
+    },
+    "/loans/{loanId}/extend": {
+      post: {
+        summary: "Extend Loan",
+        description: "Member extends their current loan by 7 days. Limit 1x, only if not overdue and no reservations.",
+        tags: ["Loans"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "loanId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "Loan extended" },
+          400: { description: "Cannot extend (overdue, reserved, or already extended)" },
+        },
+      },
+    },
+    "/reservations": {
+      get: {
+        summary: "Get All Reservations",
+        description: "Admin/Staff views all reservations.",
+        tags: ["Reservations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { in: "query", name: "status", schema: { type: "string", enum: ["waiting", "fulfilled", "canceled"] } },
+          { in: "query", name: "memberId", schema: { type: "string" } },
+          { in: "query", name: "bibliographyId", schema: { type: "string" } },
+          { in: "query", name: "limit", schema: { type: "integer" } },
+          { in: "query", name: "offset", schema: { type: "integer" } },
+        ],
+        responses: {
+          200: { description: "List of all reservations" },
+          403: { description: "Forbidden" },
+        },
+      },
+      post: {
+        summary: "Create Reservation",
+        description: "Member reserves a book when all copies are loaned. Max 3 active reservations.",
+        tags: ["Reservations"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["bibliographyId"],
+                properties: {
+                  bibliographyId: { type: "string", format: "uuid", description: "ID of the bibliography to reserve" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Reservation created" },
+          400: { description: "Still has available copies / already reserved / limit reached" },
+          404: { description: "Bibliography not found" },
+        },
+      },
+    },
+    "/reservations/my": {
+      get: {
+        summary: "Get My Reservations",
+        description: "Member views their own reservations.",
+        tags: ["Reservations"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "My reservations" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/reservations/{id}/cancel": {
+      patch: {
+        summary: "Cancel Reservation",
+        description: "Member cancels their reservation (only if status is 'waiting').",
+        tags: ["Reservations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          200: { description: "Reservation canceled" },
+          400: { description: "Cannot cancel (already fulfilled/canceled)" },
+          404: { description: "Reservation not found" },
+        },
+      },
+    },
+    "/fines": {
+      get: {
+        summary: "Get All Fines",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { in: "query", name: "status", schema: { type: "string", enum: ["paid", "unpaid"] } },
+          { in: "query", name: "loanId", schema: { type: "string" } },
+          { in: "query", name: "limit", schema: { type: "integer" } },
+          { in: "query", name: "offset", schema: { type: "integer" } },
+        ],
+        responses: { 200: { description: "List of fines" } },
+      },
+      post: {
+        summary: "Create Manual Fine",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["loanId", "amount"], properties: { loanId: { type: "string" }, amount: { type: "number" } } } } },
+        },
+        responses: { 201: { description: "Fine created" } },
+      },
+    },
+    "/fines/my": {
+      get: {
+        summary: "Get My Fines",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: "My fines" } },
+      },
+    },
+    "/fines/audit/paid-active-loans": {
+      get: {
+        summary: "Audit Paid Fines with Non-Returned Loans",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: "Audit data" } },
+      },
+    },
+    "/fines/{id}": {
+      get: {
+        summary: "Get Fine By ID",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Fine details" }, 404: { description: "Not found" } },
+      },
+      delete: {
+        summary: "Delete Fine",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Fine deleted" } },
+      },
+    },
+    "/fines/{id}/pay": {
+      post: {
+        summary: "Pay Fine",
+        tags: ["Fines"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["paymentMethod"], properties: { paymentMethod: { type: "string", default: "cash" } } } } },
+        },
+        responses: { 200: { description: "Fine paid" }, 400: { description: "Already paid" } },
+      },
+    },
+    "/locations": {
+      get: {
+        summary: "Get All Locations",
+        tags: ["Locations"],
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: "List of locations" } },
+      },
+      post: {
+        summary: "Create Location",
+        tags: ["Locations"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["room", "rack", "shelf"], properties: { room: { type: "string" }, rack: { type: "string" }, shelf: { type: "string" } } } } },
+        },
+        responses: { 201: { description: "Location created" } },
+      },
+    },
+    "/locations/{id}": {
+      get: {
+        summary: "Get Location By ID",
+        tags: ["Locations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { 200: { description: "Location details" }, 404: { description: "Not found" } },
+      },
+      put: {
+        summary: "Update Location",
+        tags: ["Locations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["room", "rack", "shelf"], properties: { room: { type: "string" }, rack: { type: "string" }, shelf: { type: "string" } } } } },
+        },
+        responses: { 200: { description: "Location updated" } },
+      },
+      delete: {
+        summary: "Delete Location (Soft Delete)",
+        tags: ["Locations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { 200: { description: "Location deleted" } },
+      },
+    },
     "/import/bibliographies/upload": {
       post: {
         summary: "Upload bibliography CSV",
