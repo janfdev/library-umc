@@ -7,7 +7,7 @@ services:
     container_name: library_backend
     restart: always
     ports:
-      - "3000:3000" # Akses di localhost:3000
+      - "4000:4000" # Akses di localhost:4000
     env_file:
       - ./library-be/.env # Load env dari file lokal (JANGAN DI-COMMIT)
     depends_on:

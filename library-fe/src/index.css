@@ -249,6 +249,16 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Ensure all form inputs, textareas, and select menus have dark text by default in light mode */
+  input, select, textarea, option {
+    color: #0f172a;
+  }
+
+  /* Maintain white text for these elements in dark mode */
+  .dark input, .dark select, .dark textarea, .dark option {
+    color: #ffffff;
+  }
+
   /* Typography Classes */
   .font-heading {
     font-family: "Space Grotesk", sans-serif;

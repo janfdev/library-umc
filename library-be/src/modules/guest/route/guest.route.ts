@@ -229,7 +229,8 @@ router.post(
 );
 
 /**
- * @swagger * /guest/absensi:
+ * @swagger
+ * /guest/absensi:
  *   post:
  *     summary: Create absensi log
  *

@@ -18,13 +18,35 @@ const app = express();
 // Trust proxy fully for secure cookie (X-Forwarded-Proto) from PaaS like Railway, Render, etc.
 app.set("trust proxy", 1);
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:5173",
+  "http://localhost:4173",
+  "https://library-fe-one.vercel.app",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:4173",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost",
+  "http://127.0.0.1"
+];
+
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL || "http://localhost:5173",
-      "http://localhost:4173",
-      "https://library-fe-one.vercel.app"
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, postman, curl)
+      if (!origin) return callback(null, true);
+
+      // In development, allow any origin to make local/network development easy
+      if (process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
   })
 );
