@@ -172,7 +172,7 @@ export default function GuestsSection({
         {activeTab === "anggota" ? (
           <button
             onClick={() => setIsMemberModalOpen(true)}
-            className="bg-[#B91C1C] hover:bg-[#9a1b1b] text-white px-6 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all"
+            className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 transition-all"
           >
             <Plus size={18} strokeWidth={2.5} /> Tambah Anggota
           </button>
@@ -181,7 +181,7 @@ export default function GuestsSection({
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsMemberDropdownOpen((v) => !v)}
-              className="bg-[#B91C1C] hover:bg-[#9a1b1b] text-white px-6 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 transition-all"
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 transition-all"
             >
               <UserCheck size={18} strokeWidth={2.5} />
               Catat Pengunjung
@@ -236,7 +236,7 @@ export default function GuestsSection({
                         onClick={() =>
                           void handleQuickRecordFromDropdown(member)
                         }
-                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left group disabled:opacity-50 disabled:cursor-wait"
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-warning-bg transition-colors text-left group disabled:opacity-50 disabled:cursor-wait"
                       >
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
                           {member.user?.image ? (
@@ -285,7 +285,7 @@ export default function GuestsSection({
           onClick={() => handleTabChange("anggota")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "anggota"
-              ? "bg-card border-red-200 text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -295,7 +295,7 @@ export default function GuestsSection({
           onClick={() => handleTabChange("tamu")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "tamu"
-              ? "bg-card border-red-200 text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -502,7 +502,7 @@ export default function GuestsSection({
                         onClick={() => setCurrentPage(p)}
                         className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                           currentPage === p
-                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            ? "bg-primary text-white shadow-md shadow-red-500/20"
                             : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                         }`}
                       >

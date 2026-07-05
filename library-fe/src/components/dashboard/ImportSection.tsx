@@ -68,7 +68,7 @@ export default function ImportSection() {
       preview: "bg-amber-50 text-amber-700",
       approving: "bg-purple-50 text-purple-700",
       committed: "bg-emerald-50 text-emerald-700",
-      failed: "bg-red-50 text-red-700",
+      failed: "bg-warning-bg text-destructive",
       cancelled: "bg-muted text-muted-foreground",
     };
     return styles[status] || "bg-muted text-muted-foreground";
@@ -119,7 +119,7 @@ export default function ImportSection() {
           <button
             type="submit"
             disabled={uploading}
-            className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-6 py-2 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {uploading ? (
               <Loader2 className="size-4 animate-spin" />
@@ -132,10 +132,10 @@ export default function ImportSection() {
       </form>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -178,7 +178,7 @@ export default function ImportSection() {
                 <div className="flex gap-2 text-xs">
                   <span className="text-emerald-600">{batch.committedRows} berhasil</span>
                   <span className="text-amber-600">{batch.validRows} valid</span>
-                  <span className="text-red-600">{batch.invalidRows} gagal</span>
+                  <span className="text-destructive">{batch.invalidRows} gagal</span>
                 </div>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(batch.status)}`}
@@ -318,12 +318,12 @@ function BatchDetail({
 
   if (!batch) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+      <div className="rounded-2xl border border-warning-border bg-warning-bg p-8 text-center">
         <AlertCircle className="mx-auto mb-4 size-12 text-red-400" />
-        <p className="text-sm text-red-600">Batch tidak ditemukan</p>
+        <p className="text-sm text-destructive">Batch tidak ditemukan</p>
         <button
           onClick={onBack}
-          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          className="mt-4 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
         >
           Kembali
         </button>
@@ -339,10 +339,10 @@ function BatchDetail({
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -417,9 +417,9 @@ function BatchDetail({
             <p className="text-2xl font-bold text-blue-700">{batch.committedRows}</p>
             <p className="text-xs text-blue-600">Committed</p>
           </div>
-          <div className="rounded-lg bg-red-50 p-3 text-center">
-            <p className="text-2xl font-bold text-red-700">{batch.failedRows}</p>
-            <p className="text-xs text-red-600">Failed</p>
+          <div className="rounded-lg bg-warning-bg p-3 text-center">
+            <p className="text-2xl font-bold text-destructive">{batch.failedRows}</p>
+            <p className="text-xs text-destructive">Failed</p>
           </div>
         </div>
       </div>
@@ -484,8 +484,8 @@ function BatchDetail({
               <p className="text-xs text-emerald-600">Committed</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-red-700">{approvalResult.failed}</p>
-              <p className="text-xs text-red-600">Failed</p>
+              <p className="text-2xl font-bold text-destructive">{approvalResult.failed}</p>
+              <p className="text-xs text-destructive">Failed</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-amber-700">{approvalResult.remaining}</p>
@@ -526,7 +526,7 @@ function BatchDetail({
                           row.status === "valid"
                             ? "bg-emerald-50 text-emerald-700"
                             : row.status === "invalid"
-                              ? "bg-red-50 text-red-700"
+                              ? "bg-warning-bg text-destructive"
                               : "bg-muted text-muted-foreground"
                         }`}
                       >

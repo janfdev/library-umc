@@ -56,10 +56,10 @@ export default function ExportSection() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -86,7 +86,7 @@ export default function ExportSection() {
           <button
             onClick={handleExportBibliographies}
             disabled={exportingBiblio}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#B91C1C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {exportingBiblio ? (
               <Loader2 className="size-4 animate-spin" />

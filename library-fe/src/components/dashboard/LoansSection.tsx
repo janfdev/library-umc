@@ -212,7 +212,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
       
       if (today > due) {
         return (
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide bg-red-100 text-red-700`}>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide bg-red-100 text-destructive`}>
             <Clock size={14} /> Terlambat
           </span>
         );
@@ -222,7 +222,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     const statusConfig: Record<string, { color: string; icon: React.ElementType; text: string }> = {
       pending: { color: "bg-yellow-100 text-yellow-700", icon: Clock, text: "Menunggu" },
       approved: { color: "bg-blue-100 text-blue-700", icon: BookOpen, text: "Dipinjam" },
-      rejected: { color: "bg-red-100 text-red-700", icon: XCircle, text: "Ditolak" },
+      rejected: { color: "bg-red-100 text-destructive", icon: XCircle, text: "Ditolak" },
       returned: { color: "bg-gray-100 text-gray-700", icon: CheckCircle, text: "Dikembalikan" },
       extended: { color: "bg-purple-100 text-purple-700", icon: Clock, text: "Diperpanjang" },
     };
@@ -374,8 +374,8 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
 
         {/* Error Message */}
         {error && (
-          <div className="mx-8 mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-sm font-medium text-red-600">{error}</p>
+          <div className="mx-8 mt-6 p-4 bg-warning-bg border border-warning-border rounded-xl">
+            <p className="text-sm font-medium text-destructive">{error}</p>
           </div>
         )}
 
@@ -405,7 +405,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 >
                   <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-5">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-card rounded-xl flex items-center justify-center shrink-0 border border-border group-hover:border-red-100 group-hover:bg-red-50 transition-colors">
+                      <div className="w-12 h-12 bg-card rounded-xl flex items-center justify-center shrink-0 border border-border group-hover:border-red-100 group-hover:bg-warning-bg transition-colors">
                         <BookOpen className="text-muted-foreground group-hover:text-[#B91C1C] transition-colors" size={20} />
                       </div>
                       <div>
@@ -465,7 +465,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                       <button
                         onClick={() => openRejectModal(loan.id)}
                         disabled={processingId === loan.id}
-                        className="flex-none bg-card text-muted-foreground border border-border px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all disabled:opacity-50"
+                        className="flex-none bg-card text-muted-foreground border border-border px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-warning-bg hover:text-destructive hover:border-warning-border transition-all disabled:opacity-50"
                       >
                          Tolak
                       </button>
@@ -492,9 +492,9 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
 
                   {/* Info untuk status lainnya */}
                   {loan.status === 'rejected' && loan.rejectReason && (
-                    <div className="mt-4 p-3 bg-red-50/50 rounded-xl text-[13px] border border-red-100">
-                      <span className="font-bold text-red-700">Alasan Penolakan: </span>
-                      <span className="text-red-600 font-medium">{loan.rejectReason}</span>
+                    <div className="mt-4 p-3 bg-warning-bg/50 rounded-xl text-[13px] border border-red-100">
+                      <span className="font-bold text-destructive">Alasan Penolakan: </span>
+                      <span className="text-destructive font-medium">{loan.rejectReason}</span>
                     </div>
                   )}
                 </div>
@@ -530,7 +530,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                         onClick={() => setCurrentPage(p)}
                         className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                           currentPage === p
-                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            ? "bg-primary text-white shadow-md shadow-red-500/20"
                             : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                         }`}
                       >
@@ -627,7 +627,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 </p>
                 <button
                   onClick={() => { setReturnModalLoan(null); setReturnResult(null); }}
-                  className="w-full bg-[#B91C1C] hover:bg-[#991b1b] text-white px-4 py-3 rounded-xl text-[13px] font-bold transition-all"
+                  className="w-full bg-primary hover:bg-primary/90 text-white px-4 py-3 rounded-xl text-[13px] font-bold transition-all"
                 >
                   Tutup
                 </button>
@@ -652,7 +652,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                     <span className="font-bold text-muted-foreground">Batas Kembali</span>
                     <span className={`font-bold ${
                       new Date(returnModalLoan.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0)
-                        ? 'text-red-600' : 'text-foreground'
+                        ? 'text-destructive' : 'text-foreground'
                     }`}>
                       {new Date(returnModalLoan.dueDate).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})}
                     </span>
@@ -711,7 +711,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 bg-red-600 text-white px-4 py-3 rounded-xl text-[13px] font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
+                className="flex-1 bg-destructive text-white px-4 py-3 rounded-xl text-[13px] font-bold hover:bg-destructive/90 transition-all shadow-lg shadow-red-600/20"
               >
                 Tolak Peminjaman
               </button>

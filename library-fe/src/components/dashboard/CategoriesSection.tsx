@@ -135,7 +135,7 @@ export default function CategoriesSection({
           </div>
           <button
             onClick={openAddModal}
-            className="bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-red-900/20 hover:bg-[#a01818] transition-all shrink-0"
+            className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-red-500/20 hover:bg-primary/90 transition-all shrink-0"
           >
             <Plus size={16} /> Tambah
           </button>
@@ -161,11 +161,11 @@ export default function CategoriesSection({
                 className="group relative bg-card p-6 rounded-[24px] border border-border hover:border-red-100 hover:shadow-xl hover:shadow-red-900/5 transition-all duration-300 overflow-hidden"
               >
                 {/* Decorative Background Element */}
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-50/50 rounded-full blur-2xl group-hover:bg-red-100/50 transition-colors" />
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning-bg/50 rounded-full blur-2xl group-hover:bg-red-100/50 transition-colors" />
 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-[#B91C1C] group-hover:bg-[#B91C1C] group-hover:text-white transition-all duration-300 shadow-sm">
+                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-[#B91C1C] group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
                       <Tag className="w-6 h-6" strokeWidth={2.5} />
                     </div>
 
@@ -179,7 +179,7 @@ export default function CategoriesSection({
                       </button>
                       <button
                         onClick={() => onDelete(category.id, category.name)}
-                        className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-red-600 hover:border-red-100 hover:shadow-sm transition-all"
+                        className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-destructive hover:border-red-100 hover:shadow-sm transition-all"
                         title="Hapus Kategori"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function CategoriesSection({
                         onClick={() => setCurrentPage(p)}
                         className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                           currentPage === p
-                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            ? "bg-primary text-white shadow-md shadow-red-500/20"
                             : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                         }`}
                       >
@@ -311,7 +311,7 @@ export default function CategoriesSection({
             </button>
             <button
               type="submit"
-              className="flex-[2] bg-[#B91C1C] text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-[#a01818] transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/10 disabled:opacity-50"
+              className="flex-[2] bg-primary text-white px-5 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/10 disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

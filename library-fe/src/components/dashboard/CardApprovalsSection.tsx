@@ -131,7 +131,7 @@ export default function CardApprovalsSection() {
 
           <button
             onClick={() => void loadRequests()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-red-50 border border-border transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-warning-bg border border-border transition-colors"
           >
             <RefreshCw size={14} /> Refresh
           </button>
@@ -157,7 +157,7 @@ export default function CardApprovalsSection() {
                 className="p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 hover:bg-surface-hover/40 transition-colors"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center font-black">
+                  <div className="w-14 h-14 rounded-2xl bg-warning-bg text-destructive flex items-center justify-center font-black">
                     {item.user.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
                   <div>
@@ -197,7 +197,7 @@ export default function CardApprovalsSection() {
                   <button
                     onClick={() => void handleIssueDirect(item)}
                     disabled={actionId === item.id}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#B91C1C] text-white text-sm font-bold hover:bg-[#991b1b] disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 disabled:opacity-50"
                   >
                     <IdCard size={14} />
                     Terbitkan Langsung
@@ -240,7 +240,7 @@ export default function CardApprovalsSection() {
                           onClick={() => setCurrentPage(p)}
                           className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                             currentPage === p
-                              ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                              ? "bg-primary text-white shadow-md shadow-red-500/20"
                               : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                           }`}
                         >

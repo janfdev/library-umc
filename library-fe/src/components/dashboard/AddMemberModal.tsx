@@ -55,7 +55,7 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
       <div className="bg-card w-full max-w-[700px] rounded-[24px] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="bg-[#0F172A] px-6 py-5 flex items-center justify-between">
+        <div className="bg-card px-6 py-5 flex items-center justify-between">
           <h2 className="text-white text-[16px] font-bold tracking-wide">Tambah Anggota Baru</h2>
           <button 
             onClick={onClose}
@@ -147,7 +147,7 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
             <button 
               type="submit" 
               disabled={loading}
-              className="px-6 py-3 bg-[#B91C1C] hover:bg-[#9a1b1b] text-white rounded-xl text-sm font-bold shadow-md shadow-red-900/20 transition-all disabled:opacity-50"
+              className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/20 transition-all disabled:opacity-50"
             >
               {loading ? "Menyimpan..." : "Simpan Anggota"}
             </button>

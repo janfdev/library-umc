@@ -84,7 +84,7 @@ export default function UsersSection() {
   };
 
   const roleBadgeClass = (role: string) => {
-    if (role === "super_admin") return "bg-red-50 text-red-700 border-red-200";
+    if (role === "super_admin") return "bg-warning-bg text-destructive border-warning-border";
     if (role === "staff") return "bg-blue-50 text-blue-700 border-blue-200";
     return "bg-muted text-muted-foreground border-border";
   };
@@ -272,7 +272,7 @@ export default function UsersSection() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
             Super Admin
           </p>
-          <p className="mt-2 text-2xl font-black text-red-700">
+          <p className="mt-2 text-2xl font-black text-destructive">
             {stats.admins}
           </p>
         </div>
@@ -308,7 +308,7 @@ export default function UsersSection() {
 
           <button
             onClick={() => void refetch()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-red-50 border border-border transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-warning-bg border border-border transition-colors"
           >
             <RefreshCw size={14} /> Refresh
           </button>
@@ -332,7 +332,7 @@ export default function UsersSection() {
           </div>
         ) : pageError || usersError ? (
           <div className="p-8 text-center">
-            <p className="text-sm font-semibold text-red-600">
+            <p className="text-sm font-semibold text-destructive">
               {pageError || usersError}
             </p>
           </div>
@@ -483,7 +483,7 @@ export default function UsersSection() {
                               savingId === user.id ||
                               (roleDraft[user.id] || user.role) === user.role
                             }
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-[#B91C1C] text-white hover:bg-[#991b1b] disabled:bg-slate-200 disabled:text-muted-foreground"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 disabled:bg-slate-200 disabled:text-muted-foreground"
                           >
                             <Save size={12} />
                             {savingId === user.id ? "Menyimpan..." : "Simpan"}
@@ -528,7 +528,7 @@ export default function UsersSection() {
                                 <button
                                   onClick={() => void handleIssueCard(user)}
                                   disabled={issueSavingId === user.id}
-                                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-[#B91C1C] text-white hover:bg-[#991b1b] disabled:bg-slate-200 disabled:text-muted-foreground"
+                                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 disabled:bg-slate-200 disabled:text-muted-foreground"
                                 >
                                   <ShieldCheck size={12} />
                                   {issueSavingId === user.id
@@ -573,7 +573,7 @@ export default function UsersSection() {
                             onClick={() => setCurrentPage(p)}
                             className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                               currentPage === p
-                                ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                                ? "bg-primary text-white shadow-md shadow-red-500/20"
                                 : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                             }`}
                           >

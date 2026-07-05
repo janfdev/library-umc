@@ -141,7 +141,7 @@ export default function ReturnApprovalsSection() {
                         onClick={() => setCurrentPage(p)}
                         className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                           currentPage === p
-                            ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                            ? "bg-primary text-white shadow-md shadow-red-500/20"
                             : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                         }`}
                       >

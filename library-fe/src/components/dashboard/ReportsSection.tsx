@@ -368,7 +368,7 @@ export default function ReportsSection({
           {/* Export Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 bg-[#B91C1C] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-900/20">
+              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-500/20">
                 <DownloadCloud size={18} />
                 Export Laporan
               </button>
@@ -564,7 +564,7 @@ export default function ReportsSection({
                   onClick={() => setChartRange(range)}
                   className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                     chartRange === range
-                      ? "bg-[#B91C1C] text-white shadow-sm"
+                      ? "bg-primary text-white shadow-sm"
                       : "text-muted-foreground hover:text-muted-foreground"
                   }`}
                 >

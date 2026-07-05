@@ -131,14 +131,14 @@ export default function AuditLogsSection() {
 
           <button
             onClick={() => void applyFilter()}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#B91C1C] text-white hover:bg-[#991b1b]"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90"
           >
             <ShieldCheck size={14} /> Terapkan
           </button>
 
           <button
             onClick={() => void refetch()}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-red-50 border border-border"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-warning-bg border border-border"
           >
             <RefreshCw size={14} /> Refresh
           </button>
@@ -152,7 +152,7 @@ export default function AuditLogsSection() {
           </div>
         ) : error ? (
           <div className="p-8 text-center">
-            <p className="text-sm font-semibold text-red-600">{error}</p>
+            <p className="text-sm font-semibold text-destructive">{error}</p>
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground text-sm font-semibold">
@@ -262,7 +262,7 @@ export default function AuditLogsSection() {
                             onClick={() => setCurrentPage(p)}
                             className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                               currentPage === p
-                                ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                                ? "bg-primary text-white shadow-md shadow-red-500/20"
                                 : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                             }`}
                           >

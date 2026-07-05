@@ -154,13 +154,13 @@ export default function BibliographySection({
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+      <div className="rounded-2xl border border-warning-border bg-warning-bg p-8 text-center">
         <AlertCircle className="mx-auto mb-4 size-12 text-red-400" />
-        <h3 className="text-lg font-semibold text-red-700">Error</h3>
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <h3 className="text-lg font-semibold text-destructive">Error</h3>
+        <p className="mt-2 text-sm text-destructive">{error}</p>
         <button
           onClick={() => fetchData(page, searchTerm || undefined)}
-          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          className="mt-4 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
         >
           <RefreshCw className="mr-2 inline size-4" />
           Coba Lagi
@@ -198,7 +198,7 @@ export default function BibliographySection({
           </div>
           <button
             onClick={handleSearch}
-            className="rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515]"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             Cari
           </button>
@@ -299,7 +299,7 @@ export default function BibliographySection({
                         </button>
                         <button
                           onClick={() => handleDelete(bib)}
-                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+                          className="rounded-lg p-1.5 text-red-400 hover:bg-warning-bg hover:text-destructive"
                           title="Arsipkan"
                         >
                           <Trash2 className="size-4" />
@@ -388,7 +388,7 @@ function BibliographyDetail({
           </button>
           <button
             onClick={() => onDelete(bib)}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
           >
             <Trash2 className="size-4" />
             Arsipkan
@@ -456,7 +456,7 @@ function BibliographyDetail({
                 key={author.id || idx}
                 className="flex items-center gap-3 rounded-lg bg-muted px-4 py-2"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#B91C1C] text-xs font-bold text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
                   {author.position}
                 </span>
                 <span className="font-medium text-foreground">{author.name}</span>
@@ -596,10 +596,10 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -793,7 +793,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 <button
                   type="button"
                   onClick={() => removeAuthor(idx)}
-                  className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-lg p-2 text-red-400 hover:bg-warning-bg hover:text-destructive"
                 >
                   <X className="size-4" />
                 </button>
@@ -837,7 +837,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 <button
                   type="button"
                   onClick={() => removeSubject(idx)}
-                  className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-lg p-2 text-red-400 hover:bg-warning-bg hover:text-destructive"
                 >
                   <X className="size-4" />
                 </button>
@@ -857,7 +857,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {loading && <Loader2 className="size-4 animate-spin" />}
             {bib ? "Simpan Perubahan" : "Tambah Bibliografi"}

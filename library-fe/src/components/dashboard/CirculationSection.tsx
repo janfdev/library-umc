@@ -148,10 +148,10 @@ export default function CirculationSection() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -190,7 +190,7 @@ export default function CirculationSection() {
               <button
                 onClick={handleScan}
                 disabled={loading || !scanInput.trim()}
-                className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {loading ? <Loader2 className="size-4 animate-spin" /> : <QrCode className="size-4" />}
                 {scanType === "qr" ? "Scan" : "Lookup"}
@@ -217,7 +217,7 @@ export default function CirculationSection() {
           <div className="mt-4 flex gap-2">
             {itemResult.allowedActions.includes("loan") && (
               <button onClick={handleLoan} disabled={loading}
-                className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50">
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50">
                 {loading ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle className="size-4" />}
                 Pinjam
               </button>
@@ -233,7 +233,7 @@ export default function CirculationSection() {
                   Kembalikan (Rusak)
                 </button>
                 <button onClick={() => handleReturn("lost")} disabled={loading}
-                  className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+                  className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50">
                   Kembalikan (Hilang)
                 </button>
               </>

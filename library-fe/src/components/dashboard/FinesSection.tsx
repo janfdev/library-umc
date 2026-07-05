@@ -54,7 +54,7 @@ function InlineToast({
   const styles =
     type === "success"
       ? "bg-green-50 border-green-200 text-green-800"
-      : "bg-red-50 border-red-200 text-red-800";
+      : "bg-warning-bg border-warning-border text-red-800";
   const Icon = type === "success" ? CheckCircle : AlertTriangle;
   return (
     <div
@@ -219,13 +219,13 @@ export default function FinesSection() {
           onClick={() => handleTabChange("unpaid")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "unpaid"
-              ? "bg-card border-red-200 text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
           Tagihan Belum Lunas
           {unpaidFines.length > 0 && (
-            <span className="ml-1.5 bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full text-[10px] font-black">
+            <span className="ml-1.5 bg-red-100 text-destructive px-1.5 py-0.5 rounded-full text-[10px] font-black">
               {unpaidFines.length}
             </span>
           )}
@@ -235,7 +235,7 @@ export default function FinesSection() {
           onClick={() => handleTabChange("paid")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "paid"
-              ? "bg-card border-red-200 text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -265,7 +265,7 @@ export default function FinesSection() {
           </div>
           <button
             onClick={fetchFines}
-            className="text-xs flex items-center gap-2 font-bold text-muted-foreground hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-red-50"
+            className="text-xs flex items-center gap-2 font-bold text-muted-foreground hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-warning-bg"
           >
             Refresh <RefreshCcw className="w-4 h-4"/>
           </button>
@@ -367,7 +367,7 @@ export default function FinesSection() {
                               {fine.loan.item.bibliography.title}
                             </p>
                             {lateDays > 0 && (
-                              <p className="text-[12px] font-medium text-red-500 mt-0.5">
+                              <p className="text-[12px] font-medium text-destructive mt-0.5">
                                 Terlambat {lateDays} hari
                               </p>
                             )}
@@ -497,7 +497,7 @@ export default function FinesSection() {
                       onClick={() => setCurrentPage(Number(p))}
                       className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-colors ${
                         currentPage === Number(p)
-                          ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                          ? "bg-primary text-white shadow-md shadow-red-500/20"
                           : "text-muted-foreground hover:bg-surface-hover"
                       }`}
                     >

@@ -161,13 +161,13 @@ export default function ItemSection() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+      <div className="rounded-2xl border border-warning-border bg-warning-bg p-8 text-center">
         <AlertCircle className="mx-auto mb-4 size-12 text-red-400" />
-        <h3 className="text-lg font-semibold text-red-700">Error</h3>
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <h3 className="text-lg font-semibold text-destructive">Error</h3>
+        <p className="mt-2 text-sm text-destructive">{error}</p>
         <button
           onClick={fetchData}
-          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          className="mt-4 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
         >
           <RefreshCw className="mr-2 inline size-4" />
           Coba Lagi
@@ -200,7 +200,7 @@ export default function ItemSection() {
           </div>
           <button
             onClick={handleSearch}
-            className="rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515]"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             Cari
           </button>
@@ -296,7 +296,7 @@ export default function ItemSection() {
                         </button>
                         <button
                           onClick={() => handleDelete(item)}
-                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+                          className="rounded-lg p-1.5 text-red-400 hover:bg-warning-bg hover:text-destructive"
                           title="Arsipkan"
                         >
                           <Trash2 className="size-4" />
@@ -373,10 +373,10 @@ function ItemDetail({
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -399,7 +399,7 @@ function ItemDetail({
           </button>
           <button
             onClick={() => onDelete(item)}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
           >
             <Trash2 className="size-4" />
             Arsipkan
@@ -493,7 +493,7 @@ function ItemDetail({
                 <button
                   onClick={handleRevokeQr}
                   disabled={qrLoading}
-                  className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
                 >
                   <Ban className="size-4" />
                   Revoke
@@ -588,10 +588,10 @@ function ItemForm({
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -696,7 +696,7 @@ function ItemForm({
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {loading && <Loader2 className="size-4 animate-spin" />}
             {item ? "Simpan Perubahan" : "Tambah Item"}
@@ -789,10 +789,10 @@ function BulkCreateForm({
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
@@ -915,7 +915,7 @@ function BulkCreateForm({
           <button
             type="submit"
             disabled={loading || items.length === 0}
-            className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {loading && <Loader2 className="size-4 animate-spin" />}
             Bulk Create ({items.length} item)

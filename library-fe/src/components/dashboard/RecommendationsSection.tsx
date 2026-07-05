@@ -111,7 +111,7 @@ export default function RecommendationsSection() {
     const config = {
       pending: { color: "bg-yellow-100 text-yellow-700", icon: Clock, text: "Menunggu" },
       approved: { color: "bg-green-100 text-green-700", icon: CheckCircle, text: "Disetujui" },
-      rejected: { color: "bg-red-100 text-red-700", icon: XCircle, text: "Ditolak" },
+      rejected: { color: "bg-red-100 text-destructive", icon: XCircle, text: "Ditolak" },
     }[status] || { color: "bg-gray-100 text-gray-700", icon: Clock, text: status };
 
     const Icon = config.icon;
@@ -164,7 +164,7 @@ export default function RecommendationsSection() {
         {/* Content Area */}
         <div className="flex-1 p-6 md:px-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold border border-red-100 flex items-center gap-3">
+            <div className="mb-6 p-4 bg-warning-bg text-destructive rounded-2xl text-xs font-bold border border-red-100 flex items-center gap-3">
               <XCircle size={16} />
               {error}
             </div>
@@ -194,7 +194,7 @@ export default function RecommendationsSection() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
+                          <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border group-hover:bg-warning-bg group-hover:border-red-100 transition-colors">
                             <BookMarked className="text-muted-foreground group-hover:text-[#B91C1C]" size={18} />
                           </div>
                           <div>
@@ -239,7 +239,7 @@ export default function RecommendationsSection() {
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(item.id, 'rejected')}
-                          className="flex-1 md:flex-none px-6 py-2.5 bg-card text-red-600 border border-red-100 rounded-xl text-xs font-bold hover:bg-red-50 transition-all"
+                          className="flex-1 md:flex-none px-6 py-2.5 bg-card text-destructive border border-red-100 rounded-xl text-xs font-bold hover:bg-warning-bg transition-all"
                         >
                           Tolak
                         </button>
@@ -283,7 +283,7 @@ export default function RecommendationsSection() {
                             onClick={() => setCurrentPage(p)}
                             className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                               currentPage === p
-                                ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
+                                ? "bg-primary text-white shadow-md shadow-red-500/20"
                                 : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                             }`}
                           >
