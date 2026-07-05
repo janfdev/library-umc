@@ -142,8 +142,13 @@ export class BibliographyService {
     if (query.gmdId) conditions.push(eq(bibliographies.gmdId, query.gmdId));
     if (query.languageId) conditions.push(eq(bibliographies.languageId, query.languageId));
     if (query.publisher) {
-      // Publisher filter requires join - skip for now
-      // conditions.push(ilike(publishers.name, `%${query.publisher}%`));
+      const publisherBibs = await db.select({ bibId: bibliographies.id })
+        .from(bibliographies)
+        .innerJoin(publishers, eq(bibliographies.publisherId, publishers.id))
+        .where(ilike(publishers.name, `%${query.publisher}%`));
+      const ids = publisherBibs.map((r: any) => r.bibId);
+      if (ids.length > 0) conditions.push(inArray(bibliographies.id, ids));
+      else return { items: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
     }
     if (query.publishYearFrom) conditions.push(sql`${bibliographies.publishYear} >= ${query.publishYearFrom}`);
     if (query.publishYearTo) conditions.push(sql`${bibliographies.publishYear} <= ${query.publishYearTo}`);

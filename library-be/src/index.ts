@@ -15,6 +15,14 @@ dotenv.config();
 
 const app = express();
 
+// ponytail: HTTPS redirect — 3 lines, works behind PaaS proxy
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === "production" && !req.headers["x-forwarded-proto"]?.startsWith("https")) {
+    return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+  }
+  next();
+});
+
 // Trust proxy fully for secure cookie (X-Forwarded-Proto) from PaaS like Railway, Render, etc.
 app.set("trust proxy", 1);
 
