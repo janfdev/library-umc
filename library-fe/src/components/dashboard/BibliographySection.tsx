@@ -527,6 +527,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
     sor: bib?.sor || "",
     description: bib?.description || "",
     type: bib?.type || "physical_book",
+    image: bib?.image || "",
   });
 
   const [authors, setAuthors] = useState<Array<{ name: string; role: string }>>(
@@ -733,6 +734,26 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 rows={2}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Gambar Cover (opsional)</label>
+              <div className="flex items-start gap-4">
+                {formData.image && (
+                  <div className="relative h-24 w-20 overflow-hidden rounded-lg border border-border">
+                    <img src={formData.image} alt="Preview" className="h-full w-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">URL gambar cover buku (dari Cloudinary atau link eksternal)</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
