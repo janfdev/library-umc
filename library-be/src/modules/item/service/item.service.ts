@@ -7,17 +7,34 @@ import crypto from "crypto";
 
 export class ItemService {
 
-  async getAllItems(bibliographyId?: string) {
+  async getAllItems(bibliographyId?: string, page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
     let whereClause: any = isNull(items.deletedAt);
     if (bibliographyId) {
       whereClause = and(eq(items.bibliographyId, bibliographyId), isNull(items.deletedAt));
     }
-    const result = await db.query.items.findMany({
-      where: whereClause,
-      with: { bibliography: true, location: true, vendor: true, collectionType: true },
-      orderBy: (items, { desc }) => [desc(items.createdAt)],
-    });
-    return { success: true, message: "Items retrieved", data: result };
+    const [data, total] = await Promise.all([
+      db.query.items.findMany({
+        where: whereClause,
+        with: { bibliography: true, location: true, vendor: true, collectionType: true },
+        orderBy: (items, { desc }) => [desc(items.createdAt)],
+        offset: skip,
+        limit,
+      }),
+      db.select({ count: sql<number>`count(*)` }).from(items).where(whereClause),
+    ]);
+    const totalCount = Number(total[0]?.count ?? 0);
+    return {
+      success: true,
+      message: "Items retrieved",
+      data,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
   }
 
   async getItemById(id: string) {

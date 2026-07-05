@@ -1,16 +1,7 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { auth } from "../lib/auth";
+import { type Request, type Response } from "express";
 import { type ZodSchema, ZodError, type ZodIssue } from "zod";
 
-type ApiResponseData =
-  | Record<string, unknown>
-  | unknown[]
-  | string
-  | number
-  | boolean
-  | null;
 
-type User = typeof auth.$Infer.Session.user;
 
 /**
  * Get authenticated user from request
@@ -38,33 +29,6 @@ export async function getAuthenticatedUser(req: Request) {
 }
 
 /**
- * @deprecated Gunakan `sendError()` sebagai gantinya.
- * Menggunakan { error: message } yang tidak konsisten dengan standar proyek.
- */
-export function createErrorResponse(
-  res: Response,
-  message: string,
-  status: number = 400,
-) {
-  return res.status(status).json({ error: message });
-}
-
-/**
- * @deprecated Gunakan `sendSuccess()` sebagai gantinya.
- */
-export function createSuccessResponse(
-  res: Response,
-  data: ApiResponseData,
-  status: number = 200,
-) {
-  return res.status(status).json(data);
-}
-
-/**
- * Validate request body with Zod schema
- */
-export function validateRequestBody<T>(
-  req: Request,
   schema: ZodSchema<T>,
 ): { data: T; error: null } | { data: null; error: string } {
   try {
@@ -126,45 +90,6 @@ export function generateSlug(name: string): string {
 /**
  * Higher-order function to wrap a controller with authentication
  */
-export function withAuth(
-  handler: (req: Request, res: Response, user: User) => Promise<unknown>,
-) {
-  return async (req: Request, res: Response, _next: NextFunction) => {
-    const user = await getAuthenticatedUser(req);
-
-    if (!user) {
-      return sendError(res, "Unauthorized", 401);
-    }
-
-    try {
-      await handler(req, res, user);
-    } catch (error) {
-      console.error("API Error:", error);
-      sendError(res, "Internal Server Error", 500);
-    }
-  };
-}
-
-/**
- * Higher-order function to wrap a controller without authentication
- */
-export function withoutAuth(
-  handler: (req: Request, res: Response) => Promise<unknown>,
-) {
-  return async (req: Request, res: Response, _next: NextFunction) => {
-    try {
-      await handler(req, res);
-    } catch (error) {
-      console.error("API Error:", error);
-      sendError(res, "Internal Server Error", 500);
-    }
-  };
-}
-
-/**
- * Calculate pagination offset
- */
-export function calculateOffset(page: number, limit: number): number {
   return (page - 1) * limit;
 }
 
