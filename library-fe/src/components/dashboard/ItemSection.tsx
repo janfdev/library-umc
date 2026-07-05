@@ -181,21 +181,21 @@ export default function ItemSection() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Item / Eksemplar</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-xl font-bold text-foreground">Item / Eksemplar</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Kelola item fisik dari bibliografi
           </p>
         </div>
         <div className="flex gap-2">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Cari item..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+              className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
             />
           </div>
           <button
@@ -223,37 +223,37 @@ export default function ItemSection() {
 
       {/* Table */}
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <Package className="mx-auto mb-4 size-12 text-slate-300" />
-          <h3 className="text-lg font-semibold text-slate-600">Belum ada item</h3>
-          <p className="mt-2 text-sm text-slate-400">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <Package className="mx-auto mb-4 size-12 text-muted-foreground" />
+          <h3 className="text-lg font-semibold text-muted-foreground">Belum ada item</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             Item akan muncul di sini setelah ditambahkan ke bibliografi
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Kode Item</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Bibliografi</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Lokasi</th>
-                  <th className="px-4 py-3 text-center font-semibold text-slate-600">Status</th>
-                  <th className="px-4 py-3 text-center font-semibold text-slate-600">QR</th>
-                  <th className="px-4 py-3 text-center font-semibold text-slate-600">Aksi</th>
+                <tr className="border-b border-border bg-muted">
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kode Item</th>
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Bibliografi</th>
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Lokasi</th>
+                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">QR</th>
+                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                  <tr key={item.id} className="border-b border-slate-50 hover:bg-surface-hover/50">
+                    <td className="px-4 py-3 font-medium text-foreground">
                       {item.itemCode}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {item.bibliography?.title || "-"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {item.location
                         ? `${item.location.room}, ${item.location.rack}`
                         : "-"}
@@ -265,7 +265,7 @@ export default function ItemSection() {
                             ? "bg-emerald-50 text-emerald-700"
                             : item.status === "loaned"
                               ? "bg-amber-50 text-amber-700"
-                              : "bg-slate-50 text-slate-600"
+                              : "bg-muted text-muted-foreground"
                         }`}
                       >
                         {item.status}
@@ -275,14 +275,14 @@ export default function ItemSection() {
                       {item.qrToken ? (
                         <QrCode className="mx-auto size-4 text-emerald-500" />
                       ) : (
-                        <span className="text-xs text-slate-400">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => openDetail(item.id)}
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                          className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
                           title="Lihat detail"
                         >
                           <Eye className="size-4" />
@@ -384,7 +384,7 @@ function ItemDetail({
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground"
         >
           <ArrowLeft className="size-4" />
           Kembali ke daftar
@@ -407,23 +407,23 @@ function ItemDetail({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="text-2xl font-bold text-slate-900">{item.itemCode}</h2>
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <h2 className="text-2xl font-bold text-foreground">{item.itemCode}</h2>
         {item.bibliography && (
-          <p className="mt-1 text-sm text-slate-500">{item.bibliography.title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{item.bibliography.title}</p>
         )}
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <dt className="text-xs font-medium text-slate-400">Kode Inventaris</dt>
-            <dd className="mt-0.5 text-sm text-slate-900">{item.inventoryCode || "-"}</dd>
+            <dt className="text-xs font-medium text-muted-foreground">Kode Inventaris</dt>
+            <dd className="mt-0.5 text-sm text-foreground">{item.inventoryCode || "-"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-400">Call Number</dt>
-            <dd className="mt-0.5 text-sm text-slate-900">{item.callNumber || "-"}</dd>
+            <dt className="text-xs font-medium text-muted-foreground">Call Number</dt>
+            <dd className="mt-0.5 text-sm text-foreground">{item.callNumber || "-"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-400">Status</dt>
+            <dt className="text-xs font-medium text-muted-foreground">Status</dt>
             <dd className="mt-0.5">
               <span
                 className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -431,7 +431,7 @@ function ItemDetail({
                     ? "bg-emerald-50 text-emerald-700"
                     : item.status === "loaned"
                       ? "bg-amber-50 text-amber-700"
-                      : "bg-slate-50 text-slate-600"
+                      : "bg-muted text-muted-foreground"
                 }`}
               >
                 {item.status}
@@ -439,20 +439,20 @@ function ItemDetail({
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-400">Lokasi</dt>
-            <dd className="mt-0.5 text-sm text-slate-900">
+            <dt className="text-xs font-medium text-muted-foreground">Lokasi</dt>
+            <dd className="mt-0.5 text-sm text-foreground">
               {item.location
                 ? `${item.location.room}, ${item.location.rack}, ${item.location.shelf}`
                 : "-"}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-400">Sumber</dt>
-            <dd className="mt-0.5 text-sm text-slate-900">{item.source || "-"}</dd>
+            <dt className="text-xs font-medium text-muted-foreground">Sumber</dt>
+            <dd className="mt-0.5 text-sm text-foreground">{item.source || "-"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-400">Harga</dt>
-            <dd className="mt-0.5 text-sm text-slate-900">
+            <dt className="text-xs font-medium text-muted-foreground">Harga</dt>
+            <dd className="mt-0.5 text-sm text-foreground">
               {item.price ? `${item.priceCurrency || "IDR"} ${item.price}` : "-"}
             </dd>
           </div>
@@ -460,14 +460,14 @@ function ItemDetail({
       </div>
 
       {/* QR Section */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
           <QrCode className="size-4" />
           QR Code
         </h3>
         {item.qrToken ? (
           <div className="flex items-start gap-6">
-            <div className="rounded-lg border border-slate-200 p-4">
+            <div className="rounded-lg border border-border p-4">
               <img
                 src={itemApi.getQrSvg(item.id)}
                 alt="QR Code"
@@ -478,7 +478,7 @@ function ItemDetail({
               />
             </div>
             <div className="space-y-2">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Versi: {item.qrVersion || 1}
               </p>
               <div className="flex gap-2">
@@ -502,7 +502,7 @@ function ItemDetail({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-slate-400">QR code belum dibuat</p>
+          <p className="text-sm text-muted-foreground">QR code belum dibuat</p>
         )}
       </div>
     </div>
@@ -576,12 +576,12 @@ function ItemForm({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">
+        <h2 className="text-xl font-bold text-foreground">
           {item ? "Edit Item" : "Tambah Item"}
         </h2>
         <button
           onClick={onClose}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
         >
           <X className="size-5" />
         </button>
@@ -597,17 +597,17 @@ function ItemForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Informasi Item</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Informasi Item</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-slate-500">Bibliografi *</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Bibliografi *</label>
               <select
                 value={formData.bibliographyId}
                 onChange={(e) => setFormData({ ...formData, bibliographyId: e.target.value })}
                 required
                 disabled={!!item}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C] disabled:bg-slate-100"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C] disabled:bg-muted"
               >
                 <option value="">Pilih bibliografi</option>
                 {bibliographies.map((bib) => (
@@ -616,39 +616,39 @@ function ItemForm({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Kode Item *</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Kode Item *</label>
               <input
                 type="text"
                 value={formData.itemCode}
                 onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
                 required
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Kode Inventaris</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Kode Inventaris</label>
               <input
                 type="text"
                 value={formData.inventoryCode}
                 onChange={(e) => setFormData({ ...formData, inventoryCode: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Call Number</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Call Number</label>
               <input
                 type="text"
                 value={formData.callNumber}
                 onChange={(e) => setFormData({ ...formData, callNumber: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Status</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               >
                 <option value="available">Tersedia</option>
                 <option value="loaned">Dipinjam</option>
@@ -660,26 +660,26 @@ function ItemForm({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Akuisisi</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Akuisisi</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Sumber</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Sumber</label>
               <input
                 type="text"
                 value={formData.source}
                 onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Harga</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Harga</label>
               <input
                 type="number"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 min="0"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
           </div>
@@ -689,7 +689,7 @@ function ItemForm({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-border bg-card px-6 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface-hover"
           >
             Batal
           </button>
@@ -782,8 +782,8 @@ function BulkCreateForm({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">Bulk Create Item</h2>
-        <button onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+        <h2 className="text-xl font-bold text-foreground">Bulk Create Item</h2>
+        <button onClick={onClose} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-muted-foreground">
           <X className="size-5" />
         </button>
       </div>
@@ -804,16 +804,16 @@ function BulkCreateForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Konfigurasi</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Konfigurasi</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-slate-500">Bibliografi *</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Bibliografi *</label>
               <select
                 value={selectedBibId}
                 onChange={(e) => setSelectedBibId(e.target.value)}
                 required
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               >
                 <option value="">Pilih bibliografi</option>
                 {bibliographies.map((bib) => (
@@ -822,7 +822,7 @@ function BulkCreateForm({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Jumlah Item *</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Jumlah Item *</label>
               <input
                 type="number"
                 value={quantity}
@@ -830,26 +830,26 @@ function BulkCreateForm({
                 min="1"
                 max="1000"
                 required
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Prefix Kode Item</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Prefix Kode Item</label>
               <input
                 type="text"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Lokasi (ID)</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Lokasi (ID)</label>
               <input
                 type="number"
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
                 placeholder="Opsional"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div className="flex items-end">
@@ -865,22 +865,22 @@ function BulkCreateForm({
         </div>
 
         {items.length > 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h3 className="mb-4 text-sm font-semibold text-slate-700">Preview ({items.length} item)</h3>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Preview ({items.length} item)</h3>
             <div className="max-h-60 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="px-3 py-2 text-left font-semibold text-slate-600">#</th>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-600">Item Code</th>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-600">Inventory Code</th>
+                  <tr className="border-b border-border bg-muted">
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">#</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Item Code</th>
+                    <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Inventory Code</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.slice(0, 20).map((item, idx) => (
                     <tr key={idx} className="border-b border-slate-50">
-                      <td className="px-3 py-2 text-slate-600">{idx + 1}</td>
-                      <td className="px-3 py-2 font-medium text-slate-900">{item.itemCode}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
+                      <td className="px-3 py-2 font-medium text-foreground">{item.itemCode}</td>
                       <td className="px-3 py-2">
                         <input
                           type="text"
@@ -890,7 +890,7 @@ function BulkCreateForm({
                             updated[idx] = { ...updated[idx], inventoryCode: e.target.value };
                             setItems(updated);
                           }}
-                          className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                          className="w-full rounded border border-border px-2 py-1 text-xs"
                         />
                       </td>
                     </tr>
@@ -898,7 +898,7 @@ function BulkCreateForm({
                 </tbody>
               </table>
               {items.length > 20 && (
-                <p className="mt-2 text-xs text-slate-400">dan {items.length - 20} item lainnya...</p>
+                <p className="mt-2 text-xs text-muted-foreground">dan {items.length - 20} item lainnya...</p>
               )}
             </div>
           </div>
@@ -908,7 +908,7 @@ function BulkCreateForm({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-border bg-card px-6 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface-hover"
           >
             Batal
           </button>

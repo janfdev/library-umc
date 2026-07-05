@@ -51,7 +51,7 @@ export default function ReturnApprovalsSection() {
 
   if (loading) {
     return (
-      <div className="py-12 text-center text-slate-400 font-medium animate-pulse">
+      <div className="py-12 text-center text-muted-foreground font-medium animate-pulse">
         Memuat data persetujuan pengembalian...
       </div>
     );
@@ -60,36 +60,36 @@ export default function ReturnApprovalsSection() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-extrabold text-slate-900">Persetujuan Pengembalian</h2>
+        <h2 className="text-xl font-extrabold text-foreground">Persetujuan Pengembalian</h2>
         <button
           onClick={fetchRequests}
-          className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
+          className="px-4 py-2 bg-muted text-muted-foreground rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
         >
           Refresh
         </button>
       </div>
 
       {requests.length === 0 ? (
-        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-12 text-center flex flex-col items-center">
+        <div className="bg-muted border border-border rounded-2xl p-12 text-center flex flex-col items-center">
           <CheckCircle size={48} className="text-green-300 mb-4" />
-          <h3 className="text-lg font-bold text-slate-700">Tidak ada pengajuan pengembalian</h3>
-          <p className="text-sm text-slate-400 mt-2">Semua buku yang dikembalikan telah diproses.</p>
+          <h3 className="text-lg font-bold text-muted-foreground">Tidak ada pengajuan pengembalian</h3>
+          <p className="text-sm text-muted-foreground mt-2">Semua buku yang dikembalikan telah diproses.</p>
         </div>
       ) : (
         <>
         <div className="grid gap-4">
           {paginatedRequests.map((req) => (
-            <div key={req.id} className="bg-white border border-slate-200 rounded-[20px] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
+            <div key={req.id} className="bg-card border border-border rounded-[20px] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4 flex-1">
                 <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
                   <BookOpen size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-[15px]">{req.loan?.item?.bibliography?.title}</h4>
-                  <p className="text-[13px] font-medium text-slate-500 mt-1">
+                  <h4 className="font-bold text-foreground text-[15px]">{req.loan?.item?.bibliography?.title}</h4>
+                  <p className="text-[13px] font-medium text-muted-foreground mt-1">
                     Oleh: {req.loan?.member?.user?.name}
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-2 flex items-center gap-1 font-bold">
+                  <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1 font-bold">
                     <Clock size={12} />
                     Batas Kembali: {new Date(req.loan?.dueDate).toLocaleDateString('id-ID')}
                   </p>
@@ -110,7 +110,7 @@ export default function ReturnApprovalsSection() {
 
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-            <p className="text-xs text-slate-400 font-medium">
+            <p className="text-xs text-muted-foreground font-medium">
               Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, requests.length)}–
               {Math.min(currentPage * itemsPerPage, requests.length)} dari {requests.length} data
             </p>
@@ -118,7 +118,7 @@ export default function ReturnApprovalsSection() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
               >
                 <ChevronLeft size={16} /> Prev
               </button>
@@ -135,14 +135,14 @@ export default function ReturnApprovalsSection() {
                   return (
                     <Fragment key={p}>
                       {showDot && (
-                        <span className="px-2 text-slate-300">...</span>
+                        <span className="px-2 text-muted-foreground">...</span>
                       )}
                       <button
                         onClick={() => setCurrentPage(p)}
                         className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                           currentPage === p
                             ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
-                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                            : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                         }`}
                       >
                         {p}
@@ -156,7 +156,7 @@ export default function ReturnApprovalsSection() {
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
               >
                 Next <ChevronRight size={16} />
               </button>

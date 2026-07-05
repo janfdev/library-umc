@@ -231,6 +231,15 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-surface: var(--dark-matter);
+  --color-surface-hover: #1a1d24;
+  --color-subtle: var(--dim-boundary);
+  --color-mild: var(--stardust);
+  --color-warning-bg: rgba(239, 68, 68, 0.1);
+  --color-warning-border: rgba(239, 68, 68, 0.3);
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-success-text: #34d399;
+  --color-warning-text: #ef4444;
 }
 
 /* ============================================

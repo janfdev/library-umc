@@ -160,10 +160,10 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
       {/* Section Ringkasan */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 className="text-2xl font-bold text-foreground">
             Ringkasan Sistem
           </h2>
-          <p className="text-slate-500 text-sm font-medium mt-1">
+          <p className="text-muted-foreground text-sm font-medium mt-1">
             Pantau aktivitas perpustakaan hari ini.
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
           <button
             type="button"
             onClick={handleImportClick}
-            className="flex items-center gap-2 bg-white text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-card text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-border hover:bg-surface-hover transition-colors shadow-sm"
           >
             <UploadCloud size={18} />
             Import Laporan
@@ -196,9 +196,9 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+              className="w-56 p-2 rounded-2xl shadow-xl border-border bg-card"
             >
-              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 Format Laporan (PDF)
               </div>
               <DropdownMenuItem
@@ -208,7 +208,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -219,14 +219,14 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
               >
                 Laporan Denda
               </DropdownMenuItem>
 
-              <div className="h-px bg-slate-100 my-1 mx-2" />
+              <div className="h-px bg-muted my-1 mx-2" />
 
-              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 Format Excel (CSV)
               </div>
               <DropdownMenuItem
@@ -236,7 +236,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -247,7 +247,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -261,16 +261,16 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
         {statCards.map((stat, i) => (
           <div
             key={i}
-            className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-all"
+            className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5 hover:shadow-md transition-all"
           >
             <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color}`}>
               {stat.icon}
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
                 {stat.label}
               </p>
-              <p className="text-2xl font-black text-slate-900 leading-none">
+              <p className="text-2xl font-black text-foreground leading-none">
                 {stat.value.toLocaleString()}
               </p>
             </div>
@@ -279,8 +279,8 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
       </div>
 
       {/* Aktivitas Peminjaman Terbaru */}
-      <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden mt-6">
-        <div className="p-6 md:px-8 md:py-6 flex items-center justify-between border-b border-slate-100">
+      <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden mt-6">
+        <div className="p-6 md:px-8 md:py-6 flex items-center justify-between border-b border-border">
           <h3 className="text-xl font-extrabold text-[#0F172A] tracking-tight">
             Aktivitas Peminjaman Terbaru
           </h3>
@@ -294,38 +294,38 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
 
         <div className="p-4 md:p-6 flex flex-col">
           {loanLoading ? (
-            <div className="p-4 px-6 text-sm text-slate-400 font-semibold">
+            <div className="p-4 px-6 text-sm text-muted-foreground font-semibold">
               Memuat aktivitas peminjaman...
             </div>
           ) : formattedRecentLoans.length === 0 ? (
-            <div className="p-4 px-6 text-sm text-slate-400 font-semibold">
+            <div className="p-4 px-6 text-sm text-muted-foreground font-semibold">
               Belum ada aktivitas peminjaman terbaru.
             </div>
           ) : (
             formattedRecentLoans.map((loan) => {
               const meta = statusMeta[loan.status] || {
                 label: loan.status,
-                className: "bg-slate-100 text-slate-600"
+                className: "bg-muted text-muted-foreground"
               };
 
               return (
                 <div
                   key={loan.id}
-                  className="flex items-center justify-between p-4 px-6 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group cursor-pointer"
+                  className="flex items-center justify-between p-4 px-6 hover:bg-surface-hover transition-colors border-b border-slate-50 last:border-0 group cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl flex items-center justify-center text-[#94A3B8]">
                       <UserIcon size={18} />
                     </div>
                     <div>
-                      <p className="text-[15px] font-bold text-slate-900">
+                      <p className="text-[15px] font-bold text-foreground">
                         {loan.memberName}{" "}
-                        <span className="font-normal text-slate-400 mx-0.5">
+                        <span className="font-normal text-muted-foreground mx-0.5">
                           meminjam
                         </span>{" "}
                         {loan.bookTitle}
                       </p>
-                      <p className="text-[12px] text-slate-400 font-medium mt-0.5">
+                      <p className="text-[12px] text-muted-foreground font-medium mt-0.5">
                         {loan.timeText}
                       </p>
                     </div>

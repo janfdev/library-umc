@@ -49,8 +49,8 @@ export default function ExportSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Export Data</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="text-xl font-bold text-foreground">Export Data</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Export data bibliografi dan item ke format CSV
         </p>
       </div>
@@ -66,21 +66,21 @@ export default function ExportSection() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Bibliography Export */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Book className="size-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Export Bibliografi</h3>
-              <p className="text-xs text-slate-500">Format Senayan CSV</p>
+              <h3 className="font-semibold text-foreground">Export Bibliografi</h3>
+              <p className="text-xs text-muted-foreground">Format Senayan CSV</p>
             </div>
           </div>
-          <p className="mb-4 text-sm text-slate-600">
+          <p className="mb-4 text-sm text-muted-foreground">
             Export semua data bibliografi dengan informasi penulis, subjek, dan kode item.
             Format: CSV dengan delimiter titik koma, encoding UTF-8 dengan BOM.
           </p>
-          <p className="mb-4 text-xs text-slate-400">
+          <p className="mb-4 text-xs text-muted-foreground">
             Catatan: Token QR dan ID internal tidak disertakan dalam export.
           </p>
           <button
@@ -100,21 +100,21 @@ export default function ExportSection() {
         </div>
 
         {/* Item Export */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
               <Package className="size-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Export Item / Eksemplar</h3>
-              <p className="text-xs text-slate-500">Format Senayan CSV</p>
+              <h3 className="font-semibold text-foreground">Export Item / Eksemplar</h3>
+              <p className="text-xs text-muted-foreground">Format Senayan CSV</p>
             </div>
           </div>
-          <p className="mb-4 text-sm text-slate-600">
+          <p className="mb-4 text-sm text-muted-foreground">
             Export semua data item dengan informasi lokasi, status, dan metadata.
             Format: CSV dengan delimiter titik koma, encoding UTF-8 dengan BOM.
           </p>
-          <p className="mb-4 text-xs text-slate-400">
+          <p className="mb-4 text-xs text-muted-foreground">
             Catatan: Token QR dan UUID internal tidak disertakan dalam export.
           </p>
           <button

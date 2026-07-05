@@ -88,27 +88,27 @@ export default function AuditLogsSection() {
         <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
           Audit Log Sistem
         </h2>
-        <p className="text-slate-500 font-medium text-[15px] mt-1">
+        <p className="text-muted-foreground font-medium text-[15px] mt-1">
           Riwayat aktivitas sensitif super admin dan staff pada sistem.
         </p>
       </div>
 
-      <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex flex-col xl:flex-row items-stretch xl:items-center gap-3">
           <div className="relative w-full xl:max-w-[340px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cari nama, email, userId, IP, detail..."
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none"
+              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none"
             />
           </div>
 
           <select
             value={action}
             onChange={(e) => setAction(e.target.value)}
-            className="px-3 py-2.5 rounded-xl border border-slate-100 text-sm font-semibold text-slate-700 bg-white"
+            className="px-3 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground bg-card"
           >
             {ACTION_OPTIONS.map((value) => (
               <option key={value} value={value}>
@@ -120,7 +120,7 @@ export default function AuditLogsSection() {
           <select
             value={entity}
             onChange={(e) => setEntity(e.target.value)}
-            className="px-3 py-2.5 rounded-xl border border-slate-100 text-sm font-semibold text-slate-700 bg-white"
+            className="px-3 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground bg-card"
           >
             {ENTITY_OPTIONS.map((value) => (
               <option key={value} value={value}>
@@ -138,7 +138,7 @@ export default function AuditLogsSection() {
 
           <button
             onClick={() => void refetch()}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:text-[#B91C1C] hover:bg-red-50 border border-slate-100"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-red-50 border border-border"
           >
             <RefreshCw size={14} /> Refresh
           </button>
@@ -155,7 +155,7 @@ export default function AuditLogsSection() {
             <p className="text-sm font-semibold text-red-600">{error}</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 text-sm font-semibold">
+          <div className="p-8 text-center text-muted-foreground text-sm font-semibold">
             Tidak ada audit log yang cocok dengan filter.
           </div>
         ) : (
@@ -163,26 +163,26 @@ export default function AuditLogsSection() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                  <tr className="bg-muted/50 border-b border-border">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       Waktu
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       Actor
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       Action
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       Entity
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       Entity ID
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       IP Address
                     </th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                       Detail
                     </th>
                   </tr>
@@ -191,36 +191,36 @@ export default function AuditLogsSection() {
                   {paginatedLogs.map((log) => (
                     <tr
                       key={log.id}
-                      className="hover:bg-slate-50/40 transition-colors"
+                      className="hover:bg-surface-hover/40 transition-colors"
                     >
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500">
+                      <td className="px-6 py-4 text-sm font-medium text-muted-foreground">
                         {log.createdAt
                           ? new Date(log.createdAt).toLocaleString("id-ID")
                           : "-"}
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-sm font-semibold text-slate-700">
+                          <p className="text-sm font-semibold text-muted-foreground">
                             {log.user?.name || "-"}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             {log.user?.email || log.userId || "-"}
                           </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-700 uppercase">
+                      <td className="px-6 py-4 text-sm font-bold text-muted-foreground uppercase">
                         {log.action}
                       </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">
+                      <td className="px-6 py-4 text-sm font-semibold text-muted-foreground">
                         {log.entity}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500">
+                      <td className="px-6 py-4 text-sm font-medium text-muted-foreground">
                         {log.entityId || "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500">
+                      <td className="px-6 py-4 text-sm font-medium text-muted-foreground">
                         {log.ipAddress || "-"}
                       </td>
-                      <td className="px-6 py-4 text-xs font-medium text-slate-500 max-w-[360px] break-all">
+                      <td className="px-6 py-4 text-xs font-medium text-muted-foreground max-w-[360px] break-all">
                         {log.detail || "-"}
                       </td>
                     </tr>
@@ -231,7 +231,7 @@ export default function AuditLogsSection() {
 
             {totalPages > 1 && (
               <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-xs text-muted-foreground font-medium">
                   Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredLogs.length)}–
                   {Math.min(currentPage * itemsPerPage, filteredLogs.length)} dari {filteredLogs.length} data
                 </p>
@@ -239,7 +239,7 @@ export default function AuditLogsSection() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
                   >
                     <ChevronLeft size={16} /> Prev
                   </button>
@@ -256,14 +256,14 @@ export default function AuditLogsSection() {
                       return (
                         <Fragment key={p}>
                           {showDot && (
-                            <span className="px-2 text-slate-300">...</span>
+                            <span className="px-2 text-muted-foreground">...</span>
                           )}
                           <button
                             onClick={() => setCurrentPage(p)}
                             className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                               currentPage === p
                                 ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
-                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                             }`}
                           >
                             {p}
@@ -277,7 +277,7 @@ export default function AuditLogsSection() {
                       setCurrentPage((p) => Math.min(totalPages, p + 1))
                     }
                     disabled={currentPage === totalPages}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
                   >
                     Next <ChevronRight size={16} />
                   </button>

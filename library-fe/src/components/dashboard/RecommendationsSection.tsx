@@ -124,13 +124,13 @@ export default function RecommendationsSection() {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+      <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden flex flex-col min-h-[600px]">
         
         {/* Header */}
         <div className="p-6 md:px-8 border-b border-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h2 className="text-[20px] font-extrabold text-[#0F172A] tracking-tight">Usulan Pengadaan Koleksi</h2>
-            <p className="text-xs text-slate-400 font-medium mt-1">Rekomendasi buku baru dari dosen untuk perpustakaan</p>
+            <p className="text-xs text-muted-foreground font-medium mt-1">Rekomendasi buku baru dari dosen untuk perpustakaan</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -138,22 +138,22 @@ export default function RecommendationsSection() {
               <select
                 value={filter}
                 onChange={(e) => { setFilter(e.target.value as FilterStatus); setCurrentPage(1); }}
-                className="appearance-none bg-[#F8FAFC] border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-slate-600 focus:ring-2 focus:ring-red-500/10 cursor-pointer min-w-[160px]"
+                className="appearance-none bg-[#F8FAFC] border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-muted-foreground focus:ring-2 focus:ring-red-500/10 cursor-pointer min-w-[160px]"
               >
                 <option value="pending">Menunggu</option>
                 <option value="approved">Disetujui</option>
                 <option value="rejected">Ditolak</option>
                 <option value="all">Semua</option>
               </select>
-              <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             </div>
             
             <div className="relative flex-1 md:flex-initial">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
                 type="text"
                 placeholder="Cari buku atau dosen..."
-                className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-[#F8FAFC] border-none rounded-xl text-[13px] font-medium text-slate-600 focus:ring-2 focus:ring-red-500/10"
+                className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-[#F8FAFC] border-none rounded-xl text-[13px] font-medium text-muted-foreground focus:ring-2 focus:ring-red-500/10"
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
@@ -177,7 +177,7 @@ export default function RecommendationsSection() {
               ))}
             </div>
           ) : filteredData.length === 0 ? (
-            <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center text-slate-400">
+            <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center text-muted-foreground">
               <BookMarked className="w-12 h-12 mb-4 opacity-10" />
               <p className="text-sm font-bold">Tidak ada data rekomendasi</p>
             </div>
@@ -187,44 +187,44 @@ export default function RecommendationsSection() {
               {paginatedData.map((item) => (
                 <div 
                   key={item.id} 
-                  className="bg-[#F8FAFC] rounded-[20px] p-6 border border-slate-100 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
+                  className="bg-[#F8FAFC] rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
                 >
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Info Buku */}
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
-                            <BookMarked className="text-slate-400 group-hover:text-[#B91C1C]" size={18} />
+                          <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
+                            <BookMarked className="text-muted-foreground group-hover:text-[#B91C1C]" size={18} />
                           </div>
                           <div>
                             <h4 className="font-extrabold text-[#0F172A] text-[15px]">{item.title}</h4>
-                            <p className="text-[13px] text-slate-500 font-medium">{item.author}</p>
+                            <p className="text-[13px] text-muted-foreground font-medium">{item.author}</p>
                           </div>
                         </div>
                         {getStatusBadge(item.status)}
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                        <div className="flex items-start gap-4 p-3 bg-white rounded-xl border border-slate-100">
-                          <User size={14} className="text-slate-400 mt-0.5" />
+                        <div className="flex items-start gap-4 p-3 bg-card rounded-xl border border-border">
+                          <User size={14} className="text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pengusul (Dosen)</p>
-                            <p className="text-[13px] font-bold text-slate-700">{item.dosen?.name || "Unknown"}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pengusul (Dosen)</p>
+                            <p className="text-[13px] font-bold text-muted-foreground">{item.dosen?.name || "Unknown"}</p>
                           </div>
                         </div>
-                        <div className="flex items-start gap-4 p-3 bg-white rounded-xl border border-slate-100">
-                          <FileText size={14} className="text-slate-400 mt-0.5" />
+                        <div className="flex items-start gap-4 p-3 bg-card rounded-xl border border-border">
+                          <FileText size={14} className="text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tgl Diajukan</p>
-                            <p className="text-[13px] font-bold text-slate-700">{formatDateID(item.createdAt)}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tgl Diajukan</p>
+                            <p className="text-[13px] font-bold text-muted-foreground">{formatDateID(item.createdAt)}</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100/50">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Alasan Pengadaan</p>
-                        <p className="text-[13px] text-slate-600 font-medium leading-relaxed italic">"{item.reason}"</p>
+                      <div className="mt-4 p-4 bg-muted rounded-xl border border-border/50">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Alasan Pengadaan</p>
+                        <p className="text-[13px] text-muted-foreground font-medium leading-relaxed italic">"{item.reason}"</p>
                       </div>
                     </div>
 
@@ -239,7 +239,7 @@ export default function RecommendationsSection() {
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(item.id, 'rejected')}
-                          className="flex-1 md:flex-none px-6 py-2.5 bg-white text-red-600 border border-red-100 rounded-xl text-xs font-bold hover:bg-red-50 transition-all"
+                          className="flex-1 md:flex-none px-6 py-2.5 bg-card text-red-600 border border-red-100 rounded-xl text-xs font-bold hover:bg-red-50 transition-all"
                         >
                           Tolak
                         </button>
@@ -251,8 +251,8 @@ export default function RecommendationsSection() {
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
-                <p className="text-xs text-slate-400 font-medium">
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border">
+                <p className="text-xs text-muted-foreground font-medium">
                   Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredData.length)}–
                   {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
                 </p>
@@ -260,7 +260,7 @@ export default function RecommendationsSection() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
                   >
                     <ChevronLeft size={16} /> Prev
                   </button>
@@ -277,14 +277,14 @@ export default function RecommendationsSection() {
                       return (
                         <Fragment key={p}>
                           {showDot && (
-                            <span className="px-2 text-slate-300">...</span>
+                            <span className="px-2 text-muted-foreground">...</span>
                           )}
                           <button
                             onClick={() => setCurrentPage(p)}
                             className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                               currentPage === p
                                 ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
-                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                             }`}
                           >
                             {p}
@@ -298,7 +298,7 @@ export default function RecommendationsSection() {
                       setCurrentPage((p) => Math.min(totalPages, p + 1))
                     }
                     disabled={currentPage === totalPages}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
                   >
                     Next <ChevronRight size={16} />
                   </button>

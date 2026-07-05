@@ -343,7 +343,7 @@ export default function ReportsSection({
           <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
             Laporan & Statistik
           </h2>
-          <p className="text-sm text-slate-400 font-medium mt-1">
+          <p className="text-sm text-muted-foreground font-medium mt-1">
             Metrik dan performa perpustakaan (Data Realtime API).
           </p>
         </div>
@@ -359,7 +359,7 @@ export default function ReportsSection({
           <button
             type="button"
             onClick={handleImportClick}
-            className="flex items-center gap-2 bg-white text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-card text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-border hover:bg-surface-hover transition-colors shadow-sm"
           >
             <UploadCloud size={18} />
             Import Laporan
@@ -375,9 +375,9 @@ export default function ReportsSection({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white"
+              className="w-56 p-2 rounded-2xl shadow-xl border-border bg-card"
             >
-              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 Format Laporan (PDF)
               </div>
               <DropdownMenuItem
@@ -387,7 +387,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -398,7 +398,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -409,14 +409,14 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
               >
                 Pendapatan Denda Bulanan
               </DropdownMenuItem>
 
-              <div className="h-px bg-slate-100 my-1 mx-2" />
+              <div className="h-px bg-muted my-1 mx-2" />
 
-              <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 Format Excel (CSV)
               </div>
               <DropdownMenuItem
@@ -426,7 +426,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -437,7 +437,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -448,7 +448,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-slate-700 focus:bg-slate-50 focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
               >
                 Pendapatan Denda Bulanan
               </DropdownMenuItem>
@@ -458,13 +458,13 @@ export default function ReportsSection({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Periode Audit Pendapatan
         </p>
         <select
           value={selectedMonth}
           onChange={(event) => setSelectedMonth(Number(event.target.value))}
-          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700"
+          className="px-3 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground"
         >
           {monthOptions.map((month) => (
             <option key={month.value} value={month.value}>
@@ -475,7 +475,7 @@ export default function ReportsSection({
         <select
           value={selectedYear}
           onChange={(event) => setSelectedYear(Number(event.target.value))}
-          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700"
+          className="px-3 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground"
         >
           {yearOptions.map((year) => (
             <option key={year} value={year}>
@@ -488,15 +488,15 @@ export default function ReportsSection({
       {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Pengunjung */}
-        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-5">
+        <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
           <div className="w-[60px] h-[60px] rounded-full bg-[#EBF5FF] flex items-center justify-center shrink-0">
             <Users className="w-7 h-7 text-[#2563EB]" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
               TOTAL PENGUNJUNG
             </p>
-            <p className="text-3xl font-black text-slate-900 mt-2">
+            <p className="text-3xl font-black text-foreground mt-2">
               {loading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
@@ -507,15 +507,15 @@ export default function ReportsSection({
         </div>
 
         {/* Peminjaman Sukses */}
-        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-5">
+        <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
           <div className="w-[60px] h-[60px] rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
             <BookCheck className="w-7 h-7 text-[#059669]" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
               PEMINJAMAN SUKSES
             </p>
-            <p className="text-3xl font-black text-slate-900 mt-2">
+            <p className="text-3xl font-black text-foreground mt-2">
               {loading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
@@ -526,23 +526,23 @@ export default function ReportsSection({
         </div>
 
         {/* Denda Terkumpul */}
-        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-5">
+        <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
           <div className="w-[60px] h-[60px] rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0">
             <DollarSign className="w-7 h-7 text-[#DC2626]" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
               PENDAPATAN DENDA ({selectedMonthLabel.toUpperCase()}{" "}
               {selectedYear})
             </p>
-            <p className="text-3xl font-black text-slate-900 mt-2">
+            <p className="text-3xl font-black text-foreground mt-2">
               {loading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 `Rp ${stats.totalPaidFines.toLocaleString("id-ID")}`
               )}
             </p>
-            <p className="text-[11px] font-semibold text-slate-500 mt-2">
+            <p className="text-[11px] font-semibold text-muted-foreground mt-2">
               Tagihan aktif: Rp {stats.outstandingFines.toLocaleString("id-ID")}
             </p>
           </div>
@@ -552,12 +552,12 @@ export default function ReportsSection({
       {/* Charts & Lists Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bar Chart Section */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm flex flex-col">
+        <div className="lg:col-span-2 bg-card p-8 rounded-[24px] border border-border shadow-sm flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <h3 className="text-[15px] font-extrabold text-[#0F172A]">
               Grafik Kunjungan
             </h3>
-            <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+            <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
               {(["day", "week", "month"] as const).map((range) => (
                 <button
                   key={range}
@@ -565,7 +565,7 @@ export default function ReportsSection({
                   className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                     chartRange === range
                       ? "bg-[#B91C1C] text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
+                      : "text-muted-foreground hover:text-muted-foreground"
                   }`}
                 >
                   {range === "day" ? "Hari" : range === "week" ? "Minggu" : "Bulan"}
@@ -630,7 +630,7 @@ export default function ReportsSection({
             </ResponsiveContainer>
           </div>
 
-          <div className="border-t-2 border-slate-100 pt-5">
+          <div className="border-t-2 border-border pt-5">
             <p className="text-center text-sm font-bold text-[#64748B]">
               Total : {stats.visitsPastWeek} pengunjung{" "}
               {chartRange === "day" ? "hari ini" : chartRange === "month" ? "bulan ini" : "minggu ini"}
@@ -639,24 +639,24 @@ export default function ReportsSection({
         </div>
 
         {/* Popular Books Section */}
-        <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm flex flex-col">
+        <div className="bg-card p-8 rounded-[24px] border border-border shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-[15px] font-extrabold text-[#0F172A]">
               Buku Terpopuler
             </h3>
-            <TrendingUp className="w-5 h-5 text-slate-900" strokeWidth={3} />
+            <TrendingUp className="w-5 h-5 text-foreground" strokeWidth={3} />
           </div>
 
           <div className="space-y-6 flex-1">
             {popularBooks.length === 0 && !loading ? (
-              <p className="text-sm font-semibold text-slate-400">
+              <p className="text-sm font-semibold text-muted-foreground">
                 Belum ada data peminjaman buku.
               </p>
             ) : null}
             {popularBooks.map((book, index) => (
               <div key={book.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
                     {index + 1}
                   </div>
                   <p className="text-sm font-bold text-[#0F172A] truncate max-w-[120px]">

@@ -143,8 +143,8 @@ export default function CirculationSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Sirkulasi</h2>
-        <p className="mt-1 text-sm text-slate-500">QR Scan, Peminjaman, dan Pengembalian</p>
+        <h2 className="text-xl font-bold text-foreground">Sirkulasi</h2>
+        <p className="mt-1 text-sm text-muted-foreground">QR Scan, Peminjaman, dan Pengembalian</p>
       </div>
 
       {error && (
@@ -157,14 +157,14 @@ export default function CirculationSection() {
       )}
 
       {mode === "scan" && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Scan / Lookup Item</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Scan / Lookup Item</h3>
           <div className="flex flex-col gap-4">
             <div className="flex gap-3">
               <select
                 value={scanType}
                 onChange={(e) => setScanType(e.target.value as "qr" | "code")}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="rounded-lg border border-border px-3 py-2 text-sm"
               >
                 <option value="code">Item Code</option>
                 <option value="qr">QR Token</option>
@@ -172,7 +172,7 @@ export default function CirculationSection() {
               <select
                 value={intent}
                 onChange={(e) => setIntent(e.target.value as "inspect" | "loan" | "return")}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="rounded-lg border border-border px-3 py-2 text-sm"
               >
                 <option value="inspect">Inspect</option>
                 <option value="loan">Loan</option>
@@ -185,7 +185,7 @@ export default function CirculationSection() {
                 placeholder={scanType === "qr" ? "Masukkan QR token..." : "Masukkan kode item..."}
                 value={scanInput}
                 onChange={(e) => setScanInput(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
               />
               <button
                 onClick={handleScan}
@@ -201,18 +201,18 @@ export default function CirculationSection() {
       )}
 
       {mode === "result" && itemResult && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-700">Item Found</h3>
-            <button onClick={reset} className="text-sm text-slate-500 hover:text-slate-700">
+            <h3 className="text-sm font-semibold text-muted-foreground">Item Found</h3>
+            <button onClick={reset} className="text-sm text-muted-foreground hover:text-muted-foreground">
               <ArrowLeft className="size-4 inline mr-1" /> Kembali
             </button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div><dt className="text-xs text-slate-400">Item Code</dt><dd className="text-sm font-medium">{itemResult.item.itemCode}</dd></div>
-            <div><dt className="text-xs text-slate-400">Title</dt><dd className="text-sm font-medium">{itemResult.item.title}</dd></div>
-            <div><dt className="text-xs text-slate-400">Status</dt><dd className="text-sm font-medium">{itemResult.item.status}</dd></div>
-            <div><dt className="text-xs text-slate-400">Location</dt><dd className="text-sm font-medium">{itemResult.item.location}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">Item Code</dt><dd className="text-sm font-medium">{itemResult.item.itemCode}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">Title</dt><dd className="text-sm font-medium">{itemResult.item.title}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">Status</dt><dd className="text-sm font-medium">{itemResult.item.status}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">Location</dt><dd className="text-sm font-medium">{itemResult.item.location}</dd></div>
           </div>
           <div className="mt-4 flex gap-2">
             {itemResult.allowedActions.includes("loan") && (
@@ -248,8 +248,8 @@ export default function CirculationSection() {
           <p className="text-sm text-emerald-600">{loanResult.message}</p>
           {loanResult.loan && (
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <div><dt className="text-xs text-slate-400">Status</dt><dd className="text-sm font-medium">{loanResult.loan.status}</dd></div>
-              <div><dt className="text-xs text-slate-400">Jatuh Tempo</dt><dd className="text-sm font-medium">{loanResult.loan.dueDate}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Status</dt><dd className="text-sm font-medium">{loanResult.loan.status}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Jatuh Tempo</dt><dd className="text-sm font-medium">{loanResult.loan.dueDate}</dd></div>
             </div>
           )}
           <button onClick={reset} className="mt-4 text-sm text-emerald-700 hover:underline">
@@ -266,9 +266,9 @@ export default function CirculationSection() {
             <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
               <p className="text-sm font-semibold text-amber-700">Denda</p>
               <div className="grid gap-2 sm:grid-cols-3 mt-2">
-                <div><dt className="text-xs text-slate-400">Hari Terlambat</dt><dd className="text-sm font-medium">{returnResult.fine.overdueDays}</dd></div>
-                <div><dt className="text-xs text-slate-400">Jumlah</dt><dd className="text-sm font-medium">Rp {returnResult.fine.assessedAmount}</dd></div>
-                <div><dt className="text-xs text-slate-400">Status</dt><dd className="text-sm font-medium">{returnResult.fine.status}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Hari Terlambat</dt><dd className="text-sm font-medium">{returnResult.fine.overdueDays}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Jumlah</dt><dd className="text-sm font-medium">Rp {returnResult.fine.assessedAmount}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Status</dt><dd className="text-sm font-medium">{returnResult.fine.status}</dd></div>
               </div>
             </div>
           )}

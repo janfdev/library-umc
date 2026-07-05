@@ -113,25 +113,25 @@ export default function CardApprovalsSection() {
         <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
           Persetujuan Kartu Member
         </h2>
-        <p className="text-slate-500 font-medium text-[15px] mt-1">
+        <p className="text-muted-foreground font-medium text-[15px] mt-1">
           Kelola pengajuan kartu member yang menunggu persetujuan admin.
         </p>
       </div>
 
-      <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:w-[360px]">
             <input
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cari nama, email, atau NIM/NIDN..."
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none"
+              className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none"
             />
           </div>
 
           <button
             onClick={() => void loadRequests()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:text-[#B91C1C] hover:bg-red-50 border border-slate-100 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-red-50 border border-border transition-colors"
           >
             <RefreshCw size={14} /> Refresh
           </button>
@@ -144,7 +144,7 @@ export default function CardApprovalsSection() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-slate-400">
+          <div className="p-10 text-center text-muted-foreground">
             <IdCard size={42} className="mx-auto mb-3 opacity-40" />
             <p className="font-semibold">Tidak ada pengajuan kartu pending</p>
           </div>
@@ -154,7 +154,7 @@ export default function CardApprovalsSection() {
             {paginatedItems.map((item) => (
               <div
                 key={item.id}
-                className="p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 hover:bg-slate-50/40 transition-colors"
+                className="p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 hover:bg-surface-hover/40 transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center font-black">
@@ -162,15 +162,15 @@ export default function CardApprovalsSection() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-bold text-slate-900">
+                      <h3 className="text-base font-bold text-foreground">
                         {item.user.name}
                       </h3>
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                         <BadgeCheck size={12} /> Pending
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500">{item.user.email}</p>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-sm text-muted-foreground">{item.user.email}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       NIM/NIDN: {item.nimNidn || "-"} · Fakultas:{" "}
                       {item.faculty || "-"} · Telp: {item.phone || "-"}
                     </p>
@@ -209,7 +209,7 @@ export default function CardApprovalsSection() {
 
           {totalPages > 1 && (
             <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-muted-foreground font-medium">
                 Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)}–
                 {Math.min(currentPage * itemsPerPage, filtered.length)} dari {filtered.length} data
               </p>
@@ -217,7 +217,7 @@ export default function CardApprovalsSection() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
                 >
                   <ChevronLeft size={16} /> Prev
                 </button>
@@ -234,14 +234,14 @@ export default function CardApprovalsSection() {
                     return (
                       <Fragment key={p}>
                         {showDot && (
-                          <span className="px-2 text-slate-300">...</span>
+                          <span className="px-2 text-muted-foreground">...</span>
                         )}
                         <button
                           onClick={() => setCurrentPage(p)}
                           className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                             currentPage === p
                               ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                              : "text-muted-foreground hover:bg-surface-hover hover:text-muted-foreground"
                           }`}
                         >
                           {p}
@@ -255,7 +255,7 @@ export default function CardApprovalsSection() {
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+                  className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
                 >
                   Next <ChevronRight size={16} />
                 </button>
