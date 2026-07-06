@@ -165,7 +165,7 @@ export default function CategoriesSection({
 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-[#B91C1C] group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
+                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm">
                       <Tag className="w-6 h-6" strokeWidth={2.5} />
                     </div>
 
@@ -188,7 +188,7 @@ export default function CategoriesSection({
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="font-bold text-foreground text-lg group-hover:text-[#B91C1C] transition-colors line-clamp-1">
+                    <h3 className="font-bold text-foreground text-lg group-hover:text-primary transition-colors line-clamp-1">
                       {category.name}
                     </h3>
                     <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 min-h-[40px]">
@@ -201,7 +201,7 @@ export default function CategoriesSection({
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       ID: #{category.id}
                     </span>
-                    <div className="flex items-center gap-1.5 text-[#B91C1C] text-xs font-bold pointer-events-none opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                    <div className="flex items-center gap-1.5 text-primary text-xs font-bold pointer-events-none opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                       Detail <ArrowRight size={14} />
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default function CategoriesSection({
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Contoh: Fiksi, Teknologi, dsb."
-              className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#B91C1C] focus:ring-1 focus:ring-[#B91C1C] transition-all outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none text-sm"
               disabled={isSubmitting}
             />
           </div>
@@ -295,7 +295,7 @@ export default function CategoriesSection({
               }
               placeholder="Berikan deskripsi singkat kategori ini..."
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-border focus:border-[#B91C1C] focus:ring-1 focus:ring-[#B91C1C] transition-all outline-none text-sm resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none text-sm resize-none"
               disabled={isSubmitting}
             />
           </div>

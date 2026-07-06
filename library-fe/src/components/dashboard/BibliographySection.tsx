@@ -147,7 +147,7 @@ export default function BibliographySection({
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-[#B91C1C]" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function BibliographySection({
           <p className="mt-1 text-sm text-muted-foreground">
             Kelola data bibliografi perpustakaan
             {data && (
-              <span className="ml-2 text-[#B91C1C] font-semibold">
+              <span className="ml-2 text-primary font-semibold">
                 ({data.total} total)
               </span>
             )}
@@ -193,7 +193,7 @@ export default function BibliographySection({
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+              className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <button
@@ -362,7 +362,7 @@ function BibliographyDetail({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-[#B91C1C]" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -615,7 +615,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -624,7 +624,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.isbnIssn}
                 onChange={(e) => setFormData({ ...formData, isbnIssn: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -633,7 +633,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.edition}
                 onChange={(e) => setFormData({ ...formData, edition: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -644,7 +644,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 onChange={(e) => setFormData({ ...formData, publishYear: e.target.value })}
                 min="1000"
                 max="9999"
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -652,7 +652,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="physical_book">Buku Fisik</option>
                 <option value="ebook">E-Book</option>
@@ -672,7 +672,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.callNumber}
                 onChange={(e) => setFormData({ ...formData, callNumber: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -681,7 +681,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.classification}
                 onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -690,7 +690,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.collation}
                 onChange={(e) => setFormData({ ...formData, collation: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -699,7 +699,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.seriesTitle}
                 onChange={(e) => setFormData({ ...formData, seriesTitle: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -714,7 +714,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 type="text"
                 value={formData.sor}
                 onChange={(e) => setFormData({ ...formData, sor: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div className="sm:col-span-2">
@@ -723,7 +723,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div className="sm:col-span-2">
@@ -732,7 +732,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div className="sm:col-span-2">
@@ -749,7 +749,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                     placeholder="https://..."
                     value={formData.image}
                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">URL gambar cover buku (dari Cloudinary atau link eksternal)</p>
                 </div>
@@ -778,12 +778,12 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                   value={author.name}
                   onChange={(e) => updateAuthor(idx, "name", e.target.value)}
                   placeholder="Nama penulis"
-                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <select
                   value={author.role}
                   onChange={(e) => updateAuthor(idx, "role", e.target.value)}
-                  className="rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="primary">Utama</option>
                   <option value="secondary">Pendamping</option>
@@ -806,7 +806,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 value={unlistedAuthorsLabel}
                 onChange={(e) => setUnlistedAuthorsLabel(e.target.value)}
                 placeholder="cth: dkk"
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -832,7 +832,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                   value={subject.name}
                   onChange={(e) => updateSubject(idx, e.target.value)}
                   placeholder="Nama subjek"
-                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <button
                   type="button"

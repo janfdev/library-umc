@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
 import type { AuthUser } from "@/types/auth";
+import ThemeToggle from "@/components/ui/theme-toggle";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -135,7 +136,7 @@ const Navbar = () => {
     <>
       {/* NAVBAR UTAMA */}
       {/* Diubah z-index ke z-40 agar berada di bawah Tirai Overlay HP */}
-      <div className="flex justify-between items-center p-4 px-6 bg-white shadow-sm sticky top-0 z-40">
+      <div className="flex justify-between items-center p-4 px-6 bg-background shadow-sm sticky top-0 z-40">
         {/* Logo & Teks */}
         <div
           className="flex items-center space-x-2 cursor-pointer"
@@ -146,14 +147,14 @@ const Navbar = () => {
             alt="UMC Library Logo"
             className="w-10 h-10 rounded-full sm:w-12 sm:h-12"
           />
-          <div className="text-sm font-bold text-gray-800">
+          <div className="text-sm font-bold text-foreground">
             <span className="block">UMC</span>
             <span className="block">Library</span>
           </div>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex text-md space-x-6 text-gray-700 font-medium">
+        <nav className="hidden md:flex text-md space-x-6 text-foreground font-medium">
           {navItems.map((item) => (
             <a
               key={item.name}
@@ -162,16 +163,16 @@ const Navbar = () => {
                 e.preventDefault();
                 navigate(item.href);
               }}
-              className={`hover:text-red-600 transition-colors relative group ${
-                isActive(item.href) ? "text-red-700 font-semibold" : ""
+              className={`hover:text-primary transition-colors relative group ${
+                isActive(item.href) ? "text-primary font-semibold" : ""
               }`}
             >
               {item.name}
               {isActive(item.href) && (
-                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-red-700"></span>
+                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary"></span>
               )}
               <span
-                className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full ${
+                className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full ${
                   isActive(item.href) ? "hidden" : ""
                 }`}
               ></span>
@@ -179,16 +180,17 @@ const Navbar = () => {
           ))}
         </nav>
 
-        {/* User Menu / Login Button - Desktop */}
-        <div className="hidden md:block relative" ref={dropdownRef}>
+        {/* Theme Toggle + User Menu - Desktop */}
+        <div className="hidden md:flex items-center gap-1 relative" ref={dropdownRef}>
+          <ThemeToggle />
           {isLoggedIn ? (
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-3 bg-white border border-gray-200 rounded-full px-3 py-1.5 hover:shadow-md transition-all duration-200 group"
+                className="flex items-center space-x-3 bg-background border border-border rounded-full px-3 py-1.5 hover:shadow-md transition-all duration-200 group"
               >
                 {/* Avatar */}
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border-2 border-white shadow-sm overflow-hidden">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/90 flex items-center justify-center text-white border-2 border-white shadow-sm overflow-hidden">
                   {activeUser?.image ? (
                     <img
                       src={activeUser.image}
@@ -202,11 +204,11 @@ const Navbar = () => {
                   )}
                 </div>
                 {/* Name */}
-                <span className="text-sm font-semibold text-gray-800 max-w-[120px] truncate hidden sm:block">
+                <span className="text-sm font-semibold text-foreground max-w-[120px] truncate hidden sm:block">
                   {displayName || "User"}
                 </span>
                 <ChevronDown
-                  className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                  className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -214,13 +216,13 @@ const Navbar = () => {
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden animate-fade-in">
+                <div className="absolute right-0 mt-2 w-56 bg-card rounded-xl shadow-2xl border border-border py-2 z-50 overflow-hidden animate-fade-in">
                   {/* User Info Header */}
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-800 truncate">
+                  <div className="px-4 py-3 bg-muted border-b border-border">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {displayName || "User"}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {displayEmail || "Email tidak tersedia"}
                     </p>
                     <span
@@ -236,21 +238,21 @@ const Navbar = () => {
                       <div className="py-1">
                         <button
                           onClick={handleProfileClick}
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors group"
+                          className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors group"
                         >
-                          <User className="w-4 h-4 group-hover:text-red-600 transition-colors" />
+                          <User className="w-4 h-4 group-hover:text-primary transition-colors" />
                           <span>Profil Saya</span>
                         </button>
 
                         <button
                           onClick={handleMyLoansClick}
-                          className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors group"
+                          className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors group"
                         >
-                          <BookOpen className="w-4 h-4 group-hover:text-red-600 transition-colors" />
+                          <BookOpen className="w-4 h-4 group-hover:text-primary transition-colors" />
                           <span>Peminjaman Saya</span>
                         </button>
                       </div>
-                      <div className="border-t border-gray-100 my-1"></div>
+                      <div className="border-t border-border my-1"></div>
                     </>
                   )}
 
@@ -260,21 +262,21 @@ const Navbar = () => {
                       <a
                         href="/dashboard/super-admin"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors group"
+                        className="flex items-center space-x-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors group"
                       >
-                        <LayoutDashboard className="w-4 h-4 group-hover:text-red-600 transition-colors" />
+                        <LayoutDashboard className="w-4 h-4 group-hover:text-primary transition-colors" />
                         <span>Dashboard Admin</span>
                       </a>
-                      <div className="border-t border-gray-100 my-1"></div>
+                      <div className="border-t border-border my-1"></div>
                     </div>
                   )}
 
                   {/* Logout - Untuk Semua Role */}
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors group"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-primary hover:bg-accent transition-colors group"
                   >
-                    <LogOut className="w-4 h-4 group-hover:text-red-700 transition-colors" />
+                    <LogOut className="w-4 h-4 group-hover:text-primary transition-colors" />
                     <span>Keluar</span>
                   </button>
                 </div>
@@ -283,7 +285,7 @@ const Navbar = () => {
           ) : (
             <button
               onClick={() => navigate("/login")}
-              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center space-x-2 hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg"
+              className="bg-gradient-to-r from-primary to-primary/90 text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center space-x-2 hover:from-primary/90 hover:to-primary transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <span>Login</span>
               <svg
@@ -306,13 +308,13 @@ const Navbar = () => {
 
         {/* Hamburger Menu - Mobile */}
         <button
-          className="md:hidden hamburger p-2 hover:bg-gray-50 rounded-xl transition-all"
+          className="md:hidden hamburger p-2 hover:bg-muted rounded-xl transition-all"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 text-gray-700"
+            className="h-6 w-6 text-foreground"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -339,13 +341,13 @@ const Navbar = () => {
       {/* SIDEBAR MOBILE - ANIMASI SMOOTH */}
       {/* Dinaikkan z-index ke z-50 agar menutupi area navbar belakang */}
       <div
-        className={`fixed top-0 right-0 w-68 h-full bg-white shadow-2xl z-50 flex flex-col
+        className={`fixed top-0 right-0 w-68 h-full bg-card shadow-2xl z-50 flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="p-5 flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border mb-6">
             <div
               className="flex items-center space-x-2 cursor-pointer"
               onClick={() => {
@@ -358,14 +360,14 @@ const Navbar = () => {
                 alt="UMC Library Logo"
                 className="w-10 h-10 rounded-full"
               />
-              <div className="text-sm font-bold text-gray-800">
+              <div className="text-sm font-bold text-foreground">
                 <span className="block">UMC</span>
                 <span className="block">Library</span>
               </div>
             </div>
             <button
               onClick={() => setIsMenuOpen(false)}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+              className="p-2 text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-xl transition-all"
               aria-label="Close menu"
             >
               <svg
@@ -398,29 +400,33 @@ const Navbar = () => {
                 }}
                 className={`text-sm font-semibold py-3 px-4 rounded-xl transition-all relative flex items-center ${
                   isActive(item.href)
-                    ? "bg-red-50 text-red-700 font-bold"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-red-600"
+                    ? "bg-accent text-primary font-bold"
+                    : "text-muted-foreground hover:bg-muted hover:text-primary"
                 }`}
               >
                 <span>{item.name}</span>
                 {isActive(item.href) && (
-                  <span className="absolute left-2 w-1 h-4 bg-red-600 rounded-full"></span>
+                  <span className="absolute left-2 w-1 h-4 bg-primary rounded-full"></span>
                 )}
               </a>
             ))}
           </nav>
 
           {/* User Menu / Login - Mobile (Dropdown Mode di Sidebar) */}
-          <div className="mt-auto pt-4 border-t border-gray-100">
+          <div className="mt-auto pt-4 border-t border-border">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-muted-foreground">Tema</span>
+              <ThemeToggle />
+            </div>
             {isLoggedIn ? (
               <div className="space-y-2">
                 {/* Kotak Akun Utama (Bertindak sebagai Trigger Accordion/Dropdown) */}
                 <button
                   onClick={() => setIsMobileSubMenuOpen(!isMobileSubMenuOpen)}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-all text-left"
+                  className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted/80 rounded-2xl transition-all text-left"
                 >
                   <div className="flex items-center space-x-3 overflow-hidden">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white border border-white flex-shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/90 flex items-center justify-center text-white border border-white flex-shrink-0 overflow-hidden">
                       {activeUser?.image ? (
                         <img
                           src={activeUser.image}
@@ -434,7 +440,7 @@ const Navbar = () => {
                       )}
                     </div>
                     <div className="overflow-hidden">
-                      <p className="text-xs font-bold text-gray-800 truncate">
+                      <p className="text-xs font-bold text-foreground truncate">
                         {displayName || "User"}
                       </p>
                       <span
@@ -445,7 +451,7 @@ const Navbar = () => {
                     </div>
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
                       isMobileSubMenuOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -461,17 +467,17 @@ const Navbar = () => {
                     <>
                       <button
                         onClick={handleProfileClick}
-                        className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-xl transition-all"
                       >
-                        <User className="w-4 h-4 text-gray-400" />
+                        <User className="w-4 h-4 text-muted-foreground" />
                         <span>Profil Saya</span>
                       </button>
 
                       <button
                         onClick={handleMyLoansClick}
-                        className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                        className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-xl transition-all"
                       >
-                        <BookOpen className="w-4 h-4 text-gray-400" />
+                        <BookOpen className="w-4 h-4 text-muted-foreground" />
                         <span>Peminjaman Saya</span>
                       </button>
                     </>
@@ -481,7 +487,7 @@ const Navbar = () => {
                     <a
                       href="/dashboard/super-admin"
                       onClick={() => setIsMenuOpen(false)}
-                      className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-xl transition-all"
                     >
                       <LayoutDashboard className="w-4 h-4 text-purple-500" />
                       <span>Dashboard Admin</span>
@@ -490,9 +496,9 @@ const Navbar = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all mt-1"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-xs font-bold text-primary hover:bg-accent rounded-xl transition-all mt-1"
                   >
-                    <LogOut className="w-4 h-4 text-red-500" />
+                    <LogOut className="w-4 h-4 text-primary" />
                     <span>Keluar Akun</span>
                   </button>
                 </div>
@@ -503,7 +509,7 @@ const Navbar = () => {
                   navigate("/login");
                   setIsMenuOpen(false);
                 }}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 shadow-md"
+                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 shadow-md"
               >
                 <span>Login</span>
               </button>

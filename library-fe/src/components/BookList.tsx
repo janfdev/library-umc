@@ -154,8 +154,8 @@ const BookList = ({
     return (
       <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat data koleksi...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Memuat data koleksi...</p>
         </div>
       </div>
     );
@@ -166,11 +166,11 @@ const BookList = ({
       <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
         <div className="text-center py-12">
           <div className="text-5xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
-          <p className="text-gray-700 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-primary mb-2">Error</h3>
+          <p className="text-foreground mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition text-sm"
           >
             Coba Lagi
           </button>
@@ -184,10 +184,10 @@ const BookList = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div className="w-full md:w-auto">
-          <h2 className="text-lg md:text-xl font-bold text-gray-900">
+          <h2 className="text-lg md:text-xl font-bold text-foreground">
             Koleksi Perpustakaan
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {totalItems} Buku
           </p>
           {currentUser && (
@@ -202,7 +202,7 @@ const BookList = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="hidden md:flex border-b border-gray-200 ml-auto">
+        <div className="hidden md:flex border-b border-border ml-auto">
           {["Buku Fisik", "E-Book"].map((tab, index) => (
             <button
               key={index}
@@ -212,8 +212,8 @@ const BookList = ({
               }}
               className={`px-6 py-3 text-sm font-medium ${
                 activeTab === index
-                  ? "text-red-700 border-b-2 border-red-700"
-                  : "text-gray-700 hover:text-red-700"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-foreground hover:text-primary"
               }`}
             >
               {tab}
@@ -223,7 +223,7 @@ const BookList = ({
       </div>
 
       {/* Mobile Tab Navigation */}
-      <div className="md:hidden flex border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap">
+      <div className="md:hidden flex border-b border-border mb-6 overflow-x-auto whitespace-nowrap">
         {["Buku Fisik", "E-Book"].map((tab, index) => (
           <button
             key={index}
@@ -233,8 +233,8 @@ const BookList = ({
             }}
             className={`px-6 py-3 text-sm font-medium ${
               activeTab === index
-                ? "text-red-700 border-b-2 border-red-700"
-                : "text-gray-700 hover:text-red-700"
+                ? "text-primary border-b-2 border-primary"
+                : "text-foreground hover:text-primary"
             }`}
           >
             {tab}
@@ -245,7 +245,7 @@ const BookList = ({
       {/* Book Grid — PerspectiveBook */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-6 justify-items-center">
         {currentItems.length === 0 ? (
-          <div className="col-span-full text-center py-8 sm:py-12 text-gray-500">
+          <div className="col-span-full text-center py-8 sm:py-12 text-muted-foreground">
             <div className="text-3xl sm:text-4xl mb-4">🔍</div>
             <p className="text-lg font-semibold mb-2">
               Tidak ada hasil ditemukan
@@ -285,7 +285,7 @@ const BookList = ({
               {/* Info & status di bawah buku */}
               <div className="text-center max-w-[120px] sm:max-w-[150px]">
                 <div className="flex flex-wrap justify-center gap-1 mt-1">
-                  <span className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded">
+                  <span className="px-1.5 py-0.5 text-[9px] bg-muted text-muted-foreground rounded">
                     {bibliography.type === "physical_book" ? "Fisik" : "E-Book"}
                   </span>
                   <span
@@ -306,7 +306,7 @@ const BookList = ({
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="p-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+            className="p-2 border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
           >
             &lt;
           </button>
@@ -321,7 +321,7 @@ const BookList = ({
               Math.abs(pageNum - currentPage) > 2
             ) {
               if (Math.abs(pageNum - currentPage) === 3) {
-                return <span key={pageNum} className="px-1 text-gray-400">...</span>;
+                return <span key={pageNum} className="px-1 text-muted-foreground">...</span>;
               }
               return null;
             }
@@ -332,8 +332,8 @@ const BookList = ({
                 onClick={() => handlePageChange(pageNum)}
                 className={`w-10 h-10 rounded-lg font-bold transition-all ${
                   currentPage === pageNum
-                    ? "bg-[#9a1b1b] text-white shadow-md"
-                    : "hover:bg-gray-200 text-gray-700"
+                    ? "bg-primary text-white shadow-md"
+                    : "hover:bg-muted text-foreground"
                 }`}
               >
                 {pageNum}
@@ -344,7 +344,7 @@ const BookList = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="p-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+            className="p-2 border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
           >
             &gt;
           </button>
@@ -352,8 +352,8 @@ const BookList = ({
       )}
 
       {/* Keterangan status */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-500">
+      <div className="mt-8 pt-6 border-t border-border">
+        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-green-500"></span>
             <span>Tersedia</span>

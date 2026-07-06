@@ -74,21 +74,21 @@ const ResetPasswordPage = () => {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen bg-[#F1F3F6] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
       {/* Latar Belakang Lingkaran */}
-      <div className="absolute top-[-100px] left-[-100px] w-96 h-96 bg-[#0F172A]/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-[#B21F24]/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-100px] left-[-100px] w-96 h-96 bg-foreground/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-[400px] bg-white rounded-[24px] shadow-xl overflow-hidden flex flex-col relative z-10">
+      <div className="w-full max-w-[400px] bg-card rounded-[24px] shadow-xl overflow-hidden flex flex-col relative z-10">
         {/* Header */}
-        <div className="bg-[#0F172A] pt-8 pb-10 px-6 text-center relative">
+        <div className="bg-foreground pt-8 pb-10 px-6 text-center relative">
           <div className="flex justify-center mb-4">
             <div className="bg-white/10 p-3 rounded-2xl shadow-inner border border-white/5">
               <ShieldCheck className="text-emerald-400 w-8 h-8" strokeWidth={1.5} />
             </div>
           </div>
           <h1 className="text-white text-xl font-bold tracking-wide">Buat Sandi Baru</h1>
-          <p className="text-gray-400 text-[13px] mt-2 max-w-[280px] mx-auto leading-relaxed">
+          <p className="text-muted-foreground text-[13px] mt-2 max-w-[280px] mx-auto leading-relaxed">
             Sandi baru Anda harus unik dan berbeda dari sandi yang digunakan sebelumnya.
           </p>
           
@@ -104,12 +104,12 @@ const ResetPasswordPage = () => {
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Sandi Berhasil Diperbarui!</h3>
-                <p className="text-sm text-gray-500">Anda akan diarahkan ke halaman login dalam beberapa detik...</p>
+                <h3 className="text-lg font-bold text-foreground mb-2">Sandi Berhasil Diperbarui!</h3>
+                <p className="text-sm text-muted-foreground">Anda akan diarahkan ke halaman login dalam beberapa detik...</p>
               </div>
               <button
                 onClick={() => navigate("/login")}
-                className="w-full h-11 bg-[#0F172A] hover:bg-slate-800 text-white rounded-xl font-bold text-[13px] shadow-md transition-all active:scale-[0.98]"
+                className="w-full h-11 bg-foreground hover:bg-foreground/90 text-white rounded-xl font-bold text-[13px] shadow-md transition-all active:scale-[0.98]"
               >
                 Langsung ke Login
               </button>
@@ -118,11 +118,11 @@ const ResetPasswordPage = () => {
             <form onSubmit={handleResetPassword} className="space-y-5">
               {/* Password Baru */}
               <div>
-                <label className="block text-gray-700 text-xs font-bold mb-2 ml-1 uppercase tracking-wider">
+                <label className="block text-foreground text-xs font-bold mb-2 ml-1 uppercase tracking-wider">
                   Kata Sandi Baru
                 </label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#0F172A]">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-foreground">
                     <Lock size={16} />
                   </div>
                   <input
@@ -130,7 +130,7 @@ const ResetPasswordPage = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Minimal 8 karakter"
-                    className="w-full pl-11 pr-4 h-12 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A]/20 focus:border-[#0F172A] outline-none text-[13px] text-gray-900 placeholder-gray-400 transition-all shadow-sm"
+                    className="w-full pl-11 pr-4 h-12 bg-background border border-border rounded-xl focus:ring-2 focus:ring-foreground/20 focus:border-foreground outline-none text-[13px] text-foreground placeholder-muted-foreground transition-all shadow-sm"
                     required
                     disabled={isLoading}
                     minLength={8}
@@ -140,11 +140,11 @@ const ResetPasswordPage = () => {
 
               {/* Konfirmasi Password */}
               <div>
-                <label className="block text-gray-700 text-xs font-bold mb-2 ml-1 uppercase tracking-wider">
+                <label className="block text-foreground text-xs font-bold mb-2 ml-1 uppercase tracking-wider">
                   Konfirmasi Sandi Baru
                 </label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#0F172A]">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-foreground">
                     <CheckCircle2 size={16} />
                   </div>
                   <input
@@ -152,7 +152,7 @@ const ResetPasswordPage = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Ulangi kata sandi baru"
-                    className="w-full pl-11 pr-4 h-12 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F172A]/20 focus:border-[#0F172A] outline-none text-[13px] text-gray-900 placeholder-gray-400 transition-all shadow-sm"
+                    className="w-full pl-11 pr-4 h-12 bg-background border border-border rounded-xl focus:ring-2 focus:ring-foreground/20 focus:border-foreground outline-none text-[13px] text-foreground placeholder-muted-foreground transition-all shadow-sm"
                     required
                     disabled={isLoading}
                     minLength={8}
@@ -170,7 +170,7 @@ const ResetPasswordPage = () => {
               <button
                 type="submit"
                 disabled={isLoading || newPassword !== confirmPassword || newPassword.length < 8}
-                className="w-full h-12 bg-[#B21F24] hover:bg-[#961a1e] text-white rounded-xl font-bold text-[13px] shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-4"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-[13px] shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-4"
               >
                 {isLoading ? (
                   <>

@@ -45,10 +45,10 @@ function getLoanStatus(loan: Loan): "active" | "warning" | "late" | "returned" |
 const STATUS_CONFIG = {
   active: { label: "Pinjaman Aktif", bg: "bg-green-50", text: "text-green-600", dot: "bg-green-500" },
   warning: { label: "Segera Kembali", bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-500" },
-  late: { label: "Terlambat", bg: "bg-red-50", text: "text-red-600", dot: "bg-red-500" },
-  returned: { label: "Dikembalikan", bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-400" },
+  late: { label: "Terlambat", bg: "bg-red-50", text: "text-primary", dot: "bg-red-500" },
+  returned: { label: "Dikembalikan", bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground" },
   pending: { label: "Menunggu Konfirmasi", bg: "bg-yellow-50", text: "text-yellow-600", dot: "bg-yellow-500" },
-  rejected: { label: "Ditolak", bg: "bg-red-50", text: "text-red-700", dot: "bg-red-600" },
+  rejected: { label: "Ditolak", bg: "bg-red-50", text: "text-primary", dot: "bg-primary" },
 } as const;
 
 type VisualStatus = keyof typeof STATUS_CONFIG;
@@ -92,7 +92,7 @@ function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCar
 
   return (
     <div
-      className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col"
+      className="bg-card rounded-[24px] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col"
       onClick={() => onViewDetail(loan)}
     >
       <div className="flex gap-4 mb-5">
@@ -118,7 +118,7 @@ function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCar
       <div className="flex justify-between items-end border-t border-slate-50 pt-4 mb-5 text-[10px]">
         <div>
           <p className="font-bold text-slate-300 uppercase tracking-widest mb-1">Jatuh Tempo</p>
-          <p className={`font-bold text-sm ${status === "late" ? "text-red-600" : "text-slate-900"}`}>
+            <p className={`font-bold text-sm ${status === "late" ? "text-primary" : "text-slate-900"}`}>
             {formatDateID(loan.dueDate)}
           </p>
           {loan.loanDate && (
@@ -128,7 +128,7 @@ function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCar
         {(loan.fine ?? 0) > 0 && (
           <div className="text-right">
             <p className="font-bold text-slate-300 uppercase tracking-widest mb-1">Denda</p>
-            <p className="font-bold text-red-600 text-sm">
+            <p className="font-bold text-primary text-sm">
               Rp {(loan.fine ?? 0).toLocaleString("id-ID")}
             </p>
             {lateDays > 0 && (
@@ -144,7 +144,7 @@ function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCar
           <button
             onClick={(e) => { e.stopPropagation(); onExtend(loan.id); }}
             disabled={isExtending}
-            className="w-full bg-[#A31D1D] hover:bg-[#8B1818] disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="w-full bg-primary hover:bg-primary/90 disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
           >
             <RefreshCw size={13} strokeWidth={3} className={isExtending ? "animate-spin" : ""} />
             {isExtending ? "MEMPROSES..." : "PERPANJANG"}
@@ -159,21 +159,21 @@ function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCar
         )}
 
         {status === "returned" && (
-          <div className="w-full bg-gray-50 text-gray-500 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          <div className="w-full bg-muted text-muted-foreground py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
             <CheckCircle size={13} />
             SUDAH DIKEMBALIKAN
           </div>
         )}
 
         {status === "rejected" && (
-          <div className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          <div className="w-full bg-red-50 text-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
             <XCircle size={13} />
             DITOLAK
           </div>
         )}
 
         {status === "late" && (
-          <div className="w-full bg-red-50 text-red-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          <div className="w-full bg-red-50 text-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
             <AlertCircle size={13} />
             TERLAMBAT — KEMBALIKAN KE PERPUSTAKAAN
           </div>
@@ -202,7 +202,7 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-white rounded-3xl w-full max-w-lg shadow-2xl">
+        <div className="relative bg-card rounded-3xl w-full max-w-lg shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-100">
             <h2 className="text-lg font-bold text-slate-900">Detail Peminjaman</h2>
@@ -236,7 +236,7 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
               </div>
               <div className="p-3 bg-slate-50 rounded-xl">
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Jatuh Tempo</p>
-                <p className={`font-bold text-sm ${status === "late" ? "text-red-600" : "text-slate-900"}`}>
+                <p className={`font-bold text-sm ${status === "late" ? "text-primary" : "text-slate-900"}`}>
                   {formatDateID(loan.dueDate)}
                 </p>
               </div>
@@ -251,10 +251,10 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
             {/* Fine */}
             {(loan.fine ?? 0) > 0 && (
               <div className="p-4 bg-red-50 rounded-xl flex items-start gap-3">
-                <AlertCircle className="text-red-600 w-5 h-5 shrink-0 mt-0.5" />
+                <AlertCircle className="text-primary w-5 h-5 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-red-700 text-sm">Denda Keterlambatan</p>
-                  <p className="text-red-600 text-sm mt-0.5">
+                  <p className="font-bold text-primary text-sm">Denda Keterlambatan</p>
+                  <p className="text-primary text-sm mt-0.5">
                     Rp {(loan.fine ?? 0).toLocaleString("id-ID")}
                     {lateDays > 0 && ` (${lateDays} hari × Rp 2.000)`}
                   </p>
@@ -274,13 +274,13 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
             {loan.rejectReason && (
               <div className="p-3 bg-red-50 rounded-xl">
                 <p className="text-[10px] font-bold text-red-400 uppercase mb-1">Alasan Penolakan</p>
-                <p className="text-xs text-red-600">{loan.rejectReason}</p>
+                <p className="text-xs text-primary">{loan.rejectReason}</p>
               </div>
             )}
 
             {/* QR Code */}
             {status === "pending" && loan.qrCodeUrl && (
-              <div className="p-4 bg-white border border-slate-100 shadow-sm rounded-xl flex flex-col items-center">
+              <div className="p-4 bg-card border border-slate-100 shadow-sm rounded-xl flex flex-col items-center">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 text-center">Tunjukkan QR Code ini ke Petugas Perpustakaan</p>
                 <div className="bg-slate-50 p-2 rounded-xl">
                    <img src={loan.qrCodeUrl} alt="QR Code Peminjaman" className="w-48 h-48 object-contain" />
@@ -301,7 +301,7 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
               <button
                 onClick={() => { onExtend(loan.id); onClose(); }}
                 disabled={isExtending}
-                className="flex-1 px-4 py-3 bg-[#A31D1D] hover:bg-[#8B1818] disabled:bg-slate-200 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-primary hover:bg-primary/90 disabled:bg-slate-200 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
               >
                 <RotateCcw size={15} />
                 Perpanjang
@@ -418,7 +418,7 @@ export default function MyLoansPage() {
 
   if (sessionLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
         <main className="flex-1 max-w-7xl mx-auto px-4 md:px-6 py-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -438,7 +438,7 @@ export default function MyLoansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 md:px-6 py-10 w-full">
@@ -446,12 +446,12 @@ export default function MyLoansPage() {
         {/* ── TOP SECTION ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Search */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="lg:col-span-2 bg-card p-6 rounded-2xl border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-bold text-slate-800">Cari Pinjaman</h2>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="lg:hidden text-slate-400 hover:text-red-600 transition-colors"
+                className="lg:hidden text-slate-400 hover:text-primary transition-colors"
               >
                 <Filter size={18} />
               </button>
@@ -463,13 +463,13 @@ export default function MyLoansPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Ketik judul atau penulis..."
-                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/10 focus:border-red-500 text-sm text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-12 pr-4 py-3 bg-card border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary text-sm text-slate-900 placeholder:text-slate-400"
               />
             </div>
           </div>
 
           {/* User Card */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="bg-card p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
             <div className="w-14 h-14 bg-linear-to-br from-red-500 to-red-700 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg">
               {user?.name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
             </div>
@@ -479,10 +479,10 @@ export default function MyLoansPage() {
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] font-bold">
                   <span className="text-slate-400 uppercase tracking-widest">Pinjaman Aktif</span>
-                  <span className="text-red-700">{stats.active + stats.warning + stats.late} buku</span>
+                  <span className="text-primary">{stats.active + stats.warning + stats.late} buku</span>
                 </div>
                 {stats.totalFine > 0 && (
-                  <p className="text-[10px] text-red-600 font-medium pt-1">
+                  <p className="text-[10px] text-primary font-medium pt-1">
                     ⚠ Denda: Rp {stats.totalFine.toLocaleString("id-ID")}
                   </p>
                 )}
@@ -493,7 +493,7 @@ export default function MyLoansPage() {
 
         {/* ── FILTER BAR ── */}
         <div className={`mb-6 transition-all duration-300 ${showFilters ? "block" : "hidden lg:block"}`}>
-          <div className="bg-white rounded-xl border border-slate-100 p-4">
+          <div className="bg-card rounded-xl border border-slate-100 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter:</span>
               {FILTER_OPTIONS.map((opt) => {
@@ -508,7 +508,7 @@ export default function MyLoansPage() {
                     onClick={() => setFilterStatus(opt.value)}
                     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                       isActive
-                        ? "bg-red-600 text-white"
+                        ? "bg-primary text-white"
                         : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                     }`}
                   >
@@ -530,7 +530,7 @@ export default function MyLoansPage() {
             <button
               onClick={() => fetchLoans(true)}
               disabled={refreshing}
-              className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
+              className="p-2.5 bg-card border border-slate-200 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
               title="Refresh"
             >
               <RefreshCw size={15} className={`text-slate-500 ${refreshing ? "animate-spin" : ""}`} />
@@ -540,7 +540,7 @@ export default function MyLoansPage() {
 
         {/* ── CONTENT ── */}
         {filteredLoans.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+          <div className="bg-card rounded-2xl border border-slate-100 p-12 text-center">
             <CalendarDays className="w-14 h-14 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-800 mb-2">Tidak Ada Pinjaman</h3>
             <p className="text-slate-400 text-sm mb-6 max-w-md mx-auto">
@@ -553,7 +553,7 @@ export default function MyLoansPage() {
             {(searchTerm || filterStatus !== "all") && (
               <button
                 onClick={() => { setSearchTerm(""); setFilterStatus("all"); }}
-                className="px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all"
+                className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all"
               >
                 Reset Filter
               </button>

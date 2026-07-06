@@ -39,19 +39,19 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
   const statusMeta: Record<string, { label: string; className: string }> = {
     approved: {
       label: "Dipinjam",
-      className: "bg-[#fff7ed] text-[#ea580c]"
+      className: "bg-orange-50 text-orange-600"
     },
     pending: {
       label: "Menunggu",
-      className: "bg-[#eff6ff] text-[#2563eb]"
+      className: "bg-blue-50 text-blue-600"
     },
     returned: {
       label: "Dikembalikan",
-      className: "bg-[#ecfdf5] text-[#059669]"
+      className: "bg-green-50 text-green-600"
     },
     rejected: {
       label: "Ditolak",
-      className: "bg-[#fef2f2] text-[#dc2626]"
+      className: "bg-red-50 text-destructive"
     }
   };
 
@@ -180,7 +180,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
           <button
             type="button"
             onClick={handleImportClick}
-            className="flex items-center gap-2 bg-card text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-border hover:bg-surface-hover transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-card text-foreground px-5 py-2.5 rounded-xl font-bold text-sm border border-border hover:bg-surface-hover transition-colors shadow-sm"
           >
             <UploadCloud size={18} />
             Import Laporan
@@ -189,7 +189,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
           {/* Export Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-500/20">
+              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors shadow-sm shadow-red-500/20">
                 <DownloadCloud size={18} />
                 Export Laporan
               </button>
@@ -208,7 +208,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-primary"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -219,7 +219,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-primary"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -236,7 +236,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -247,7 +247,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -281,10 +281,10 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
       {/* Aktivitas Peminjaman Terbaru */}
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden mt-6">
         <div className="p-6 md:px-8 md:py-6 flex items-center justify-between border-b border-border">
-          <h3 className="text-xl font-extrabold text-[#0F172A] tracking-tight">
+          <h3 className="text-xl font-extrabold text-foreground tracking-tight">
             Aktivitas Peminjaman Terbaru
           </h3>
-          <button className="text-[#B91C1C] font-bold text-sm hover:underline flex items-center gap-1 group">
+          <button className="text-primary font-bold text-sm hover:underline flex items-center gap-1 group">
             Lihat Semua{" "}
             <span className="text-lg group-hover:translate-x-1 transition-transform">
               →
@@ -314,7 +314,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                   className="flex items-center justify-between p-4 px-6 hover:bg-surface-hover transition-colors border-b border-slate-50 last:border-0 group cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl flex items-center justify-center text-[#94A3B8]">
+                    <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-muted-foreground">
                       <UserIcon size={18} />
                     </div>
                     <div>

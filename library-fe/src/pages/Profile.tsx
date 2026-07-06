@@ -246,7 +246,7 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       <main className="w-full mx-auto md:px-8 px-4 pt-10 pb-16">
@@ -262,7 +262,7 @@ const Profile = () => {
 
         {/* Profile Card Section */}
         <div className="px-10 -mt-20 flex flex-col md:flex-row items-end gap-8 mb-12 relative z-10">
-          <div className="w-48 h-56 bg-white rounded-[32px] shadow-xl border border-slate-50 overflow-hidden flex items-center justify-center p-1">
+          <div className="w-48 h-56 bg-card rounded-[32px] shadow-xl border border-slate-50 overflow-hidden flex items-center justify-center p-1">
             <div className="w-full h-full bg-slate-100 rounded-[28px] overflow-hidden flex items-center justify-center">
               {profile?.user?.image ? (
                 <img
@@ -287,7 +287,7 @@ const Profile = () => {
                 : profile?.faculty || "Teknik Informatika"}
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest">
-              <Mail size={14} className="text-red-700" />
+              <Mail size={14} className="text-primary" />
               {profile?.user?.email || authUser?.email}
             </div>
           </div>
@@ -302,18 +302,18 @@ const Profile = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative pb-5 text-xs font-black uppercase tracking-[0.15em] transition-all ${
                   activeTab === tab.id
-                    ? "text-red-700 scale-105"
+                    ? "text-primary scale-105"
                     : "text-slate-400 hover:text-slate-600"
                 }`}
               >
                 {tab.label}
                 {tab.count !== null && (
-                  <sup className="ml-1 text-[8px] font-black text-red-600">
+                  <sup className="ml-1 text-[8px] font-black text-primary">
                     {tab.count}
                   </sup>
                 )}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-700 rounded-full" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
                 )}
               </button>
             ))}
@@ -339,9 +339,9 @@ const Profile = () => {
             </div>
           )}
           {activeTab === "usulan-koleksi" && isLecturerOnly && (
-            <section className="bg-white border border-red-100 rounded-[28px] p-6 md:p-8 shadow-sm">
+            <section className="bg-card border border-red-100 rounded-[28px] p-6 md:p-8 shadow-sm">
               <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-red-50 text-primary flex items-center justify-center shrink-0">
                   <BookMarked size={22} />
                 </div>
                 <div>
@@ -379,7 +379,7 @@ const Profile = () => {
                         })
                       }
                       placeholder="Contoh: Pemrograman Web Modern"
-                      className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 outline-none"
+                      className="mt-2 w-full bg-card border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 outline-none"
                     />
                   </div>
 
@@ -398,7 +398,7 @@ const Profile = () => {
                         })
                       }
                       placeholder="Nama Penulis"
-                      className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 outline-none"
+                      className="mt-2 w-full bg-card border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 outline-none"
                     />
                   </div>
 
@@ -416,7 +416,7 @@ const Profile = () => {
                         })
                       }
                       placeholder="Opsional"
-                      className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 outline-none"
+                      className="mt-2 w-full bg-card border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 outline-none"
                     />
                   </div>
 
@@ -434,7 +434,7 @@ const Profile = () => {
                         })
                       }
                       placeholder="Contoh: 978-3-16-148410-0"
-                      className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 outline-none"
+                      className="mt-2 w-full bg-card border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 outline-none"
                     />
                   </div>
 
@@ -453,7 +453,7 @@ const Profile = () => {
                         })
                       }
                       placeholder="Contoh: Digunakan sebagai referensi mata kuliah semester ini."
-                      className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 outline-none resize-y"
+                      className="mt-2 w-full bg-card border border-slate-200 rounded-2xl py-3 px-4 text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 outline-none resize-y"
                     />
                   </div>
                 </div>
@@ -462,7 +462,7 @@ const Profile = () => {
                   <button
                     type="submit"
                     disabled={recommendationLoading}
-                    className="inline-flex items-center justify-center gap-2 bg-red-700 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-[0.18em] shadow-lg shadow-red-200 hover:bg-red-800 disabled:bg-slate-300 transition-all active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-[0.18em] shadow-lg shadow-red-200 hover:bg-primary/90 disabled:bg-slate-300 transition-all active:scale-95"
                   >
                     {recommendationLoading ? (
                       <Loader2 size={15} className="animate-spin" />
@@ -478,7 +478,7 @@ const Profile = () => {
           {activeTab === "edit-profil" && (
             <div className="bg-slate-50/50 rounded-[40px] p-10 max-w-3xl border border-slate-100 shadow-sm">
               <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center text-red-600">
+                <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center text-primary">
                   <Settings size={20} />
                 </div>
                 Pengaturan Profil
@@ -497,20 +497,20 @@ const Profile = () => {
                           onChange={(e) =>
                             setFormData({ ...formData, institution: e.target.value })
                           }
-                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
-                          Asal Daerah
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.originRegion || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, originRegion: e.target.value })
-                          }
-                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                      className="w-full bg-card border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/20 transition-all outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                      Asal Daerah
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.originRegion || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, originRegion: e.target.value })
+                      }
+                      className="w-full bg-card border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/20 transition-all outline-none"
                         />
                       </div>
                     </>
@@ -526,20 +526,20 @@ const Profile = () => {
                           onChange={(e) =>
                             setFormData({ ...formData, nimNidn: e.target.value })
                           }
-                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
-                          Fakultas
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.faculty || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, faculty: e.target.value })
-                          }
-                          className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                      className="w-full bg-card border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/20 transition-all outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">
+                      Fakultas
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.faculty || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, faculty: e.target.value })
+                      }
+                      className="w-full bg-card border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/20 transition-all outline-none"
                         />
                       </div>
                     </>
@@ -555,7 +555,7 @@ const Profile = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="w-full bg-white border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-red-500/10 focus:border-red-500/20 transition-all outline-none"
+                    className="w-full bg-card border border-slate-200 rounded-[20px] py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary/20 transition-all outline-none"
                     placeholder="081234567890"
                   />
                 </div>
@@ -563,7 +563,7 @@ const Profile = () => {
                   <button
                     type="submit"
                     disabled={updateLoading}
-                    className="bg-red-700 text-white px-12 py-4 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-red-200 hover:bg-red-800 disabled:bg-slate-300 transition-all active:scale-95"
+                    className="bg-primary text-white px-12 py-4 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-red-200 hover:bg-primary/90 disabled:bg-slate-300 transition-all active:scale-95"
                   >
                     {updateLoading ? "Menyimpan..." : "Simpan Perubahan"}
                   </button>

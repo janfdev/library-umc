@@ -96,19 +96,19 @@ const KatalogDetail = () => {
 
   if (loading || sessionLoading)
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-700"></div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-muted">
       <Navbar />
 
       {/* Modal Form Peminjaman */}
       {showLoanForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               Ajukan Peminjaman Buku
             </h3>
@@ -132,7 +132,7 @@ const KatalogDetail = () => {
                   value={loanFormData.loanDate}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-red-500/10"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-primary/10"
                   required
                 />
               </div>
@@ -161,7 +161,7 @@ const KatalogDetail = () => {
                   value={loanFormData.notes}
                   onChange={handleInputChange}
                   placeholder="Contoh: untuk tugas akhir, dll"
-                  className="w-full px-4 py-2.5 border border-slate-200 text-slate-900 rounded-xl text-sm focus:ring-2 focus:ring-red-500/10"
+                  className="w-full px-4 py-2.5 border border-slate-200 text-slate-900 rounded-xl text-sm focus:ring-2 focus:ring-primary/10"
                   rows={3}
                 />
               </div>
@@ -179,14 +179,14 @@ const KatalogDetail = () => {
                   setShowLoanForm(false);
                   setLoanFormData({ loanDate: "", dueDate: "", notes: "" });
                 }}
-                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-black text-sm font-medium hover:bg-slate-50"
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-foreground text-sm font-medium hover:bg-slate-50"
               >
                 Batal
               </button>
               <button
                 onClick={handleSubmitLoan}
                 disabled={borrowLoading}
-                className="flex-1 bg-[#9a1b1b] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#7a1515] disabled:bg-slate-400 transition-all"
+                className="flex-1 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 disabled:bg-slate-400 transition-all"
               >
                 {borrowLoading ? "Memproses..." : "Ajukan Peminjaman"}
               </button>
@@ -197,25 +197,25 @@ const KatalogDetail = () => {
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-[13px] text-gray-400 mb-6 font-medium">
-          <Link to="/" className="hover:text-red-700">
+        <nav className="flex items-center gap-2 text-[13px] text-muted-foreground mb-6 font-medium">
+          <Link to="/" className="hover:text-primary">
             Beranda
           </Link>
           <ChevronRight size={12} />
-          <Link to="/katalog" className="hover:text-red-700">
+          <Link to="/katalog" className="hover:text-primary">
             Katalog
           </Link>
           <ChevronRight size={12} />
-          <span className="text-gray-800 font-bold truncate">
+          <span className="text-foreground font-bold truncate">
             {bibliography?.title}
           </span>
         </nav>
 
         {/* Card Utama */}
-        <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row mb-12">
+        <div className="bg-card rounded-[32px] shadow-sm border border-border overflow-hidden flex flex-col md:flex-row mb-12">
           {/* Sisi Kiri - Visual */}
-          <div className="md:w-[35%] bg-[#F8FAFC] p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100">
-            <div className="w-52 h-72 rounded-xl overflow-hidden shadow-2xl bg-white mb-8">
+          <div className="md:w-[35%] bg-background p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-border">
+            <div className="w-52 h-72 rounded-xl overflow-hidden shadow-2xl bg-card mb-8">
               {bibliography?.image ? (
                 <img
                   src={bibliography.image}
@@ -253,10 +253,10 @@ const KatalogDetail = () => {
                   onClick={btn.onClick}
                   className="flex flex-col items-center gap-1.5 group"
                 >
-                  <div className="p-2.5 border border-gray-200 rounded-xl group-hover:bg-white group-hover:shadow-sm text-gray-400 group-hover:text-red-700 transition-all">
+                  <div className="p-2.5 border border-border rounded-xl group-hover:bg-card group-hover:shadow-sm text-muted-foreground group-hover:text-primary transition-all">
                     {btn.icon}
                   </div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                     {btn.label}
                   </span>
                 </button>
@@ -284,7 +284,7 @@ const KatalogDetail = () => {
                   Buku Sudah Anda Reservasi
                 </span>
               ) : bookStatus === "empty" ? (
-                <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-red-50 text-red-600">
+                <span className="px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 bg-red-50 text-primary">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                   Stok Kosong
                 </span>
@@ -325,7 +325,7 @@ const KatalogDetail = () => {
             </h1>
             <p className="text-md text-slate-400 font-medium mb-8">
               Oleh{" "}
-              <span className="text-red-600 font-bold">
+              <span className="text-primary font-bold">
                 {bibliography?.author}
               </span>
             </p>
@@ -364,7 +364,7 @@ const KatalogDetail = () => {
               <button
                 onClick={handleBorrow}
                 disabled={borrowLoading || isBorrowing}
-                className="flex-2 bg-[#9a1b1b] hover:bg-[#7a1515] disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
+                className="flex-2 bg-primary hover:bg-primary/90 disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
               >
                 {borrowLoading ? (
                   <>
@@ -397,7 +397,7 @@ const KatalogDetail = () => {
               {currentUser && (
                 <button
                   onClick={onCheckStatusClick}
-                  className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
+                  className="flex-1 bg-card border border-border hover:bg-muted text-foreground py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all active:scale-[0.98]"
                 >
                   <Bell size={18} />
                   Cek Status
@@ -408,7 +408,7 @@ const KatalogDetail = () => {
             {!currentUser && (
               <p className="text-xs text-center text-slate-400 mt-4">
                 Silakan{" "}
-                <Link to="/login" className="text-red-700 font-bold">
+                <Link to="/login" className="text-primary font-bold">
                   login
                 </Link>{" "}
                 untuk meminjam buku
@@ -426,7 +426,7 @@ const KatalogDetail = () => {
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-8">
-            <p className="text-red-600 text-sm font-medium">{error}</p>
+            <p className="text-primary text-sm font-medium">{error}</p>
           </div>
         )}
 
@@ -443,7 +443,7 @@ const KatalogDetail = () => {
             </div>
             <Link
               to="/katalog"
-              className="text-red-700 text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all"
+              className="text-primary text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all"
             >
               Lihat Semua <ArrowRight size={16} />
             </Link>
@@ -478,7 +478,7 @@ const KatalogDetail = () => {
                   </div>
                 </PerspectiveBook>
                 <div className="text-center w-[150px]">
-                  <p className="text-xs font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-red-700 transition-colors">
+                  <p className="text-xs font-bold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                     {book.title}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5">

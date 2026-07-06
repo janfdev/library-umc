@@ -143,7 +143,7 @@ export default function ImportSection() {
       {/* Batch List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="size-6 animate-spin text-[#B91C1C]" />
+          <Loader2 className="size-6 animate-spin text-primary" />
         </div>
       ) : batches.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-12 text-center">
@@ -311,7 +311,7 @@ function BatchDetail({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-[#B91C1C]" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }

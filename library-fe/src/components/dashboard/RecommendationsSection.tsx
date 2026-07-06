@@ -129,7 +129,7 @@ export default function RecommendationsSection() {
         {/* Header */}
         <div className="p-6 md:px-8 border-b border-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-[20px] font-extrabold text-[#0F172A] tracking-tight">Usulan Pengadaan Koleksi</h2>
+            <h2 className="text-[20px] font-extrabold text-foreground tracking-tight">Usulan Pengadaan Koleksi</h2>
             <p className="text-xs text-muted-foreground font-medium mt-1">Rekomendasi buku baru dari dosen untuk perpustakaan</p>
           </div>
           
@@ -138,7 +138,7 @@ export default function RecommendationsSection() {
               <select
                 value={filter}
                 onChange={(e) => { setFilter(e.target.value as FilterStatus); setCurrentPage(1); }}
-                className="appearance-none bg-[#F8FAFC] border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-muted-foreground focus:ring-2 focus:ring-red-500/10 cursor-pointer min-w-[160px]"
+                className="appearance-none bg-background border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-muted-foreground focus:ring-2 focus:ring-primary/10 cursor-pointer min-w-[160px]"
               >
                 <option value="pending">Menunggu</option>
                 <option value="approved">Disetujui</option>
@@ -153,7 +153,7 @@ export default function RecommendationsSection() {
               <input
                 type="text"
                 placeholder="Cari buku atau dosen..."
-                className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-[#F8FAFC] border-none rounded-xl text-[13px] font-medium text-muted-foreground focus:ring-2 focus:ring-red-500/10"
+                className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-background border-none rounded-xl text-[13px] font-medium text-muted-foreground focus:ring-2 focus:ring-primary/10"
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
@@ -187,7 +187,7 @@ export default function RecommendationsSection() {
               {paginatedData.map((item) => (
                 <div 
                   key={item.id} 
-                  className="bg-[#F8FAFC] rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
+                  className="bg-background rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
                 >
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Info Buku */}
@@ -195,10 +195,10 @@ export default function RecommendationsSection() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border group-hover:bg-warning-bg group-hover:border-red-100 transition-colors">
-                            <BookMarked className="text-muted-foreground group-hover:text-[#B91C1C]" size={18} />
+                            <BookMarked className="text-muted-foreground group-hover:text-primary" size={18} />
                           </div>
                           <div>
-                            <h4 className="font-extrabold text-[#0F172A] text-[15px]">{item.title}</h4>
+                            <h4 className="font-extrabold text-foreground text-[15px]">{item.title}</h4>
                             <p className="text-[13px] text-muted-foreground font-medium">{item.author}</p>
                           </div>
                         </div>

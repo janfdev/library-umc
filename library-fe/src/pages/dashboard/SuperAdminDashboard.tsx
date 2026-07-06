@@ -46,6 +46,7 @@ import {
   CommandShortcut
 } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
+import ThemeToggle from "@/components/ui/theme-toggle";
 import {
   Sidebar,
   SidebarContent,
@@ -129,11 +130,11 @@ function DashboardSidebar({
     <Sidebar
       variant="sidebar"
       collapsible="icon"
-      className="border-r border-slate-800/40 z-100"
+      className="border-r border-sidebar-border z-100"
     >
-      <SidebarHeader className="bg-[#0F172A] p-6 pb-4 group-data-[collapsible=icon]:px-8 group-data-[collapsible=icon]:pb-5">
-        <div className="flex items-center gap-3 border-b border-slate-800/30 pb-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-b-0 group-data-[collapsible=icon]:pb-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#B91C1C] p-1">
+      <SidebarHeader className="bg-sidebar p-6 pb-4 group-data-[collapsible=icon]:px-8 group-data-[collapsible=icon]:pb-5">
+        <div className="flex items-center gap-3 border-b border-sidebar-border pb-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-b-0 group-data-[collapsible=icon]:pb-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary p-1">
             <img
               src={Logo}
               alt="UMC Library Logo"
@@ -141,15 +142,15 @@ function DashboardSidebar({
             />
           </div>
           <div className="group-data-[collapsible=icon]:hidden">
-            <h1 className="text-sm font-bold tracking-tight text-white">
+            <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">
               UMC Library
             </h1>
-            <p className="text-[10px] text-slate-500">Digital Library System</p>
+            <p className="text-[10px] text-sidebar-foreground/50">Digital Library System</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#0F172A] px-3 py-2">
+      <SidebarContent className="bg-sidebar px-3 py-2">
         <SidebarMenu className="space-y-1">
           {(() => {
             const items: React.ReactNode[] = [];
@@ -160,7 +161,7 @@ function DashboardSidebar({
                 currentGroup = group;
                 items.push(
                   <div key={`group-${group}`} className="pt-3 pb-1 px-4">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 group-data-[collapsible=icon]:hidden">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
                       {group}
                     </span>
                   </div>
@@ -178,8 +179,8 @@ function DashboardSidebar({
                     className={cn(
                       "h-11 rounded-xl px-4 text-sm font-medium group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!",
                       activeMenu === key
-                        ? "bg-white text-[#B91C1C] shadow-lg shadow-red-900/20"
-                        : "text-white/90 hover:bg-[#B91C1C] hover:text-white"
+                        ? "bg-card text-primary shadow-lg shadow-primary/20"
+                        : "text-sidebar-foreground/90 hover:bg-primary hover:text-sidebar-foreground"
                     )}
                   >
                     <Icon className="size-5" />
@@ -195,13 +196,13 @@ function DashboardSidebar({
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="bg-[#0F172A] p-4 pt-2">
+      <SidebarFooter className="bg-sidebar p-4 pt-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => void onSignOut()}
               tooltip="Keluar"
-              className="h-11 rounded-xl px-4 text-sm font-medium text-white/90 hover:bg-[#B91C1C] hover:text-white group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:px-0!"
+              className="h-11 rounded-xl px-4 text-sm font-medium text-sidebar-foreground/90 hover:bg-primary hover:text-sidebar-foreground group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:px-0!"
             >
               <LogOut className="size-5" />
               <span className="group-data-[collapsible=icon]:hidden">
@@ -371,7 +372,7 @@ export default function SuperAdminDashboard() {
       case "users":
         if (!isSuperAdmin) {
           return (
-            <div className="rounded-2xl border border-slate-100 bg-white p-8 text-center">
+            <div className="rounded-2xl border border-slate-100 bg-card p-8 text-center">
               <p className="text-sm font-bold text-red-600">
                 Akses ditolak. Hanya super admin yang dapat membuka Manajemen
                 User.
@@ -383,7 +384,7 @@ export default function SuperAdminDashboard() {
       case "audit":
         if (!isSuperAdmin) {
           return (
-            <div className="rounded-2xl border border-slate-100 bg-white p-8 text-center">
+            <div className="rounded-2xl border border-slate-100 bg-card p-8 text-center">
               <p className="text-sm font-bold text-red-600">
                 Akses ditolak. Hanya super admin yang dapat membuka Audit Log.
               </p>
@@ -438,6 +439,7 @@ export default function SuperAdminDashboard() {
           </button>
 
           <div className="ml-auto flex items-center gap-4 sm:gap-6">
+            <ThemeToggle />
             <div className="flex items-center gap-3 border-l border-slate-100 pl-4 sm:pl-6">
               <div className="hidden text-right sm:block">
                 <p className="leading-tight text-sm font-bold text-slate-900">
@@ -485,7 +487,7 @@ export default function SuperAdminDashboard() {
           onOpenChange={setIsCommandOpen}
           title="Pencarian Dashboard"
           description="Cari dan pilih tab dashboard"
-          className="border border-red-100 bg-white"
+          className="border border-red-100 bg-card"
         >
           <CommandInput
             placeholder="Ketik nama menu dashboard..."

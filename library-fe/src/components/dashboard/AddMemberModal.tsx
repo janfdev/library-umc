@@ -48,7 +48,7 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
   if (!isOpen) return null;
 
   const inputClass = "w-full px-4 py-3 bg-card border border-border rounded-[14px] focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all font-semibold text-slate-800 placeholder:text-muted-foreground text-sm";
-  const labelClass = "block text-[12px] font-extrabold text-[#0F172A] mb-2";
+  const labelClass = "block text-[12px] font-extrabold text-foreground mb-2";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">

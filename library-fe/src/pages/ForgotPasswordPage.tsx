@@ -53,14 +53,14 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F1F3F6] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
       {/* Latar Belakang Lingkaran (opsional, untuk sentuhan desain) */}
-      <div className="absolute top-[-100px] right-[-100px] w-96 h-96 bg-[#B21F24]/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-100px] left-[-100px] w-96 h-96 bg-[#0F172A]/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-100px] right-[-100px] w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-100px] left-[-100px] w-96 h-96 bg-foreground/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-[400px] bg-white rounded-[24px] shadow-xl overflow-hidden flex flex-col relative z-10">
+      <div className="w-full max-w-[400px] bg-card rounded-[24px] shadow-xl overflow-hidden flex flex-col relative z-10">
         {/* Header */}
-        <div className="bg-[#B21F24] pt-8 pb-10 px-6 text-center relative">
+        <div className="bg-primary pt-8 pb-10 px-6 text-center relative">
           <button 
             onClick={() => navigate("/login")}
             className="absolute left-4 top-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -98,7 +98,7 @@ const ForgotPasswordPage = () => {
               
               <button
                 onClick={() => navigate("/login")}
-                className="w-full h-11 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl font-bold text-[13px] shadow-sm transition-all active:scale-[0.98]"
+                className="w-full h-11 bg-card border-2 border-border hover:border-gray-300 hover:bg-muted text-foreground rounded-xl font-bold text-[13px] shadow-sm transition-all active:scale-[0.98]"
               >
                 Kembali ke Halaman Login
               </button>
@@ -106,11 +106,11 @@ const ForgotPasswordPage = () => {
           ) : (
             <form onSubmit={handleResetPassword} className="space-y-6">
               <div>
-                <label className="block text-gray-700 text-xs font-bold mb-2 ml-1 uppercase tracking-wider">
+                <label className="block text-foreground text-xs font-bold mb-2 ml-1 uppercase tracking-wider">
                   Alamat Email
                 </label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#B21F24]">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
                     <Mail size={16} />
                   </div>
                   <input
@@ -118,7 +118,7 @@ const ForgotPasswordPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nama@email.com"
-                    className="w-full pl-11 pr-4 h-12 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B21F24]/20 focus:border-[#B21F24] outline-none text-[13px] text-gray-900 placeholder-gray-400 transition-all shadow-sm"
+                    className="w-full pl-11 pr-4 h-12 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-[13px] text-foreground placeholder-muted-foreground transition-all shadow-sm"
                     required
                     disabled={isLoading}
                   />
@@ -128,7 +128,7 @@ const ForgotPasswordPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-[#0F172A] hover:bg-slate-800 text-white rounded-xl font-bold text-[13px] shadow-md transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full h-12 bg-foreground hover:bg-foreground/90 text-white rounded-xl font-bold text-[13px] shadow-md transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (
                   <>

@@ -110,7 +110,7 @@ export default function CardApprovalsSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+        <h2 className="text-[28px] font-extrabold text-foreground tracking-tight">
           Persetujuan Kartu Member
         </h2>
         <p className="text-muted-foreground font-medium text-[15px] mt-1">
@@ -125,13 +125,13 @@ export default function CardApprovalsSection() {
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cari nama, email, atau NIM/NIDN..."
-              className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none"
+              className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-primary/40 outline-none"
             />
           </div>
 
           <button
             onClick={() => void loadRequests()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-[#B91C1C] hover:bg-warning-bg border border-border transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-primary hover:bg-warning-bg border border-border transition-colors"
           >
             <RefreshCw size={14} /> Refresh
           </button>

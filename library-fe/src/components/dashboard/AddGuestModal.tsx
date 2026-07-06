@@ -83,7 +83,7 @@ export default function AddGuestModal({ isOpen, onClose, onRefresh }: AddGuestMo
         {/* Modal Body / Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-[12px] font-extrabold text-[#0F172A] mb-2">
+            <label className="block text-[12px] font-extrabold text-foreground mb-2">
               Email Pengunjung <span className="text-destructive">*</span>
             </label>
             <div className="relative">

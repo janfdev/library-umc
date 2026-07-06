@@ -92,26 +92,26 @@ const Katalog = () => {
             Temukan ribuan koleksi buku fisik dan digital terbaik Universitas Muhammadiyah Cirebon untuk mendukung kegiatan akademik Anda.
           </p>
 
-          <div className="bg-white rounded-2xl md:rounded-full p-1.5 shadow-2xl flex flex-col md:flex-row items-center gap-1 md:gap-0 mt-8 mx-2 sm:mx-0">
+          <div className="bg-card rounded-2xl md:rounded-full p-1.5 shadow-2xl flex flex-col md:flex-row items-center gap-1 md:gap-0 mt-8 mx-2 sm:mx-0">
             <div className="flex items-center grow w-full px-5 gap-3">
-              <Search className="text-gray-400 w-5 h-5 shrink-0" />
+              <Search className="text-muted-foreground w-5 h-5 shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Cari Judul, Penulis, atau ISBN..."
-                className="w-full py-4 md:py-3.5 outline-none text-gray-700 placeholder-gray-400 bg-transparent text-sm md:text-base"
+                className="w-full py-4 md:py-3.5 outline-none text-foreground placeholder-muted-foreground bg-transparent text-sm md:text-base"
               />
             </div>
 
-            <div className="hidden md:block w-[1px] h-8 bg-gray-200 mx-2"></div>
+            <div className="hidden md:block w-[1px] h-8 bg-border mx-2"></div>
 
             <div className="w-full md:w-auto px-2 md:px-0">
               <select
                 value={searchType}
                 onChange={(e) => setSearchType(e.target.value)}
-                className="w-full md:w-auto bg-transparent px-5 py-4 md:py-3.5 text-gray-600 outline-none cursor-pointer text-sm font-medium border-t md:border-t-0 border-gray-100"
+                className="w-full md:w-auto bg-transparent px-5 py-4 md:py-3.5 text-muted-foreground outline-none cursor-pointer text-sm font-medium border-t md:border-t-0 border-border"
               >
                 <option value="all">Semua Kategori</option>
                 <option value="title">Judul</option>
@@ -123,7 +123,7 @@ const Katalog = () => {
             <div className="w-full md:w-auto p-1 md:p-0">
               <button
                 onClick={handleSearch}
-                className="w-full md:w-auto bg-[#9a1b1b] hover:bg-[#7a1515] text-white px-8 py-4 md:py-3.5 rounded-xl md:rounded-full font-bold transition-all active:scale-95 shadow-lg"
+                className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-8 py-4 md:py-3.5 rounded-xl md:rounded-full font-bold transition-all active:scale-95 shadow-lg"
               >
                 Cari Koleksi
               </button>
@@ -136,14 +136,14 @@ const Katalog = () => {
       <main className="max-w-7xl mx-auto py-8 px-4 md:px-8 grow w-full">
         {/* Mobile Filter Toggle */}
         <div className="lg:hidden flex justify-between items-center mb-6">
-          <div className="text-sm font-medium text-gray-500">
+          <div className="text-sm font-medium text-muted-foreground">
             {hasActiveFilters ? "Filter aktif diterapkan" : "Menampilkan semua koleksi"}
           </div>
           <button 
             onClick={() => setIsSidebarOpen(true)}
-            className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 shadow-sm active:scale-95 transition-all"
+            className="flex items-center gap-2 bg-card px-4 py-2.5 rounded-xl border border-border text-sm font-bold text-foreground shadow-sm active:scale-95 transition-all"
           >
-            <Filter className="w-4 h-4 text-[#9a1b1b]" /> Filter
+            <Filter className="w-4 h-4 text-primary" /> Filter
           </button>
         </div>
 
@@ -162,16 +162,16 @@ const Katalog = () => {
               />
             )}
             
-            <div className="relative bg-white h-full lg:h-auto p-6 rounded-none lg:rounded-2xl shadow-2xl lg:shadow-sm border-r lg:border border-gray-100 overflow-y-auto w-[280px] sm:w-[320px] lg:w-full">
+            <div className="relative bg-card h-full lg:h-auto p-6 rounded-none lg:rounded-2xl shadow-2xl lg:shadow-sm border-r lg:border border-border overflow-y-auto w-[280px] sm:w-[320px] lg:w-full">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-[#9a1b1b]" /> Filter Pencarian
+                <h2 className="font-bold text-foreground text-lg flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-primary" /> Filter Pencarian
                 </h2>
                 <button 
                   onClick={() => setIsSidebarOpen(false)}
-                  className="lg:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className="lg:hidden p-2 rounded-full hover:bg-muted transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
 
@@ -182,8 +182,8 @@ const Katalog = () => {
                   disabled={!hasActiveFilters}
                   className={`w-full py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 uppercase tracking-wider transition-all border ${
                     !hasActiveFilters 
-                    ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed" 
-                    : "bg-red-50 text-[#9a1b1b] border-red-100 hover:bg-red-100"
+                    ? "bg-muted text-muted-foreground border-border cursor-not-allowed" 
+                    : "bg-red-50 text-primary border-red-100 hover:bg-red-100"
                   }`}
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Reset Semua Filter
@@ -191,7 +191,7 @@ const Katalog = () => {
 
                 {/* Filter: Ketersediaan */}
                 <div>
-                  <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                  <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">
                     Ketersediaan
                   </h3>
                   <div className="space-y-3">
@@ -207,13 +207,13 @@ const Katalog = () => {
                               setAvailabilityFilter(availabilityFilter.filter((f) => f !== "available"));
                             }
                           }}
-                          className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-md checked:bg-[#9a1b1b] checked:border-[#9a1b1b] transition-all"
+                          className="peer appearance-none w-5 h-5 border-2 border-border rounded-md checked:bg-primary checked:border-primary transition-all"
                         />
                         <svg className="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Tersedia Sekarang</span>
+                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Tersedia Sekarang</span>
                     </label>
                     <label className="flex items-center gap-3 group cursor-pointer">
                       <div className="relative flex items-center justify-center">
@@ -227,43 +227,43 @@ const Katalog = () => {
                               setAvailabilityFilter(availabilityFilter.filter((f) => f !== "borrowed"));
                             }
                           }}
-                          className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-md checked:bg-[#9a1b1b] checked:border-[#9a1b1b] transition-all"
+                          className="peer appearance-none w-5 h-5 border-2 border-border rounded-md checked:bg-primary checked:border-primary transition-all"
                         />
                         <svg className="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Sedang Dipinjam</span>
+                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Sedang Dipinjam</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Filter: Tahun Terbit */}
                 <div>
-                  <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                  <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">
                     Tahun Terbit
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase ml-1 tracking-tighter">Mulai</span>
+                      <span className="text-[10px] text-muted-foreground font-bold uppercase ml-1 tracking-tighter">Mulai</span>
                       <input
                         type="number"
                         value={yearRange.start}
                         onChange={(e) => setYearRange({ ...yearRange, start: e.target.value })}
                         placeholder="1990"
-                        className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-100 focus:border-[#9a1b1b] transition-all"
+                        className="w-full p-3 bg-muted border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-100 focus:border-primary transition-all"
                         min="1900"
                         max={new Date().getFullYear()}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase ml-1 tracking-tighter">Sampai</span>
+                      <span className="text-[10px] text-muted-foreground font-bold uppercase ml-1 tracking-tighter">Sampai</span>
                       <input
                         type="number"
                         value={yearRange.end}
                         onChange={(e) => setYearRange({ ...yearRange, end: e.target.value })}
                         placeholder="2025"
-                        className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-100 focus:border-[#9a1b1b] transition-all"
+                        className="w-full p-3 bg-muted border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-100 focus:border-primary transition-all"
                         min="1900"
                         max={new Date().getFullYear()}
                       />
@@ -273,13 +273,13 @@ const Katalog = () => {
 
                 {/* Active Filters Summary */}
                 {hasActiveFilters && (
-                  <div className="pt-6 border-t border-gray-100">
-                    <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                  <div className="pt-6 border-t border-border">
+                    <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
                       Filter Aktif
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {searchQuery && (
-                        <span className="px-3 py-1.5 bg-red-50 text-[#9a1b1b] rounded-lg text-[10px] font-bold border border-red-100">
+                        <span className="px-3 py-1.5 bg-red-50 text-primary rounded-lg text-[10px] font-bold border border-red-100">
                           "{searchQuery}"
                         </span>
                       )}

@@ -75,10 +75,10 @@ const DialogUnauthorized = () => {
             <AlertCircle className="w-10 h-10 text-yellow-600" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-lg font-semibold text-foreground dark:text-foreground">
               Akses Terbatas
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Email <strong>{session?.user.email}</strong> belum terdaftar
               sebagai civitas akademika UMC. Anda tetap dapat melihat katalog,
               namun fitur peminjaman dan akses jurnal lengkap dibatasi.
@@ -88,7 +88,7 @@ const DialogUnauthorized = () => {
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full sm:w-1/2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="w-full sm:w-1/2 border-primary text-primary hover:bg-accent hover:text-primary"
             >
               Ganti Akun
             </Button>
@@ -106,10 +106,10 @@ const DialogUnauthorized = () => {
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-lg font-semibold text-foreground dark:text-foreground">
               Selamat Datang, {session?.user.name}!
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Anda telah berhasil login sebagai{" "}
               <span className="font-medium text-blue-600 uppercase">
                 {(session?.user as User).role}

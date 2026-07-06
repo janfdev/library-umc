@@ -96,17 +96,17 @@ const LoanRequestForm = ({
       {notification.show && (
         <div className={`fixed top-6 right-6 z-[60] p-4 rounded-xl shadow-2xl border transition-all duration-300 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 ${
           notification.type === 'success' ? 'bg-white border-green-200' :
-          notification.type === 'error' ? 'bg-white border-red-200' :
+          notification.type === 'error' ? 'bg-white border-primary' :
           'bg-white border-blue-200'
         }`}>
           {notification.type === 'success' ? (
             <CheckCircle size={20} className="text-green-600" />
           ) : notification.type === 'error' ? (
-            <XCircle size={20} className="text-red-600" />
+            <XCircle size={20} className="text-primary" />
           ) : (
             <AlertCircle size={20} className="text-blue-600" />
           )}
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-foreground">
             {notification.message}
           </p>
         </div>
@@ -118,33 +118,33 @@ const LoanRequestForm = ({
         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
           
           {/* Header */}
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <div className="p-6 border-b border-border flex justify-between items-center">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Form Peminjaman</h3>
-              <p className="text-xs text-slate-500 mt-1">Silakan lengkapi data peminjaman buku</p>
+              <h3 className="text-xl font-bold text-foreground">Form Peminjaman</h3>
+              <p className="text-xs text-muted-foreground mt-1">Silakan lengkapi data peminjaman buku</p>
             </div>
             <button 
               onClick={handleClose}
               className="p-2 hover:bg-slate-100 rounded-full transition-colors"
             >
-              <X size={20} className="text-slate-400" />
+              <X size={20} className="text-muted-foreground" />
             </button>
           </div>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Info Buku - High Contrast */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Detail Koleksi</span>
-              <p className="font-bold text-slate-900 text-lg leading-tight mt-1">{collectionTitle}</p>
-              <p className="text-sm text-slate-600 font-medium">{collectionAuthor}</p>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-border">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Detail Koleksi</span>
+              <p className="font-bold text-foreground text-lg leading-tight mt-1">{collectionTitle}</p>
+              <p className="text-sm text-foreground font-medium">{collectionAuthor}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Tanggal Peminjaman */}
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                  <Calendar size={16} className="text-red-600" />
+                <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+                  <Calendar size={16} className="text-primary" />
                   Mulai Pinjam
                 </label>
                 <input
@@ -153,15 +153,15 @@ const LoanRequestForm = ({
                   value={loanFormData.loanDate}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 font-medium focus:border-red-500/20 focus:ring-4 focus:ring-red-500/10 outline-none transition-all"
+                  className="w-full px-4 py-3 bg-white border-2 border-border rounded-xl text-foreground font-medium focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                   required
                 />
               </div>
 
               {/* Tanggal Pengembalian */}
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                  <Calendar size={16} className="text-red-600" />
+                <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+                  <Calendar size={16} className="text-primary" />
                   Kembali
                 </label>
                 <input
@@ -170,7 +170,7 @@ const LoanRequestForm = ({
                   value={loanFormData.dueDate}
                   onChange={handleInputChange}
                   min={loanFormData.loanDate || new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 font-medium focus:border-red-500/20 focus:ring-4 focus:ring-red-500/10 outline-none transition-all"
+                  className="w-full px-4 py-3 bg-white border-2 border-border rounded-xl text-foreground font-medium focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                   required
                 />
               </div>
@@ -178,8 +178,8 @@ const LoanRequestForm = ({
 
             {/* Catatan */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                <FileText size={16} className="text-red-600" />
+              <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+                <FileText size={16} className="text-primary" />
                 Catatan (Opsional)
               </label>
               <textarea
@@ -187,7 +187,7 @@ const LoanRequestForm = ({
                 value={loanFormData.notes}
                 onChange={handleInputChange}
                 placeholder="Contoh: Untuk keperluan penelitian..."
-                className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 font-medium focus:border-red-500/20 focus:ring-4 focus:ring-red-500/10 outline-none transition-all resize-none"
+                className="w-full px-4 py-3 bg-white border-2 border-border rounded-xl text-foreground font-medium focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none"
                 rows={3}
               />
             </div>
@@ -204,18 +204,18 @@ const LoanRequestForm = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
+          <div className="p-6 border-t border-border flex gap-3 bg-slate-50/50">
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-white hover:border-slate-300 transition-all disabled:opacity-50"
+              className="flex-1 px-4 py-3 border-2 border-border rounded-xl text-sm font-bold text-foreground hover:bg-white hover:border-slate-300 transition-all disabled:opacity-50"
             >
               Batal
             </button>
             <button
               onClick={handleSubmit}
               disabled={isLoading}
-              className="flex-[2] bg-[#9a1b1b] text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-[#7a1515] active:scale-[0.98] disabled:bg-slate-400 shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2"
+              className="flex-[2] bg-primary text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-primary/90 active:scale-[0.98] disabled:bg-slate-400 shadow-lg shadow-primary transition-all flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
