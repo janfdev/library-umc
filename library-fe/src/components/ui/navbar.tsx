@@ -7,7 +7,7 @@ import {
   User,
   ChevronDown,
   LayoutDashboard,
-  BookOpen
+  BookOpen,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
 import type { AuthUser } from "@/types/auth";
@@ -57,7 +57,7 @@ const Navbar = () => {
     { name: "Beranda", href: "/" },
     { name: "Katalog", href: "/katalog" },
     { name: "E-Resource", href: "/e-resource" },
-    { name: "Tentang", href: "/tentang" }
+    { name: "Tentang", href: "/tentang" },
   ];
 
   // Cek apakah link aktif
@@ -106,20 +106,20 @@ const Navbar = () => {
   const roleAppearance = {
     super_admin: {
       label: "Super Admin",
-      className: "bg-purple-100 text-purple-700"
+      className: "bg-purple-100 text-purple-700",
     },
     staff: {
       label: "Staff",
-      className: "bg-amber-100 text-amber-700"
+      className: "bg-amber-100 text-amber-700",
     },
     lecturer: {
       label: "Lecturer",
-      className: "bg-emerald-100 text-emerald-700"
+      className: "bg-emerald-100 text-emerald-700",
     },
     student: {
       label: "Mahasiswa",
-      className: "bg-blue-100 text-blue-700"
-    }
+      className: "bg-blue-100 text-blue-700",
+    },
   } as const;
 
   const currentRoleAppearance =
@@ -181,8 +181,11 @@ const Navbar = () => {
         </nav>
 
         {/* Theme Toggle + User Menu - Desktop */}
-        <div className="hidden md:flex items-center gap-1 relative" ref={dropdownRef}>
-          <ThemeToggle />
+        <div
+          className="hidden md:flex items-center gap-1 relative"
+          ref={dropdownRef}
+        >
+          {/*<ThemeToggle />*/}
           {isLoggedIn ? (
             <div className="relative">
               <button
@@ -415,7 +418,9 @@ const Navbar = () => {
           {/* User Menu / Login - Mobile (Dropdown Mode di Sidebar) */}
           <div className="mt-auto pt-4 border-t border-border">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-muted-foreground">Tema</span>
+              <span className="text-xs font-semibold text-muted-foreground">
+                Tema
+              </span>
               <ThemeToggle />
             </div>
             {isLoggedIn ? (
