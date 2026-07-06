@@ -47,19 +47,19 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
 
   if (!isOpen) return null;
 
-  const inputClass = "w-full px-4 py-3 bg-white border border-slate-200 rounded-[14px] focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all font-semibold text-slate-800 placeholder:text-slate-300 text-sm";
+  const inputClass = "w-full px-4 py-3 bg-card border border-border rounded-[14px] focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-300 transition-all font-semibold text-slate-800 placeholder:text-muted-foreground text-sm";
   const labelClass = "block text-[12px] font-extrabold text-[#0F172A] mb-2";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-[700px] rounded-[24px] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-card w-full max-w-[700px] rounded-[24px] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="bg-[#0F172A] px-6 py-5 flex items-center justify-between">
+        <div className="bg-card px-6 py-5 flex items-center justify-between">
           <h2 className="text-white text-[16px] font-bold tracking-wide">Tambah Anggota Baru</h2>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-muted-foreground hover:text-white transition-colors"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -140,14 +140,14 @@ export default function AddMemberModal({ isOpen, onClose }: AddMemberModalProps)
             <button 
               type="button" 
               onClick={onClose}
-              className="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors"
+              className="px-6 py-3 border border-border text-muted-foreground rounded-xl text-sm font-bold hover:bg-surface-hover transition-colors"
             >
               Batal
             </button>
             <button 
               type="submit" 
               disabled={loading}
-              className="px-6 py-3 bg-[#B91C1C] hover:bg-[#9a1b1b] text-white rounded-xl text-sm font-bold shadow-md shadow-red-900/20 transition-all disabled:opacity-50"
+              className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/20 transition-all disabled:opacity-50"
             >
               {loading ? "Menyimpan..." : "Simpan Anggota"}
             </button>

@@ -54,7 +54,7 @@ function InlineToast({
   const styles =
     type === "success"
       ? "bg-green-50 border-green-200 text-green-800"
-      : "bg-red-50 border-red-200 text-red-800";
+      : "bg-warning-bg border-warning-border text-red-800";
   const Icon = type === "success" ? CheckCircle : AlertTriangle;
   return (
     <div
@@ -204,7 +204,7 @@ export default function FinesSection() {
         <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
           Manajemen Denda
         </h2>
-        <p className="text-slate-500 font-medium text-[15px] mt-1">
+        <p className="text-muted-foreground font-medium text-[15px] mt-1">
           Kelola tagihan keterlambatan dan riwayat denda mahasiswa.
         </p>
       </div>
@@ -219,13 +219,13 @@ export default function FinesSection() {
           onClick={() => handleTabChange("unpaid")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "unpaid"
-              ? "bg-white border-red-200 text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
-              : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
           Tagihan Belum Lunas
           {unpaidFines.length > 0 && (
-            <span className="ml-1.5 bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full text-[10px] font-black">
+            <span className="ml-1.5 bg-red-100 text-destructive px-1.5 py-0.5 rounded-full text-[10px] font-black">
               {unpaidFines.length}
             </span>
           )}
@@ -235,8 +235,8 @@ export default function FinesSection() {
           onClick={() => handleTabChange("paid")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "paid"
-              ? "bg-white border-red-200 text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
-              : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
           Riwayat Pembayaran
@@ -246,16 +246,16 @@ export default function FinesSection() {
     
 
       {/* Main Card */}
-      <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden flex flex-col">
         {/* Controls Bar */}
         <div className="p-6 flex flex-col sm:flex-row items-center justify-between border-b border-slate-50 gap-4">
           <div className="relative w-full sm:w-[350px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
               type="text"
               id="fines-search"
               placeholder="Cari nama mahasiswa..."
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-slate-400 text-black"
+              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-muted-foreground text-black"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -265,7 +265,7 @@ export default function FinesSection() {
           </div>
           <button
             onClick={fetchFines}
-            className="text-xs flex items-center gap-2 font-bold text-slate-500 hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-red-50"
+            className="text-xs flex items-center gap-2 font-bold text-muted-foreground hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-warning-bg"
           >
             Refresh <RefreshCcw className="w-4 h-4"/>
           </button>
@@ -282,37 +282,37 @@ export default function FinesSection() {
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
+                <tr className="bg-muted/50 border-b border-border">
                   {activeTab === "unpaid" ? (
                     <>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         NAMA MAHASISWA
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         BUKU &amp; KETERLAMBATAN
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         STATUS BUKU
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         TOTAL DENDA
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap text-right">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap text-right">
                         AKSI
                       </th>
                     </>
                   ) : (
                     <>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         NAMA MAHASISWA
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         BUKU
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                         JATUH TEMPO
                       </th>
-                      <th className="px-8 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap text-right">
+                      <th className="px-8 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap text-right">
                         NOMINAL LUNAS
                       </th>
                     </>
@@ -324,7 +324,7 @@ export default function FinesSection() {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-8 py-12 text-center text-slate-400"
+                      className="px-8 py-12 text-center text-muted-foreground"
                     >
                       <Wallet size={48} className="mx-auto mb-4 opacity-20" />
                       <p className="font-semibold">
@@ -349,25 +349,25 @@ export default function FinesSection() {
                     return (
                       <tr
                         key={fine.id}
-                        className="hover:bg-slate-50/50 transition-colors group"
+                        className="hover:bg-surface-hover/50 transition-colors group"
                       >
                         <td className="px-8 py-5">
                           <div>
-                            <p className="text-[14px] font-bold text-slate-900 group-hover:text-[#B91C1C] transition-colors">
+                            <p className="text-[14px] font-bold text-foreground group-hover:text-[#B91C1C] transition-colors">
                               {fine.loan.member.user.name}
                             </p>
-                            <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                            <p className="text-[11px] font-medium text-muted-foreground mt-0.5">
                               {fine.loan.member.user.email}
                             </p>
                           </div>
                         </td>
                         <td className="px-8 py-5">
                           <div>
-                            <p className="text-[14px] font-bold text-slate-900 truncate max-w-[200px]">
+                            <p className="text-[14px] font-bold text-foreground truncate max-w-[200px]">
                               {fine.loan.item.bibliography.title}
                             </p>
                             {lateDays > 0 && (
-                              <p className="text-[12px] font-medium text-red-500 mt-0.5">
+                              <p className="text-[12px] font-medium text-destructive mt-0.5">
                                 Terlambat {lateDays} hari
                               </p>
                             )}
@@ -391,7 +391,7 @@ export default function FinesSection() {
                           <p className="text-[14px] font-bold text-[#B91C1C]">
                             {formatRupiah(fine.amount)}
                           </p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
                             Rp 500/hari
                           </p>
                         </td>
@@ -420,23 +420,23 @@ export default function FinesSection() {
                   (paginatedList as PaidFine[]).map((fine) => (
                     <tr
                       key={fine.id}
-                      className="hover:bg-slate-50/50 transition-colors group"
+                      className="hover:bg-surface-hover/50 transition-colors group"
                     >
                       <td className="px-8 py-5">
-                        <p className="text-[14px] font-bold text-slate-900 group-hover:text-[#B91C1C] transition-colors">
+                        <p className="text-[14px] font-bold text-foreground group-hover:text-[#B91C1C] transition-colors">
                           {fine.loan.member.user.name}
                         </p>
-                        <p className="text-[11px] font-medium text-slate-400">
+                        <p className="text-[11px] font-medium text-muted-foreground">
                           {fine.loan.member.user.email}
                         </p>
                       </td>
                       <td className="px-8 py-5">
-                        <p className="text-[14px] font-bold text-slate-900 truncate max-w-[200px]">
+                        <p className="text-[14px] font-bold text-foreground truncate max-w-[200px]">
                           {fine.loan.item.bibliography.title}
                         </p>
                       </td>
                       <td className="px-8 py-5">
-                        <p className="text-[13px] font-medium text-slate-500">
+                        <p className="text-[13px] font-medium text-muted-foreground">
                           {new Date(fine.loan.dueDate).toLocaleDateString(
                             "id-ID",
                             {
@@ -465,7 +465,7 @@ export default function FinesSection() {
 
         {/* Pagination Controls */}
         <div className="p-6 border-t border-slate-50 flex items-center justify-between">
-          <p className="text-xs text-slate-400 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             Menampilkan{" "}
             {Math.min((currentPage - 1) * itemsPerPage + 1, activeList.length)}–
             {Math.min(currentPage * itemsPerPage, activeList.length)} dari{" "}
@@ -475,7 +475,7 @@ export default function FinesSection() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
             >
               <ChevronLeft size={16} /> Prev
             </button>
@@ -491,14 +491,14 @@ export default function FinesSection() {
                 return (
                   <Fragment key={p.toString()}>
                     {showDot && (
-                      <span className="text-slate-300 px-1">...</span>
+                      <span className="text-muted-foreground px-1">...</span>
                     )}
                     <button
                       onClick={() => setCurrentPage(Number(p))}
                       className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-colors ${
                         currentPage === Number(p)
-                          ? "bg-[#B91C1C] text-white shadow-md shadow-red-900/20"
-                          : "text-slate-500 hover:bg-slate-50"
+                          ? "bg-primary text-white shadow-md shadow-red-500/20"
+                          : "text-muted-foreground hover:bg-surface-hover"
                       }`}
                     >
                       {p}
@@ -510,7 +510,7 @@ export default function FinesSection() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-30"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-muted-foreground hover:text-muted-foreground hover:bg-surface-hover rounded-xl transition-all disabled:opacity-30"
             >
               Next <ChevronRight size={16} />
             </button>

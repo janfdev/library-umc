@@ -154,13 +154,13 @@ export default function BibliographySection({
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+      <div className="rounded-2xl border border-warning-border bg-warning-bg p-8 text-center">
         <AlertCircle className="mx-auto mb-4 size-12 text-red-400" />
-        <h3 className="text-lg font-semibold text-red-700">Error</h3>
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <h3 className="text-lg font-semibold text-destructive">Error</h3>
+        <p className="mt-2 text-sm text-destructive">{error}</p>
         <button
           onClick={() => fetchData(page, searchTerm || undefined)}
-          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          className="mt-4 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
         >
           <RefreshCw className="mr-2 inline size-4" />
           Coba Lagi
@@ -174,8 +174,8 @@ export default function BibliographySection({
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Bibliografi</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-xl font-bold text-foreground">Bibliografi</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Kelola data bibliografi perpustakaan
             {data && (
               <span className="ml-2 text-[#B91C1C] font-semibold">
@@ -186,26 +186,26 @@ export default function BibliographySection({
         </div>
         <div className="flex gap-2">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Cari bibliografi..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+              className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
             />
           </div>
           <button
             onClick={handleSearch}
-            className="rounded-lg bg-[#B91C1C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9F1515]"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
           >
             Cari
           </button>
           {searchTerm && (
             <button
               onClick={handleClearSearch}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-surface-hover"
             >
               Reset
             </button>
@@ -222,57 +222,57 @@ export default function BibliographySection({
 
       {/* Table */}
       {!data || data.items.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <Book className="mx-auto mb-4 size-12 text-slate-300" />
-          <h3 className="text-lg font-semibold text-slate-600">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <Book className="mx-auto mb-4 size-12 text-muted-foreground" />
+          <h3 className="text-lg font-semibold text-muted-foreground">
             {searchTerm ? "Tidak ada hasil" : "Belum ada bibliografi"}
           </h3>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-muted-foreground">
             {searchTerm
               ? `Tidak ditemukan bibliografi untuk "${searchTerm}"`
               : "Bibliografi akan muncul di sini setelah ditambahkan"}
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Judul</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Penulis</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Penerbit</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Tahun</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">ISBN</th>
-                  <th className="px-4 py-3 text-center font-semibold text-slate-600">Stok</th>
-                  <th className="px-4 py-3 text-center font-semibold text-slate-600">Aksi</th>
+                <tr className="border-b border-border bg-muted">
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Judul</th>
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Penulis</th>
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Penerbit</th>
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Tahun</th>
+                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">ISBN</th>
+                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Stok</th>
+                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((bib) => (
-                  <tr key={bib.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                  <tr key={bib.id} className="border-b border-slate-50 hover:bg-surface-hover/50">
                     <td className="px-4 py-3">
-                      <div className="max-w-xs truncate font-medium text-slate-900">
+                      <div className="max-w-xs truncate font-medium text-foreground">
                         {bib.title}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="max-w-[200px] truncate text-slate-600">
+                      <div className="max-w-[200px] truncate text-muted-foreground">
                         {bib.authors?.map((a) => a.name).join(", ") || "-"}
                         {bib.unlistedAuthorsLabel && (
-                          <span className="ml-1 text-xs text-slate-400">
+                          <span className="ml-1 text-xs text-muted-foreground">
                             +{bib.unlistedAuthorsLabel}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {bib.publisher?.name || "-"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {bib.publishYear || "-"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {bib.isbnIssn || "-"}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -285,7 +285,7 @@ export default function BibliographySection({
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => openDetail(bib.id)}
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                          className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
                           title="Lihat detail"
                         >
                           <Eye className="size-4" />
@@ -299,7 +299,7 @@ export default function BibliographySection({
                         </button>
                         <button
                           onClick={() => handleDelete(bib)}
-                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+                          className="rounded-lg p-1.5 text-red-400 hover:bg-warning-bg hover:text-destructive"
                           title="Arsipkan"
                         >
                           <Trash2 className="size-4" />
@@ -314,22 +314,22 @@ export default function BibliographySection({
 
           {/* Pagination */}
           {data.totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-              <p className="text-sm text-slate-500">
+            <div className="flex items-center justify-between border-t border-border px-4 py-3">
+              <p className="text-sm text-muted-foreground">
                 Halaman {data.page} dari {data.totalPages} ({data.total} total)
               </p>
               <div className="flex gap-1">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-surface-hover disabled:opacity-50"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                   disabled={page === data.totalPages}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-surface-hover disabled:opacity-50"
                 >
                   <ChevronRight className="size-4" />
                 </button>
@@ -373,7 +373,7 @@ function BibliographyDetail({
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground"
         >
           <ArrowLeft className="size-4" />
           Kembali ke daftar
@@ -388,7 +388,7 @@ function BibliographyDetail({
           </button>
           <button
             onClick={() => onDelete(bib)}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90"
           >
             <Trash2 className="size-4" />
             Arsipkan
@@ -397,12 +397,12 @@ function BibliographyDetail({
       </div>
 
       {/* Header */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="rounded-2xl border border-border bg-card p-6">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{bib.title}</h2>
+            <h2 className="text-2xl font-bold text-foreground">{bib.title}</h2>
             {bib.sor && (
-              <p className="mt-1 text-sm text-slate-500">{bib.sor}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{bib.sor}</p>
             )}
           </div>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
@@ -429,23 +429,23 @@ function BibliographyDetail({
         {/* Description */}
         {bib.description && (
           <div className="mt-6">
-            <h3 className="mb-2 text-sm font-semibold text-slate-700">Deskripsi</h3>
-            <p className="text-sm text-slate-600">{bib.description}</p>
+            <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Deskripsi</h3>
+            <p className="text-sm text-muted-foreground">{bib.description}</p>
           </div>
         )}
 
         {/* Notes */}
         {bib.notes && (
           <div className="mt-4">
-            <h3 className="mb-2 text-sm font-semibold text-slate-700">Catatan</h3>
-            <p className="text-sm text-slate-600">{bib.notes}</p>
+            <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Catatan</h3>
+            <p className="text-sm text-muted-foreground">{bib.notes}</p>
           </div>
         )}
       </div>
 
       {/* Authors */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
           <Users className="size-4" />
           Penulis
         </h3>
@@ -454,13 +454,13 @@ function BibliographyDetail({
             {bib.authors.map((author, idx) => (
               <div
                 key={author.id || idx}
-                className="flex items-center gap-3 rounded-lg bg-slate-50 px-4 py-2"
+                className="flex items-center gap-3 rounded-lg bg-muted px-4 py-2"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#B91C1C] text-xs font-bold text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
                   {author.position}
                 </span>
-                <span className="font-medium text-slate-900">{author.name}</span>
-                <span className="rounded bg-slate-200 px-2 py-0.5 text-xs text-slate-600">
+                <span className="font-medium text-foreground">{author.name}</span>
+                <span className="rounded bg-slate-200 px-2 py-0.5 text-xs text-muted-foreground">
                   {author.role}
                 </span>
               </div>
@@ -474,14 +474,14 @@ function BibliographyDetail({
             )}
           </div>
         ) : (
-          <p className="text-sm text-slate-400">Tidak ada penulis tercatat</p>
+          <p className="text-sm text-muted-foreground">Tidak ada penulis tercatat</p>
         )}
       </div>
 
       {/* Subjects */}
       {bib.subjects && bib.subjects.length > 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
             <Tag className="size-4" />
             Subjek
           </h3>
@@ -527,6 +527,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
     sor: bib?.sor || "",
     description: bib?.description || "",
     type: bib?.type || "physical_book",
+    image: bib?.image || "",
   });
 
   const [authors, setAuthors] = useState<Array<{ name: string; role: string }>>(
@@ -583,75 +584,75 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">
+        <h2 className="text-xl font-bold text-foreground">
           {bib ? "Edit Bibliografi" : "Tambah Bibliografi"}
         </h2>
         <button
           onClick={onClose}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
         >
           <X className="size-5" />
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-warning-border bg-warning-bg p-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 text-red-500" />
-            <p className="text-sm text-red-700">{error}</p>
+            <AlertCircle className="size-4 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Informasi Dasar</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Informasi Dasar</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-slate-500">Judul *</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Judul *</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">ISBN/ISSN</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">ISBN/ISSN</label>
               <input
                 type="text"
                 value={formData.isbnIssn}
                 onChange={(e) => setFormData({ ...formData, isbnIssn: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Edisi</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Edisi</label>
               <input
                 type="text"
                 value={formData.edition}
                 onChange={(e) => setFormData({ ...formData, edition: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Tahun Terbit</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Tahun Terbit</label>
               <input
                 type="number"
                 value={formData.publishYear}
                 onChange={(e) => setFormData({ ...formData, publishYear: e.target.value })}
                 min="1000"
                 max="9999"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Tipe</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipe</label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               >
                 <option value="physical_book">Buku Fisik</option>
                 <option value="ebook">E-Book</option>
@@ -662,88 +663,108 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Klasifikasi & Lokasi</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Klasifikasi & Lokasi</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Call Number</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Call Number</label>
               <input
                 type="text"
                 value={formData.callNumber}
                 onChange={(e) => setFormData({ ...formData, callNumber: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Klasifikasi</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Klasifikasi</label>
               <input
                 type="text"
                 value={formData.classification}
                 onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Koleksi</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Koleksi</label>
               <input
                 type="text"
                 value={formData.collation}
                 onChange={(e) => setFormData({ ...formData, collation: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Seri</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Seri</label>
               <input
                 type="text"
                 value={formData.seriesTitle}
                 onChange={(e) => setFormData({ ...formData, seriesTitle: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Informasi Tambahan</h3>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Informasi Tambahan</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">SOR (Statement of Responsibility)</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">SOR (Statement of Responsibility)</label>
               <input
                 type="text"
                 value={formData.sor}
                 onChange={(e) => setFormData({ ...formData, sor: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-slate-500">Deskripsi</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Deskripsi</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-slate-500">Catatan</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Catatan</label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Gambar Cover (opsional)</label>
+              <div className="flex items-start gap-4">
+                {formData.image && (
+                  <div className="relative h-24 w-20 overflow-hidden rounded-lg border border-border">
+                    <img src={formData.image} alt="Preview" className="h-full w-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">URL gambar cover buku (dari Cloudinary atau link eksternal)</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-700">Penulis</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">Penulis</h3>
             <button
               type="button"
               onClick={addAuthor}
-              className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200"
+              className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-slate-200"
             >
               <Plus className="size-3" />
               Tambah Penulis
@@ -757,12 +778,12 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                   value={author.name}
                   onChange={(e) => updateAuthor(idx, "name", e.target.value)}
                   placeholder="Nama penulis"
-                  className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
                 />
                 <select
                   value={author.role}
                   onChange={(e) => updateAuthor(idx, "role", e.target.value)}
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  className="rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
                 >
                   <option value="primary">Utama</option>
                   <option value="secondary">Pendamping</option>
@@ -772,32 +793,32 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 <button
                   type="button"
                   onClick={() => removeAuthor(idx)}
-                  className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-lg p-2 text-red-400 hover:bg-warning-bg hover:text-destructive"
                 >
                   <X className="size-4" />
                 </button>
               </div>
             ))}
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Label Penulis Lainnya (Dkk)</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Label Penulis Lainnya (Dkk)</label>
               <input
                 type="text"
                 value={unlistedAuthorsLabel}
                 onChange={(e) => setUnlistedAuthorsLabel(e.target.value)}
                 placeholder="cth: dkk"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-700">Subjek</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">Subjek</h3>
             <button
               type="button"
               onClick={addSubject}
-              className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200"
+              className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-slate-200"
             >
               <Plus className="size-3" />
               Tambah Subjek
@@ -811,12 +832,12 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                   value={subject.name}
                   onChange={(e) => updateSubject(idx, e.target.value)}
                   placeholder="Nama subjek"
-                  className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
                 />
                 <button
                   type="button"
                   onClick={() => removeSubject(idx)}
-                  className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-lg p-2 text-red-400 hover:bg-warning-bg hover:text-destructive"
                 >
                   <X className="size-4" />
                 </button>
@@ -829,14 +850,14 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-border bg-card px-6 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface-hover"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 rounded-lg bg-[#B91C1C] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#9F1515] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {loading && <Loader2 className="size-4 animate-spin" />}
             {bib ? "Simpan Perubahan" : "Tambah Bibliografi"}
@@ -855,8 +876,8 @@ function MetaField({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
     <div>
-      <dt className="text-xs font-medium text-slate-400">{label}</dt>
-      <dd className="mt-0.5 text-sm text-slate-900">{value}</dd>
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 text-sm text-foreground">{value}</dd>
     </div>
   );
 }
