@@ -70,7 +70,7 @@ export default function LecturerRecommendationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
-        <div className="bg-[#B91C1C] p-6 text-white flex items-center justify-between">
+        <div className="bg-primary p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
               <BookMarked size={20} />
@@ -102,32 +102,32 @@ export default function LecturerRecommendationModal({
 
           <div className="space-y-4">
             <div>
-              <label className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                 ISBN (Opsional)
               </label>
               <input
                 type="text"
                 placeholder="Contoh: 978-3-16-148410-0"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                 value={formData.isbn}
                 onChange={(e) =>
                   setFormData({ ...formData, isbn: e.target.value })
                 }
               />
-              <p className="text-[11px] text-slate-400 font-medium mt-1">
+              <p className="text-[11px] text-muted-foreground font-medium mt-1">
                 Membantu identifikasi buku yang lebih akurat
               </p>
             </div>
 
             <div>
-              <label className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                 Judul Buku *
               </label>
               <input
                 required
                 type="text"
                 placeholder="Contoh: Pemrograman Web Modern"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                 value={formData.title}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
@@ -137,14 +137,14 @@ export default function LecturerRecommendationModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                <label className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                   Penulis *
                 </label>
                 <input
                   required
                   type="text"
                   placeholder="Nama Penulis"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                  className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                   value={formData.author}
                   onChange={(e) =>
                     setFormData({ ...formData, author: e.target.value })
@@ -152,13 +152,13 @@ export default function LecturerRecommendationModal({
                 />
               </div>
               <div>
-                <label className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+                <label className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                   Penerbit
                 </label>
                 <input
                   type="text"
                   placeholder="Opsional"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                  className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                   value={formData.publisher}
                   onChange={(e) =>
                     setFormData({ ...formData, publisher: e.target.value })
@@ -168,14 +168,14 @@ export default function LecturerRecommendationModal({
             </div>
 
             <div>
-              <label className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                 Alasan Pengadaan *
               </label>
               <textarea
                 required
                 placeholder="Contoh: Digunakan sebagai referensi mata kuliah X semester gasal."
                 rows={3}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all resize-none"
+                className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none"
                 value={formData.reason}
                 onChange={(e) =>
                   setFormData({ ...formData, reason: e.target.value })
@@ -188,14 +188,14 @@ export default function LecturerRecommendationModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3.5 bg-slate-50 text-slate-600 rounded-2xl text-[13px] font-bold hover:bg-slate-100 transition-all"
+              className="flex-1 py-3.5 bg-muted text-foreground rounded-2xl text-[13px] font-bold hover:bg-muted transition-all"
             >
               Batal
             </button>
             <button
               disabled={loading}
               type="submit"
-              className="flex-[2] py-3.5 bg-[#B91C1C] text-white rounded-2xl text-[13px] font-bold hover:bg-[#991b1b] transition-all shadow-lg shadow-red-900/20 flex items-center justify-center gap-2"
+              className="flex-[2] py-3.5 bg-primary text-white rounded-2xl text-[13px] font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary flex items-center justify-center gap-2"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />

@@ -161,7 +161,7 @@ export default function GuestsSection({
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+          <h2 className="text-[28px] font-extrabold text-foreground tracking-tight">
             Manajemen Pengguna
           </h2>
           <p className="text-muted-foreground font-medium text-[15px] mt-1">
@@ -217,7 +217,7 @@ export default function GuestsSection({
                       placeholder="Cari nama / NIM..."
                       value={memberDropdownQuery}
                       onChange={(e) => setMemberDropdownQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-muted border border-border rounded-xl text-xs font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 outline-none placeholder:text-muted-foreground"
+                      className="w-full pl-9 pr-3 py-2 bg-muted border border-border rounded-xl text-xs font-medium focus:ring-2 focus:ring-red-500/10 focus:border-primary/40 outline-none placeholder:text-muted-foreground"
                     />
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export default function GuestsSection({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-bold text-slate-800 group-hover:text-[#B91C1C] truncate transition-colors">
+                          <p className="text-[13px] font-bold text-slate-800 group-hover:text-primary truncate transition-colors">
                             {member.user?.name || "No Name"}
                           </p>
                           <p className="text-[11px] text-muted-foreground">
@@ -261,12 +261,12 @@ export default function GuestsSection({
                         {recordingId === member.id ? (
                           <Loader
                             size={14}
-                            className="animate-spin text-[#B91C1C] shrink-0"
+                            className="animate-spin text-primary shrink-0"
                           />
                         ) : (
                           <UserCheck
                             size={14}
-                            className="text-muted-foreground group-hover:text-[#B91C1C] shrink-0 transition-colors"
+                            className="text-muted-foreground group-hover:text-primary shrink-0 transition-colors"
                           />
                         )}
                       </button>
@@ -285,7 +285,7 @@ export default function GuestsSection({
           onClick={() => handleTabChange("anggota")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "anggota"
-              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-primary shadow-sm ring-1 ring-primary/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -295,7 +295,7 @@ export default function GuestsSection({
           onClick={() => handleTabChange("tamu")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "tamu"
-              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-primary shadow-sm ring-1 ring-primary/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -322,7 +322,7 @@ export default function GuestsSection({
                   ? "Cari NIM, Nama..."
                   : "Cari Nama, Fakultas..."
               }
-              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-muted-foreground"
+              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-primary/40 transition-all outline-none placeholder:text-muted-foreground"
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
@@ -390,7 +390,7 @@ export default function GuestsSection({
                       </td>
                       <td className="px-8 py-5">
                         <div>
-                          <p className="text-[14px] font-bold text-foreground group-hover:text-[#B91C1C] transition-colors">
+                          <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
                             {guest.name}
                           </p>
                           <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mt-1">
@@ -439,7 +439,7 @@ export default function GuestsSection({
                           )}
                         </div>
                         <div>
-                          <p className="text-[14px] font-bold text-foreground group-hover:text-[#B91C1C] transition-colors">
+                          <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
                             {member.user?.name || "No Name"}
                           </p>
                           <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mt-1">

@@ -201,7 +201,7 @@ export default function FinesSection() {
     <div className="flex flex-col gap-8">
       {/* Header Area */}
       <div>
-        <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+        <h2 className="text-[28px] font-extrabold text-foreground tracking-tight">
           Manajemen Denda
         </h2>
         <p className="text-muted-foreground font-medium text-[15px] mt-1">
@@ -219,7 +219,7 @@ export default function FinesSection() {
           onClick={() => handleTabChange("unpaid")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "unpaid"
-              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-primary shadow-sm ring-1 ring-primary/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -235,7 +235,7 @@ export default function FinesSection() {
           onClick={() => handleTabChange("paid")}
           className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
             activeTab === "paid"
-              ? "bg-card border-warning-border text-[#B91C1C] shadow-sm ring-1 ring-[#B91C1C]/10"
+              ? "bg-card border-warning-border text-primary shadow-sm ring-1 ring-primary/10"
               : "bg-transparent border-transparent text-muted-foreground hover:text-slate-800 hover:bg-muted"
           }`}
         >
@@ -255,7 +255,7 @@ export default function FinesSection() {
               type="text"
               id="fines-search"
               placeholder="Cari nama mahasiswa..."
-              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-[#B91C1C]/40 transition-all outline-none placeholder:text-muted-foreground text-black"
+              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-primary/40 transition-all outline-none placeholder:text-muted-foreground text-black"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -265,7 +265,7 @@ export default function FinesSection() {
           </div>
           <button
             onClick={fetchFines}
-            className="text-xs flex items-center gap-2 font-bold text-muted-foreground hover:text-[#B91C1C] transition-colors px-3 py-2 rounded-xl hover:bg-warning-bg"
+            className="text-xs flex items-center gap-2 font-bold text-muted-foreground hover:text-primary transition-colors px-3 py-2 rounded-xl hover:bg-warning-bg"
           >
             Refresh <RefreshCcw className="w-4 h-4"/>
           </button>
@@ -353,7 +353,7 @@ export default function FinesSection() {
                       >
                         <td className="px-8 py-5">
                           <div>
-                            <p className="text-[14px] font-bold text-foreground group-hover:text-[#B91C1C] transition-colors">
+                            <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
                               {fine.loan.member.user.name}
                             </p>
                             <p className="text-[11px] font-medium text-muted-foreground mt-0.5">
@@ -388,7 +388,7 @@ export default function FinesSection() {
                           )}
                         </td>
                         <td className="px-8 py-5">
-                          <p className="text-[14px] font-bold text-[#B91C1C]">
+                          <p className="text-[14px] font-bold text-primary">
                             {formatRupiah(fine.amount)}
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -423,7 +423,7 @@ export default function FinesSection() {
                       className="hover:bg-surface-hover/50 transition-colors group"
                     >
                       <td className="px-8 py-5">
-                        <p className="text-[14px] font-bold text-foreground group-hover:text-[#B91C1C] transition-colors">
+                        <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
                           {fine.loan.member.user.name}
                         </p>
                         <p className="text-[11px] font-medium text-muted-foreground">

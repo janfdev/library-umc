@@ -6,7 +6,7 @@ const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
       
       {/* Premium Background: Dot Grid & Gradients */}
       <div className="absolute inset-0 z-0 opacity-[0.03]" 
@@ -38,7 +38,7 @@ const NotFound = () => {
            <motion.div 
              animate={{ y: [0, -15, 0] }}
              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-             className="w-48 h-48 bg-white rounded-[40px] flex items-center justify-center relative shadow-2xl shadow-red-100/50"
+             className="w-48 h-48 bg-card rounded-[40px] flex items-center justify-center relative shadow-2xl shadow-red-100/50"
            >
               {/* Spinning Ring */}
               <motion.div 
@@ -48,11 +48,11 @@ const NotFound = () => {
               />
               
               <div className="relative">
-                 <BookOpen size={92} className="text-red-700" strokeWidth={1.5} />
+                 <BookOpen size={92} className="text-primary" strokeWidth={1.5} />
                  <motion.div 
                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                    transition={{ repeat: Infinity, duration: 2 }}
-                   className="absolute -top-4 -right-4 p-4 bg-red-600 shadow-xl shadow-red-200 rounded-3xl"
+                    className="absolute -top-4 -right-4 p-4 bg-primary shadow-xl shadow-red-200 rounded-3xl"
                  >
                     <Search size={22} className="text-white" />
                  </motion.div>
@@ -82,7 +82,7 @@ const NotFound = () => {
              initial={{ width: 0 }}
              animate={{ width: "80px" }}
              transition={{ delay: 0.5, duration: 1 }}
-             className="h-1.5 bg-red-600 mx-auto rounded-full" 
+              className="h-1.5 bg-primary mx-auto rounded-full" 
            />
            <motion.p 
              initial={{ opacity: 0 }}
@@ -100,17 +100,17 @@ const NotFound = () => {
             whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -10px rgba(185, 28, 28, 0.4)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/")}
-            className="flex items-center justify-center gap-3 bg-red-700 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-red-200 transition-all group"
+            className="flex items-center justify-center gap-3 bg-primary text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-red-200 transition-all group"
           >
             <Home size={18} className="transition-transform group-hover:-translate-y-1" />
             Home
           </motion.button>
           
           <motion.button
-            whileHover={{ scale: 1.05, backgroundColor: "#f8fafc" }}
+            whileHover={{ scale: 1.05, backgroundColor: "var(--muted)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center gap-3 bg-white border-2 border-slate-100 text-slate-900 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all"
+            className="flex items-center justify-center gap-3 bg-card border-2 border-slate-100 text-slate-900 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all"
           >
             <ArrowLeft size={18} />
             Back
@@ -125,8 +125,8 @@ const NotFound = () => {
         transition={{ delay: 1 }}
         className="absolute bottom-10 flex flex-col items-center gap-4 group"
       >
-        <div className="w-12 h-12 bg-white shadow-xl rounded-2xl flex items-center justify-center text-slate-900 text-[10px] font-black italic border border-slate-50 group-hover:rotate-[360deg] transition-transform duration-700">UMC</div>
-        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 group-hover:text-red-700 transition-colors">Digital Library</p>
+        <div className="w-12 h-12 bg-card shadow-xl rounded-2xl flex items-center justify-center text-foreground text-[10px] font-black italic border border-slate-50 group-hover:rotate-[360deg] transition-transform duration-700">UMC</div>
+        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground group-hover:text-primary transition-colors">Digital Library</p>
       </motion.div>
 
     </div>

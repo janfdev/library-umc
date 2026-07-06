@@ -370,12 +370,12 @@ export default function EResourcePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-muted flex flex-col font-sans overflow-x-hidden">
       <Navbar />
 
       <main className="flex-1">
         {/* --- HERO SECTION --- */}
-        <section className="bg-gradient-to-r from-red-700 to-red-800 pt-20 pb-28 px-4 relative">
+        <section className="bg-gradient-to-r from-primary to-primary/90 pt-20 pb-28 px-4 relative">
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Repositori Digital UMC
@@ -387,27 +387,27 @@ export default function EResourcePage() {
 
             {/* --- SEARCH BAR (Floating) --- */}
             <div className="absolute left-1/2 -bottom-8 -translate-x-1/2 w-full max-w-4xl px-4">
-              <div className="bg-white flex items-center rounded-2xl shadow-lg p-1.5 border border-gray-100">
+              <div className="bg-card flex items-center rounded-2xl shadow-lg p-1.5 border border-border">
                 <div className="flex-1 flex items-center px-4">
-                  <Search className="text-gray-400 w-5 h-5 mr-3" />
+                  <Search className="text-muted-foreground w-5 h-5 mr-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full py-3.5 text-gray-700 focus:outline-none font-medium text-base"
+                    className="w-full py-3.5 text-foreground focus:outline-none font-medium text-base"
                     placeholder="Cari judul, penulis, atau kata kunci..."
                   />
                 </div>
 
                 {/* Search Type Dropdown */}
                 <div className="relative group">
-                  <button className="hidden md:flex items-center px-6 border-l border-gray-200 text-gray-500 text-sm gap-2 font-medium hover:text-red-600 transition-colors">
+                  <button className="hidden md:flex items-center px-6 border-l border-border text-muted-foreground text-sm gap-2 font-medium hover:text-primary transition-colors">
                     {searchType === "all" && "Semua"}
                     {searchType === "title" && "Judul"}
                     {searchType === "author" && "Penulis"}
                     <ChevronDown size={16} />
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <div className="absolute right-0 top-full mt-2 w-40 bg-card rounded-xl shadow-lg border border-border py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                     {[
                       { value: "all", label: "Semua" },
                       { value: "title", label: "Judul" },
@@ -416,10 +416,10 @@ export default function EResourcePage() {
                       <button
                         key={type.value}
                         onClick={() => setSearchType(type.value as any)}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-muted ${
                           searchType === type.value
-                            ? "text-red-600 font-medium"
-                            : "text-gray-600"
+                            ? "text-primary font-medium"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {type.label}
@@ -428,7 +428,7 @@ export default function EResourcePage() {
                   </div>
                 </div>
 
-                <button className="bg-red-600 text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:bg-red-700 transition-all ml-2">
+                <button className="bg-primary text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-all ml-2">
                   Cari
                 </button>
               </div>
@@ -441,10 +441,10 @@ export default function EResourcePage() {
           {/* Mobile Filter Toggle */}
           <button
             onClick={() => setShowMobileFilter(!showMobileFilter)}
-            className="lg:hidden w-full mb-6 flex items-center justify-between px-5 py-3 bg-white border border-gray-200 rounded-xl shadow-sm"
+            className="lg:hidden w-full mb-6 flex items-center justify-between px-5 py-3 bg-card border border-border rounded-xl shadow-sm"
           >
-            <span className="font-medium text-gray-700">Filter Pencarian</span>
-            <Filter className="w-5 h-5 text-gray-400" />
+            <span className="font-medium text-foreground">Filter Pencarian</span>
+            <Filter className="w-5 h-5 text-muted-foreground" />
           </button>
 
           <div className="flex flex-col lg:flex-row gap-8">
@@ -455,15 +455,15 @@ export default function EResourcePage() {
               ${showMobileFilter ? "block" : "hidden lg:block"}
             `}
             >
-              <div className="sticky top-24 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="sticky top-24 bg-card rounded-2xl border border-border shadow-sm p-5">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                  <h3 className="font-bold text-foreground text-sm uppercase tracking-wide flex items-center gap-2">
                     <Filter size={16} />
                     Filter
                   </h3>
                   <button
                     onClick={resetFilters}
-                    className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
+                    className="text-xs font-medium text-primary hover:text-primary/90 transition-colors flex items-center gap-1"
                   >
                     <RotateCcw size={12} />
                     Reset
@@ -472,19 +472,19 @@ export default function EResourcePage() {
 
                 {/* Kategori Dropdown Filter */}
                 <div className="mb-6 category-dropdown">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Kategori
                   </label>
                   <div className="relative">
                     <button
                       onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm hover:border-red-300 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-card border border-border rounded-xl text-foreground text-sm hover:border-primary/40 transition-colors"
                     >
                       <span>{selectedCategory}</span>
                       <ChevronDown size={16} className={`transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isCategoryDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-auto">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-20 max-h-60 overflow-auto">
                         {categoryOptions.map((option) => (
                           <button
                             key={option.value}
@@ -492,12 +492,12 @@ export default function EResourcePage() {
                               setSelectedCategory(option.value);
                               setIsCategoryDropdownOpen(false);
                             }}
-                            className={`w-full flex justify-between items-center px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
-                              selectedCategory === option.value ? 'bg-red-50 text-red-600' : 'text-gray-700'
+                            className={`w-full flex justify-between items-center px-4 py-2.5 text-sm hover:bg-muted transition-colors ${
+                              selectedCategory === option.value ? 'bg-red-50 text-primary' : 'text-foreground'
                             }`}
                           >
                             <span>{option.label}</span>
-                            <span className="text-xs text-gray-400">{categoryCounts[option.value] || 0}</span>
+                            <span className="text-xs text-muted-foreground">{categoryCounts[option.value] || 0}</span>
                           </button>
                         ))}
                       </div>
@@ -507,19 +507,19 @@ export default function EResourcePage() {
 
                 {/* Fakultas Dropdown Filter */}
                 <div className="mb-6 faculty-dropdown">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Fakultas
                   </label>
                   <div className="relative">
                     <button
                       onClick={() => setIsFacultyDropdownOpen(!isFacultyDropdownOpen)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 text-sm hover:border-red-300 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-card border border-border rounded-xl text-foreground text-sm hover:border-primary/40 transition-colors"
                     >
                       <span>{selectedFaculty}</span>
                       <ChevronDown size={16} className={`transition-transform ${isFacultyDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isFacultyDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-60 overflow-auto">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-20 max-h-60 overflow-auto">
                         {facultyOptions.map((option) => (
                           <button
                             key={option.value}
@@ -527,8 +527,8 @@ export default function EResourcePage() {
                               setSelectedFaculty(option.value);
                               setIsFacultyDropdownOpen(false);
                             }}
-                            className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
-                              selectedFaculty === option.value ? 'bg-red-50 text-red-600' : 'text-gray-700'
+                            className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors ${
+                              selectedFaculty === option.value ? 'bg-red-50 text-primary' : 'text-foreground'
                             }`}
                           >
                             {option.label}
@@ -541,7 +541,7 @@ export default function EResourcePage() {
 
                 {/* Tahun Terbit */}
                 <div className="mb-6">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Tahun Terbit
                   </label>
                   <div className="flex gap-3">
@@ -551,7 +551,7 @@ export default function EResourcePage() {
                         value={yearStart}
                         onChange={(e) => setYearStart(e.target.value)}
                         placeholder="Dari"
-                        className="w-full bg-white text-gray-700 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all placeholder:text-gray-400"
+                        className="w-full bg-card text-foreground border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground"
                       />
                     </div>
                     <div className="flex-1">
@@ -560,7 +560,7 @@ export default function EResourcePage() {
                         value={yearEnd}
                         onChange={(e) => setYearEnd(e.target.value)}
                         placeholder="Sampai"
-                        className="w-full bg-white text-gray-700 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all placeholder:text-gray-400"
+                        className="w-full bg-card text-foreground border border-border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
@@ -572,7 +572,7 @@ export default function EResourcePage() {
                   selectedFaculty !== "Semua Fakultas" ||
                   yearStart ||
                   yearEnd) && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-border">
                     <div className="flex flex-wrap gap-1.5">
                       {searchQuery && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs">
@@ -603,21 +603,21 @@ export default function EResourcePage() {
               {/* Results Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold text-gray-800">
+                  <h2 className="text-xl font-bold text-foreground">
                     Hasil Pencarian
                   </h2>
-                  <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="bg-red-100 text-primary text-xs font-semibold px-3 py-1 rounded-full">
                     {filteredItems.length} dokumen
                   </span>
                 </div>
 
                 {/* Sorting */}
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-400 text-xs">Urutkan:</span>
+                  <span className="text-muted-foreground text-xs">Urutkan:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 focus:outline-none focus:border-red-400"
+                    className="bg-card border border-border rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground focus:outline-none focus:border-primary/60"
                   >
                     <option value="date">Terbaru</option>
                     <option value="downloads">Terpopuler</option>
@@ -629,12 +629,12 @@ export default function EResourcePage() {
               {/* Results Grid - Card Layout yang lebih natural */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {paginatedItems.length === 0 ? (
-                  <div className="col-span-full bg-white border border-gray-100 rounded-2xl p-12 text-center">
-                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                  <div className="col-span-full bg-card border border-border rounded-2xl p-12 text-center">
+                    <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-foreground mb-2">
                       Tidak ada hasil
                     </h3>
-                    <p className="text-gray-400 text-sm max-w-md mx-auto">
+                    <p className="text-muted-foreground text-sm max-w-md mx-auto">
                       Tidak ditemukan karya ilmiah yang sesuai dengan kriteria pencarian Anda.
                     </p>
                   </div>
@@ -642,7 +642,7 @@ export default function EResourcePage() {
                   paginatedItems.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
+                      className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
                     >
                       {/* Card Header */}
                       <div className="p-5 pb-3">
@@ -650,7 +650,7 @@ export default function EResourcePage() {
                           <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryStyle(item.category)}`}>
                             {item.category}
                           </span>
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Eye size={14} />
                             <span>{item.views}</span>
                             <Download size={14} className="ml-1" />
@@ -658,11 +658,11 @@ export default function EResourcePage() {
                           </div>
                         </div>
                         
-                        <h3 className="text-lg font-bold text-gray-800 leading-tight mb-2 line-clamp-2 hover:text-red-600 transition-colors">
+                        <h3 className="text-lg font-bold text-foreground leading-tight mb-2 line-clamp-2 hover:text-primary transition-colors">
                           {item.title}
                         </h3>
                         
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 mb-3">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mb-3">
                           <div className="flex items-center gap-1.5">
                             <User size={14} />
                             <span>{item.author}</span>
@@ -676,7 +676,7 @@ export default function EResourcePage() {
 
                       {/* Card Body - Abstract */}
                       <div className="px-5 py-2">
-                        <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">
+                        <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
                           {item.abstract}
                         </p>
                       </div>
@@ -687,13 +687,13 @@ export default function EResourcePage() {
                           {item.keywords.slice(0, 3).map((keyword, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md text-xs"
+                              className="px-2 py-0.5 bg-muted text-muted-foreground rounded-md text-xs"
                             >
                               {keyword}
                             </span>
                           ))}
                           {item.keywords.length > 3 && (
-                            <span className="px-2 py-0.5 text-gray-400 text-xs">
+                            <span className="px-2 py-0.5 text-muted-foreground text-xs">
                               +{item.keywords.length - 3}
                             </span>
                           )}
@@ -701,14 +701,14 @@ export default function EResourcePage() {
                       </div>
 
                       {/* Card Footer */}
-                      <div className="px-5 py-4 border-t border-gray-100 mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <div className="px-5 py-4 border-t border-border mt-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Calendar size={12} />
                           <span>{item.date}</span>
                           <span className="mx-1">•</span>
                           <span>{item.fileSize}</span>
                         </div>
-                        <button className="flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 hover:text-white transition-all">
+                        <button className="flex items-center gap-1.5 bg-red-50 text-primary px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-all">
                           <Download size={14} />
                           PDF
                         </button>
@@ -725,7 +725,7 @@ export default function EResourcePage() {
                     <button
                       onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:border-primary/40 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <ChevronLeft size={16} />
                     </button>
@@ -743,8 +743,8 @@ export default function EResourcePage() {
                             onClick={() => setCurrentPage(page)}
                             className={`w-10 h-10 rounded-xl font-medium text-sm transition-all ${
                               currentPage === page
-                                ? "bg-red-600 text-white shadow-sm"
-                                : "border border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-500"
+                                ? "bg-primary text-white shadow-sm"
+                                : "border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
                             }`}
                           >
                             {page}
@@ -752,7 +752,7 @@ export default function EResourcePage() {
                         );
                       } else if (page === currentPage - 2 || page === currentPage + 2) {
                         return (
-                          <span key={page} className="text-gray-400 px-1">
+                          <span key={page} className="text-muted-foreground px-1">
                             ...
                           </span>
                         );
@@ -763,7 +763,7 @@ export default function EResourcePage() {
                     <button
                       onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
-                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:border-primary/40 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <ChevronRight size={16} />
                     </button>

@@ -47,30 +47,30 @@ const RiwayatPeminjaman = ({ type, view = "grid" }: RiwayatPeminjamanProps) => {
   if (loading) {
     return (
       <div className="py-12 text-center animate-pulse">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-700 mb-4"></div>
-        <p className="text-slate-400 font-medium italic">Memuat data...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+        <p className="text-muted-foreground font-medium italic">Memuat data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="py-8 text-center bg-red-50 rounded-2xl border border-red-100 p-6">
-        <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-        <h3 className="text-red-800 font-bold mb-1">Terjadi Kesalahan</h3>
-        <p className="text-red-700/80 text-xs">{error}</p>
+      <div className="py-8 text-center bg-accent rounded-2xl border border-primary p-6">
+        <AlertCircle className="w-8 h-8 text-primary mx-auto mb-3" />
+        <h3 className="text-primary font-bold mb-1">Terjadi Kesalahan</h3>
+        <p className="text-primary/80 text-xs">{error}</p>
       </div>
     );
   }
 
   if (loans.length === 0) {
     return (
-      <div className="py-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-300 mx-auto mb-4 shadow-sm">
+      <div className="py-12 text-center bg-slate-50/50 rounded-3xl border border-dashed border-border">
+        <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center text-muted-foreground mx-auto mb-4 shadow-sm">
           <Info size={24} />
         </div>
-        <h3 className="text-slate-600 font-bold mb-1">Kosong</h3>
-        <p className="text-slate-400 text-xs">
+        <h3 className="text-foreground font-bold mb-1">Kosong</h3>
+        <p className="text-muted-foreground text-xs">
           Belum ada data {type === "active" ? "peminjaman" : "riwayat"} yang
           ditemukan.
         </p>
@@ -89,9 +89,9 @@ const RiwayatPeminjaman = ({ type, view = "grid" }: RiwayatPeminjamanProps) => {
   }
 
   return (
-    <div className="overflow-hidden bg-white border border-slate-100 rounded-[20px] shadow-sm animate-fade-in">
+    <div className="overflow-hidden bg-card border border-border rounded-[20px] shadow-sm animate-fade-in">
       <table className="w-full text-left border-collapse">
-        <thead className="bg-[#9c1b1b] text-white">
+        <thead className="bg-primary text-white">
           <tr className="text-[10px] font-black uppercase tracking-widest">
             <th className="px-6 py-4">Buku</th>
             <th className="px-6 py-4">Tanggal Pinjam</th>
@@ -166,8 +166,8 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
   };
 
   return (
-    <div className="bg-white rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-100 flex gap-5 group hover:shadow-lg transition-all">
-      <div className="shrink-0 w-24 h-32 bg-slate-200 rounded-2xl overflow-hidden flex items-center justify-center text-slate-400">
+    <div className="bg-card rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-border flex gap-5 group hover:shadow-lg transition-all">
+      <div className="shrink-0 w-24 h-32 bg-slate-200 rounded-2xl overflow-hidden flex items-center justify-center text-muted-foreground">
         {bibliography?.image ? (
           <img
             src={bibliography.image}
@@ -180,16 +180,16 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
       </div>
       <div className="flex-1 flex flex-col justify-between py-1">
         <div>
-          <h4 className="font-bold text-slate-900 text-sm mb-1 line-clamp-2 leading-tight">
+          <h4 className="font-bold text-foreground text-sm mb-1 line-clamp-2 leading-tight">
             {bibliography?.title || "Unknown Title"}
           </h4>
-          <p className="text-[10px] font-medium text-slate-400 mb-2">
+          <p className="text-[10px] font-medium text-muted-foreground mb-2">
             {bibliography?.author || "Unknown Author"}
           </p>
 
           {/* Status jatuh tempo */}
           {daysLeft !== null && (
-            <p className={`text-[10px] font-bold mb-3 ${isLate ? "text-red-500" : isWarning ? "text-orange-500" : "text-slate-400"}`}>
+            <p className={`text-[10px] font-bold mb-3 ${isLate ? "text-primary" : isWarning ? "text-orange-500" : "text-muted-foreground"}`}>
               {isLate
                 ? `⚠ Terlambat ${Math.abs(daysLeft)} hari`
                 : daysLeft === 0
@@ -230,7 +230,7 @@ const ActiveLoanCard = ({ loan }: { loan: LoanData }) => {
             <button
               onClick={handleExtend}
               disabled={isExtending || isReturning || returnPending}
-              className="px-4 py-1.5 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-4 py-1.5 bg-accent text-primary text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {isExtending ? (
                 <><RotateCcw size={9} className="animate-spin" /> Memproses...</>
@@ -257,17 +257,17 @@ const HistoryTableRow = ({ loan }: { loan: LoanData }) => {
       bg: "bg-green-50",
       text: "text-green-600"
     },
-    rejected: { label: "Dibatalkan", bg: "bg-red-50", text: "text-red-600" }
+    rejected: { label: "Dibatalkan", bg: "bg-accent", text: "text-primary" }
   };
 
   const status = STATUS_CONFIG[loan.status] || {
     label: loan.status,
-    bg: "bg-slate-50",
-    text: "text-slate-600"
+    bg: "bg-muted",
+    text: "text-foreground"
   };
 
   return (
-    <tr className="text-[11px] font-bold text-slate-600 hover:bg-slate-50/50 transition-colors">
+    <tr className="text-[11px] font-bold text-foreground hover:bg-muted/50 transition-colors">
       <td className="px-6 py-4">{bibliography?.title || "Unknown Title"}</td>
       <td className="px-6 py-4">
         {borrowDate?.toLocaleDateString("id-ID", {

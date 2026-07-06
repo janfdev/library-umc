@@ -47,7 +47,7 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
+    <div className="w-full min-h-screen bg-muted">
       <div>
         <div className="absolute w-full">
           <Navbar />
@@ -77,7 +77,7 @@ export default function Home() {
             </div>
 
             {/* Search Bar - Sekarang dijamin 100% presisi di tengah */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mt-6 w-full sm:max-w-2xl text-left">
+            <div className="bg-card rounded-xl shadow-lg p-4 sm:p-6 mt-6 w-full sm:max-w-2xl text-left">
               <div className="flex flex-col space-y-3 sm:space-y-4">
                 {/* Input Search & Dropdown */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
@@ -88,11 +88,11 @@ export default function Home() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Cari Judul, penulis, ISBN..."
-                      className="w-full px-4 py-2.5 sm:py-3 pl-10 border text-sm sm:text-base text-black border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-4 py-2.5 sm:py-3 pl-10 border text-sm sm:text-base text-foreground border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 absolute left-3 top-3.5 text-gray-400"
+                      className="h-5 w-5 absolute left-3 top-3.5 text-muted-foreground"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -108,7 +108,7 @@ export default function Home() {
                   <select
                     value={searchType}
                     onChange={(e) => setSearchType(e.target.value)}
-                    className="px-4 py-2.5 sm:py-3 border text-sm sm:text-base text-black border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="px-4 py-2.5 sm:py-3 border text-sm sm:text-base text-foreground border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="all">Semua</option>
                     <option value="title">Judul</option>
@@ -121,7 +121,7 @@ export default function Home() {
                 <div className="w-full pt-2">
                   <button
                     onClick={handleSearch}
-                    className="w-full bg-red-600 hover:bg-red-700 font-medium py-2.5 sm:py-3 px-6 rounded-full transition-colors duration-200 text-sm sm:text-base text-white"
+                    className="w-full bg-primary hover:bg-primary/90 font-medium py-2.5 sm:py-3 px-6 rounded-full transition-colors duration-200 text-sm sm:text-base text-white"
                   >
                     Telusuri Koleksi
                   </button>
@@ -134,11 +134,11 @@ export default function Home() {
 
       {/* Pintasan */}
       <div className="w-full p-4 sm:p-6 lg:p-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 px-2 sm:px-4 lg:px-16 text-gray-900">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 px-2 sm:px-4 lg:px-16 text-foreground">
           {/* Card 1 */}
           <a
             href="/katalog"
-            className="flex flex-col items-center text-center shadow-lg rounded-lg p-6 bg-white hover:shadow-xl transition-shadow h-full"
+            className="flex flex-col items-center text-center shadow-lg rounded-lg p-6 bg-card hover:shadow-xl transition-shadow h-full"
           >
             <span>
               <svg
@@ -151,7 +151,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-book-open-text text-red-700 sm:h-20"
+                className="lucide lucide-book-open-text text-primary sm:h-20"
               >
                 <path d="M12 7v14" />
                 <path d="M16 12h2" />
@@ -164,7 +164,7 @@ export default function Home() {
             <h2 className="text-base sm:text-lg font-bold mt-3 sm:mt-4">
               Katalog Online
             </h2>
-            <p className="text-[12px] text-gray-600 mt-2">
+            <p className="text-[12px] text-muted-foreground mt-2">
               Telusuri koleksi buku dan e-book perpustakaan UMC
             </p>
           </a>
@@ -172,7 +172,7 @@ export default function Home() {
           {/* Card 2 */}
           <a
             href="e-resource"
-            className="flex flex-col items-center text-center shadow-lg rounded-lg p-4 sm:p-6 bg-white hover:shadow-xl transition-shadow h-full"
+            className="flex flex-col items-center text-center shadow-lg rounded-lg p-4 sm:p-6 bg-card hover:shadow-xl transition-shadow h-full"
           >
             <span>
               <svg
@@ -185,7 +185,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-file-minus text-red-700 sm:w-20 sm:h-20"
+                className="lucide lucide-file-minus text-primary sm:w-20 sm:h-20"
               >
                 <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
                 <path d="M14 2v5a1 1 0 0 0 1 1h5" />
@@ -195,7 +195,7 @@ export default function Home() {
             <h2 className="text-base sm:text-lg font-bold mt-3 sm:mt-4">
               Repositori Digital
             </h2>
-            <p className="text-[10px] sm:text-[12px] text-gray-600 mt-2">
+            <p className="text-[10px] sm:text-[12px] text-muted-foreground mt-2">
               Akses jurnal, skripsi, dan publikasi ilmiah UMC
             </p>
           </a>
@@ -203,7 +203,7 @@ export default function Home() {
           {/* Card 3 */}
           <a
             href="#"
-            className="flex flex-col items-center text-center shadow-lg rounded-lg p-4 sm:p-6 bg-white hover:shadow-xl transition-shadow h-full"
+            className="flex flex-col items-center text-center shadow-lg rounded-lg p-4 sm:p-6 bg-card hover:shadow-xl transition-shadow h-full"
           >
             <span>
               <svg
@@ -216,7 +216,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-map-pinned-icon lucide-map-pinned text-red-700 sm:w-20 sm:h-20"
+                className="lucide lucide-map-pinned-icon lucide-map-pinned text-primary sm:w-20 sm:h-20"
               >
                 <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0" />
                 <circle cx="12" cy="8" r="2" />
@@ -226,7 +226,7 @@ export default function Home() {
             <h2 className="text-base sm:text-lg font-bold mt-3 sm:mt-4">
               Informasi Lokasi
             </h2>
-            <p className="text-[10px] sm:text-[12px] text-gray-600 mt-2">
+            <p className="text-[10px] sm:text-[12px] text-muted-foreground mt-2">
               Temukan lokasi perpustakaan dan fasilitasnya
             </p>
           </a>
@@ -234,7 +234,7 @@ export default function Home() {
           {/* Card 4 */}
           <a
             href="/katalog"
-            className="flex flex-col items-center text-center shadow-lg rounded-lg p-4 sm:p-6 bg-white hover:shadow-xl transition-shadow h-full"
+            className="flex flex-col items-center text-center shadow-lg rounded-lg p-4 sm:p-6 bg-card hover:shadow-xl transition-shadow h-full"
           >
             <span>
               <svg
@@ -247,7 +247,7 @@ export default function Home() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="lucide lucide-book-plus-icon lucide-book-plus text-red-700 sm:w-20 sm:h-20"
+                className="lucide lucide-book-plus-icon lucide-book-plus text-primary sm:w-20 sm:h-20"
               >
                 <path d="M12 7v6" />
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
@@ -257,7 +257,7 @@ export default function Home() {
             <h2 className="text-base sm:text-lg font-bold mt-3 sm:mt-4">
               Koleksi Terbaru
             </h2>
-            <p className="text-[10px] sm:text-[12px] text-gray-600 mt-2">
+            <p className="text-[10px] sm:text-[12px] text-muted-foreground mt-2">
               Lihat koleksi buku terbaru yang tersedia
             </p>
           </a>

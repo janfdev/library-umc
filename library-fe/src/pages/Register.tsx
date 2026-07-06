@@ -140,7 +140,7 @@ const Register = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-[420px] bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         {/* Header dengan Gradasi */}
-        <div className="bg-gradient-to-br from-[#B21F24] to-[#8a181b] pt-10 pb-12 px-6 text-center relative">
+        <div className="bg-gradient-to-br from-primary to-primary/90 pt-10 pb-12 px-6 text-center relative">
           <div className="flex justify-center mb-4">
             <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
               <UserCircle2 className="text-white w-10 h-10" />
@@ -160,12 +160,12 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Nama Field */}
             <div className="space-y-1.5">
-              <label className="text-slate-700 text-xs font-semibold ml-1">
+              <label className="text-foreground text-xs font-semibold ml-1">
                 Nama Lengkap
               </label>
               <div className="relative group">
                 <User
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
                   size={18}
                 />
                 <input
@@ -174,10 +174,10 @@ const Register = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Masukkan nama lengkap"
-                  className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
+                  className={`w-full pl-11 pr-4 h-12 bg-muted border rounded-2xl outline-none text-foreground text-sm transition-all focus:ring-4 focus:ring-primary/5 focus:bg-white ${
                     validationErrors.name
                       ? "border-red-300 bg-red-50/50"
-                      : "border-slate-200 focus:border-[#B21F24]"
+                      : "border-border focus:border-primary"
                   }`}
                   required
                 />
@@ -191,12 +191,12 @@ const Register = () => {
 
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-slate-700 text-xs font-semibold ml-1">
+              <label className="text-foreground text-xs font-semibold ml-1">
                 Email
               </label>
               <div className="relative group">
                 <Mail
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
                   size={18}
                 />
                 <input
@@ -205,10 +205,10 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="contoh@student.umc.ac.id"
-                  className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
+                  className={`w-full pl-11 pr-4 h-12 bg-muted border rounded-2xl outline-none text-foreground text-sm transition-all focus:ring-4 focus:ring-primary/5 focus:bg-white ${
                     validationErrors.email
                       ? "border-red-300 bg-red-50/50"
-                      : "border-slate-200 focus:border-[#B21F24]"
+                      : "border-border focus:border-primary"
                   }`}
                   required
                 />
@@ -223,12 +223,12 @@ const Register = () => {
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-slate-700 text-xs font-semibold ml-1">
+                <label className="text-foreground text-xs font-semibold ml-1">
                   Password
                 </label>
                 <div className="relative group">
                   <Lock
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
                     size={18}
                   />
                   <input
@@ -237,10 +237,10 @@ const Register = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Min. 8 karakter"
-                    className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
+                    className={`w-full pl-11 pr-4 h-12 bg-muted border rounded-2xl outline-none text-foreground text-sm transition-all focus:ring-4 focus:ring-primary/5 focus:bg-white ${
                       validationErrors.password
                         ? "border-red-300 bg-red-50/50"
-                        : "border-slate-200 focus:border-[#B21F24]"
+                        : "border-border focus:border-primary"
                     }`}
                     required
                   />
@@ -252,12 +252,12 @@ const Register = () => {
                 )}
               </div>
               <div className="space-y-1.5">
-                <label className="text-slate-700 text-xs font-semibold ml-1">
+                <label className="text-foreground text-xs font-semibold ml-1">
                   Konfirmasi
                 </label>
                 <div className="relative group">
                   <Lock
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#B21F24] transition-colors"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
                     size={18}
                   />
                   <input
@@ -266,10 +266,10 @@ const Register = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Ulangi password"
-                    className={`w-full pl-11 pr-4 h-12 bg-slate-50 border rounded-2xl outline-none text-slate-900 text-sm transition-all focus:ring-4 focus:ring-[#B21F24]/5 focus:bg-white ${
+                    className={`w-full pl-11 pr-4 h-12 bg-muted border rounded-2xl outline-none text-foreground text-sm transition-all focus:ring-4 focus:ring-primary/5 focus:bg-white ${
                       validationErrors.confirmPassword
                         ? "border-red-300 bg-red-50/50"
-                        : "border-slate-200 focus:border-[#B21F24]"
+                        : "border-border focus:border-primary"
                     }`}
                     required
                   />
@@ -285,7 +285,7 @@ const Register = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-semibold shadow-lg shadow-slate-200 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full h-12 bg-foreground hover:bg-foreground/90 text-white rounded-2xl font-semibold shadow-lg shadow-slate-200 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -299,10 +299,10 @@ const Register = () => {
           </form>
 
           {/* Footer Link */}
-          <div className="pt-4 border-t border-slate-100 text-center">
+          <div className="pt-4 border-t border-border text-center">
             <button
               onClick={() => navigate("/login")}
-              className="inline-flex items-center gap-2 text-slate-500 hover:text-[#B21F24] text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
             >
               <ArrowLeft size={16} />
               Sudah punya akun? Masuk

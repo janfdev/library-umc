@@ -4,7 +4,7 @@ import LogoUmc from "@/assets/logo_umc.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-red-800 text-white py-6 md:py-8 px-4 sm:px-6 md:px-12">
+    <footer className="bg-primary text-white py-6 md:py-8 px-4 sm:px-6 md:px-12">
       <div className="max-w-6xl mx-auto block lg:flex lg:justify-between gap-6 lg:gap-8 space-y-6 lg:space-y-0">
         {/* Kolom 1: Logo & Media Sosial */}
         <div className="flex flex-col space-y-4">
@@ -187,7 +187,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="border-t border-red-700 mt-8 pt-4 text-center text-[10px] sm:text-[12px] lg:text-sm opacity-80">
+      <div className="border-t border-primary mt-8 pt-4 text-center text-[10px] sm:text-[12px] lg:text-sm opacity-80">
         Copyright © {new Date().getFullYear()} Universitas Muhammadiyah Cirebon
       </div>
     </footer>

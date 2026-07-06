@@ -81,10 +81,10 @@ const Absensi = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center p-4">
-      <div className="max-w-120 w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+      <div className="max-w-120 w-full bg-card rounded-[2rem] shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-[#a31d1d] p-8 text-center text-white">
+        <div className="bg-primary p-8 text-center text-primary-foreground">
           <div className="inline-block p-3 bg-white/20 rounded-full mb-3">
             <BookOpen size={36} strokeWidth={1.5} />
           </div>
@@ -134,18 +134,18 @@ const Absensi = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Nama */}
             <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Nama <span className="text-red-500">*</span>
+              <label className="block text-[11px] font-bold text-foreground mb-1">
+                Nama <span className="text-destructive">*</span>
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   <User size={16} />
                 </div>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 bg-background border border-border rounded-lg text-foreground text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                   placeholder="contoh: John Doe"
                   required
                   disabled={isLoading}
@@ -154,18 +154,18 @@ const Absensi = () => {
             </div>
             {/* Program Studi */}
             <div>
-              <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                Program Studi <span className="text-red-500">*</span>
+              <label className="block text-[11px] font-bold text-foreground mb-1">
+                Program Studi <span className="text-destructive">*</span>
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   <Backpack size={16} />
                 </div>
                 <input
                   type="text"
                   value={prodi}
                   onChange={(e) => setProdi(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-lg text-black text-sm font-medium focus:ring-2 focus:ring-red-100 focus:border-[#a31d1d] outline-none transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 bg-background border border-border rounded-lg text-foreground text-sm font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                   placeholder="contoh: Teknik Informatika"
                   required
                   disabled={isLoading}
@@ -178,7 +178,7 @@ const Absensi = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#0f172a] hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg mt-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70 text-sm"
+              className="w-full bg-foreground hover:bg-foreground/90 text-primary-foreground font-bold py-3 rounded-xl shadow-lg mt-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70 text-sm"
             >
               {isLoading ? (
                 <>
@@ -194,7 +194,7 @@ const Absensi = () => {
             </button>
           </form>
 
-          <p className="text-center text-[9px] text-gray-400 mt-5 uppercase tracking-widest">
+          <p className="text-center text-[9px] text-muted-foreground mt-5 uppercase tracking-widest">
             Koleksi Digital UMC • {new Date().getFullYear()}
           </p>
         </div>

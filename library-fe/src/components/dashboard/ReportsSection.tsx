@@ -55,6 +55,12 @@ export default function ReportsSection({
   className = ""
 }: ReportsSectionProps) {
   const { success, error, info } = useToast();
+  const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const chartFg = cssVar("--foreground");
+  const chartMuted = cssVar("--muted-foreground");
+  const chartPrimary = cssVar("--primary");
+  const chartBg = cssVar("--muted");
+  const chartBorder = cssVar("--border");
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -340,7 +346,7 @@ export default function ReportsSection({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-extrabold text-[#0F172A] tracking-tight">
+          <h2 className="text-[28px] font-extrabold text-foreground tracking-tight">
             Laporan & Statistik
           </h2>
           <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -359,7 +365,7 @@ export default function ReportsSection({
           <button
             type="button"
             onClick={handleImportClick}
-            className="flex items-center gap-2 bg-card text-[#0F172A] px-5 py-2.5 rounded-xl font-bold text-sm border border-border hover:bg-surface-hover transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-card text-foreground px-5 py-2.5 rounded-xl font-bold text-sm border border-border hover:bg-surface-hover transition-colors shadow-sm"
           >
             <UploadCloud size={18} />
             Import Laporan
@@ -368,7 +374,7 @@ export default function ReportsSection({
           {/* Export Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-800 transition-colors shadow-sm shadow-red-500/20">
+              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors shadow-sm shadow-red-500/20">
                 <DownloadCloud size={18} />
                 Export Laporan
               </button>
@@ -387,7 +393,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-primary"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -398,7 +404,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-primary"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -409,7 +415,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#B91C1C]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-primary"
               >
                 Pendapatan Denda Bulanan
               </DropdownMenuItem>
@@ -426,7 +432,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -437,7 +443,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -448,7 +454,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-[#1D4ED8]"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
               >
                 Pendapatan Denda Bulanan
               </DropdownMenuItem>
@@ -489,8 +495,8 @@ export default function ReportsSection({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Pengunjung */}
         <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
-          <div className="w-[60px] h-[60px] rounded-full bg-[#EBF5FF] flex items-center justify-center shrink-0">
-            <Users className="w-7 h-7 text-[#2563EB]" strokeWidth={2.5} />
+          <div className="w-[60px] h-[60px] rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+            <Users className="w-7 h-7 text-blue-600" strokeWidth={2.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
@@ -508,8 +514,8 @@ export default function ReportsSection({
 
         {/* Peminjaman Sukses */}
         <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
-          <div className="w-[60px] h-[60px] rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
-            <BookCheck className="w-7 h-7 text-[#059669]" strokeWidth={2.5} />
+          <div className="w-[60px] h-[60px] rounded-full bg-green-50 flex items-center justify-center shrink-0">
+            <BookCheck className="w-7 h-7 text-green-600" strokeWidth={2.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
@@ -527,8 +533,8 @@ export default function ReportsSection({
 
         {/* Denda Terkumpul */}
         <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
-          <div className="w-[60px] h-[60px] rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0">
-            <DollarSign className="w-7 h-7 text-[#DC2626]" strokeWidth={2.5} />
+          <div className="w-[60px] h-[60px] rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <DollarSign className="w-7 h-7 text-destructive" strokeWidth={2.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
@@ -554,7 +560,7 @@ export default function ReportsSection({
         {/* Bar Chart Section */}
         <div className="lg:col-span-2 bg-card p-8 rounded-[24px] border border-border shadow-sm flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <h3 className="text-[15px] font-extrabold text-[#0F172A]">
+            <h3 className="text-[15px] font-extrabold text-foreground">
               Grafik Kunjungan
             </h3>
             <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
@@ -587,7 +593,7 @@ export default function ReportsSection({
                 margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
                 barSize={chartRange === "week" ? 50 : chartRange === "day" ? 14 : 16}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartBorder} />
                 <Tooltip
                   cursor={{ fill: "transparent" }}
                   contentStyle={{
@@ -604,7 +610,7 @@ export default function ReportsSection({
                   dataKey="day"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#0F172A", fontSize: 12, fontWeight: 700 }}
+                  tick={{ fill: chartFg, fontSize: 12, fontWeight: 700 }}
                   tickMargin={15}
                   height={40}
                   interval={chartRange === "month" ? 4 : chartRange === "day" ? 2 : 0}
@@ -613,7 +619,7 @@ export default function ReportsSection({
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 600 }}
+                  tick={{ fill: chartMuted, fontSize: 11, fontWeight: 600 }}
                   allowDecimals={false}
                   domain={[0, (dataMax: number) => Math.max(dataMax, 5)]}
                   width={35}
@@ -621,9 +627,9 @@ export default function ReportsSection({
 
                 <Bar
                   dataKey="visits"
-                  fill="#9a1b1b"
+                  fill={chartPrimary}
                   radius={[4, 4, 0, 0]}
-                  background={{ fill: "#F1F5F9", radius: 4 }}
+                  background={{ fill: chartBg, radius: 4 }}
                   name="Kunjungan"
                 />
               </BarChart>
@@ -631,7 +637,7 @@ export default function ReportsSection({
           </div>
 
           <div className="border-t-2 border-border pt-5">
-            <p className="text-center text-sm font-bold text-[#64748B]">
+            <p className="text-center text-sm font-bold text-muted-foreground">
               Total : {stats.visitsPastWeek} pengunjung{" "}
               {chartRange === "day" ? "hari ini" : chartRange === "month" ? "bulan ini" : "minggu ini"}
             </p>
@@ -641,7 +647,7 @@ export default function ReportsSection({
         {/* Popular Books Section */}
         <div className="bg-card p-8 rounded-[24px] border border-border shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-[15px] font-extrabold text-[#0F172A]">
+            <h3 className="text-[15px] font-extrabold text-foreground">
               Buku Terpopuler
             </h3>
             <TrendingUp className="w-5 h-5 text-foreground" strokeWidth={3} />
@@ -659,11 +665,11 @@ export default function ReportsSection({
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
                     {index + 1}
                   </div>
-                  <p className="text-sm font-bold text-[#0F172A] truncate max-w-[120px]">
+                  <p className="text-sm font-bold text-foreground truncate max-w-[120px]">
                     {book.title}
                   </p>
                 </div>
-                <div className="px-3 py-1.5 rounded-full bg-[#EBF5FF] text-[#2563EB] text-[10px] font-black tracking-wide shrink-0">
+                <div className="px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black tracking-wide shrink-0">
                   {book.loanCount} Dipinjam
                 </div>
               </div>

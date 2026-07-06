@@ -5,195 +5,99 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================
-   SHADCN UI GENERATED THEME (COMMENTED OUT)
+   UMC LIBRARY DESIGN SYSTEM
    ============================================
-   Original Shadcn UI theme configuration has
-   been replaced with Bitcoin DeFi design system.
-
-   If you need to restore Shadcn defaults, 
-   uncomment the section below and comment out
-   the Bitcoin DeFi section.
+   University brand: Crimson Red (#B91C1C)
+   Light/dark mode support via CSS variables.
    ============================================ */
 
-/* Shadcn Original :root variables
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-*/
 
-/* Shadcn Original @theme inline
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
-*/
+  /* Light Mode */
+  --background: #ffffff;
+  --foreground: #0f172a;
 
-/* Shadcn Original .dark theme
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #B91C1C;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #fef2f2;
+  --accent-foreground: #B91C1C;
+
+  --destructive: #dc2626;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #B91C1C;
+
+  /* Sidebar (dark in both modes) */
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #B91C1C;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #B91C1C;
+
+  /* Extra semantic tokens */
+  --success: #059669;
+  --warning: #ea580c;
+  --info: #2563eb;
+}
+
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-*/
+  --background: #0a0a0a;
+  --foreground: #f8fafc;
 
-/* Shadcn Original @layer base
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-*/
+  --card: #111827;
+  --card-foreground: #f8fafc;
 
-/* ============================================
-   BITCOIN DEFI DESIGN SYSTEM (ACTIVE)
-   ============================================
-   Custom design system inspired by Bitcoin
-   and DeFi aesthetics. Features:
-   - Dark void backgrounds (#030304)
-   - Bitcoin orange accents (#F7931A)
-   - Digital gold highlights (#FFD600)
-   - Glass morphism effects
-   - Orange/gold glow shadows
-   - Custom typography (Space Grotesk, Inter, JetBrains Mono)
-   ============================================ */
+  --popover: #111827;
+  --popover-foreground: #f8fafc;
 
-:root {
-  /* Core Colors - Bitcoin DeFi Palette */
-  --void: #030304;
-  --dark-matter: #0f1115;
-  --pure-light: #ffffff;
-  --stardust: #94a3b8;
-  --dim-boundary: #1e293b;
-  --bitcoin-orange: #f7931a;
-  --burnt-orange: #ea580c;
-  --digital-gold: #ffd600;
+  --primary: #B91C1C;
+  --primary-foreground: #ffffff;
 
-  /* Shadcn compatibility */
-  --radius: 0.625rem;
-  --background: var(--void);
-  --foreground: var(--pure-light);
-  --card: var(--dark-matter);
-  --card-foreground: var(--pure-light);
-  --popover: var(--dark-matter);
-  --popover-foreground: var(--pure-light);
-  --primary: var(--bitcoin-orange);
-  --primary-foreground: var(--pure-light);
-  --secondary: var(--burnt-orange);
-  --secondary-foreground: var(--pure-light);
-  --muted: var(--stardust);
-  --muted-foreground: var(--stardust);
-  --accent: var(--digital-gold);
-  --accent-foreground: var(--void);
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --accent: #1e1010;
+  --accent-foreground: #f87171;
+
   --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: var(--bitcoin-orange);
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #B91C1C;
+
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #B91C1C;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #B91C1C;
+
+  --success: #34d399;
+  --warning: #fb923c;
+  --info: #60a5fa;
 }
 
 /* Shadcn Compatibility - Theme Inline Variables */
@@ -223,27 +127,28 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-surface: var(--dark-matter);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-surface: var(--card);
+  --color-surface-hover: #f8fafc;
+}
+
+.dark .color-surface-hover,
+.dark [style*="--color-surface-hover"] {
   --color-surface-hover: #1a1d24;
-  --color-subtle: var(--dim-boundary);
-  --color-mild: var(--stardust);
-  --color-warning-bg: rgba(239, 68, 68, 0.1);
-  --color-warning-border: rgba(239, 68, 68, 0.3);
-  --color-success-bg: rgba(16, 185, 129, 0.1);
-  --color-success-text: #34d399;
-  --color-warning-text: #ef4444;
 }
 
 /* ============================================
-   BASE LAYER - Foundation Styles
+   BASE LAYER
    ============================================ */
 @layer base {
   * {
@@ -251,24 +156,17 @@
   }
 
   body {
-    background-color: #030304;
-    color: white;
+    @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Ensure all form inputs, textareas, and select menus have dark text by default in light mode */
   input, select, textarea, option {
-    color: #0f172a;
+    @apply text-foreground;
   }
 
-  /* Maintain white text for these elements in dark mode */
-  .dark input, .dark select, .dark textarea, .dark option {
-    color: #ffffff;
-  }
-
-  /* Typography Classes */
+  /* Typography */
   .font-heading {
     font-family: "Space Grotesk", sans-serif;
   }
@@ -283,38 +181,33 @@
 }
 
 /* ============================================
-   UTILITIES LAYER - Utility Classes
+   UTILITIES LAYER
    ============================================ */
 @layer utilities {
-  /* Bitcoin Orange Glow */
-  .glow-orange {
-    box-shadow: 0 0 20px -5px rgba(234, 88, 12, 0.5);
+  /* Red Glow (UMC brand) */
+  .glow-red {
+    box-shadow: 0 0 20px -5px rgba(185, 28, 28, 0.5);
   }
 
-  .glow-orange-lg {
-    box-shadow: 0 0 30px -5px rgba(247, 147, 26, 0.6);
-  }
-
-  /* Gold Glow */
-  .glow-gold {
-    box-shadow: 0 0 20px rgba(255, 214, 0, 0.3);
+  .glow-red-lg {
+    box-shadow: 0 0 30px -5px rgba(185, 28, 28, 0.6);
   }
 
   /* Card Elevation */
   .card-elevation {
-    box-shadow: 0 0 50px -10px rgba(247, 147, 26, 0.1);
+    box-shadow: 0 0 50px -10px rgba(185, 28, 28, 0.1);
   }
 
-  /* Gradient Text */
+  /* Gradient Text (red shades) */
   .gradient-text {
-    background: linear-gradient(to right, #f7931a, #ffd600);
+    background: linear-gradient(to right, #B91C1C, #ef4444);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  .gradient-text-orange {
-    background: linear-gradient(to right, #ea580c, #f7931a);
+  .gradient-text-red {
+    background: linear-gradient(to right, #991b1b, #B91C1C);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -343,18 +236,10 @@
   }
 
   /* Radial Blur */
-  .radial-blur-orange {
+  .radial-blur-red {
     position: absolute;
     border-radius: 9999px;
-    background-color: #f7931a;
-    opacity: 0.1;
-    filter: blur(120px);
-  }
-
-  .radial-blur-gold {
-    position: absolute;
-    border-radius: 9999px;
-    background-color: #ffd600;
+    background-color: #B91C1C;
     opacity: 0.1;
     filter: blur(120px);
   }
@@ -370,33 +255,31 @@
 }
 
 /* ============================================
-   COMPONENTS LAYER - Reusable Components
+   COMPONENTS LAYER
    ============================================ */
 @layer components {
-  /* Primary Button - Bitcoin Orange Gradient */
+  /* Primary Button - UMC Red */
   .btn-primary {
-    background: linear-gradient(to right, #ea580c, #f7931a);
-    color: white;
-    font-weight: 700;
+    @apply bg-primary text-primary-foreground font-bold;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
     min-height: 44px;
     transition: all 300ms;
-    box-shadow: 0 0 20px -5px rgba(234, 88, 12, 0.5);
+    box-shadow: 0 0 20px -5px rgba(185, 28, 28, 0.5);
   }
 
   .btn-primary:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 30px -5px rgba(247, 147, 26, 0.6);
+    box-shadow: 0 0 30px -5px rgba(185, 28, 28, 0.6);
   }
 
   /* Outline Button */
   .btn-outline {
     background-color: transparent;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    border: 2px solid var(--border);
+    @apply text-foreground;
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
     min-height: 44px;
@@ -404,28 +287,27 @@
   }
 
   .btn-outline:hover {
-    border-color: white;
-    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+    background-color: var(--accent);
   }
 
   /* Ghost Button */
   .btn-ghost {
     background-color: transparent;
-    color: white;
+    @apply text-foreground;
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
     transition: all 300ms;
   }
 
   .btn-ghost:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #f7931a;
+    @apply bg-accent text-accent-foreground;
   }
 
   /* Card - Standard */
   .card-standard {
-    background-color: #0f1115;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply bg-card border-border;
+    border: 1px solid var(--border);
     border-radius: 1rem;
     padding: 2rem;
     transition: all 300ms;
@@ -433,34 +315,8 @@
 
   .card-standard:hover {
     transform: translateY(-4px);
-    border-color: rgba(247, 147, 26, 0.5);
-    box-shadow: 0 0 30px -10px rgba(247, 147, 26, 0.2);
-  }
-
-  /* Input - Technical */
-  .input-technical {
-    background-color: rgba(0, 0, 0, 0.5);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-    height: 3rem;
-    padding: 0.5rem 1rem;
-    color: white;
-    font-size: 0.875rem;
-    transition: all 200ms;
-    outline: none;
-  }
-
-  .input-technical::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-  }
-
-  .input-technical:focus-visible {
-    border-bottom-color: #f7931a;
-    box-shadow: 0 10px 20px -10px rgba(247, 147, 26, 0.3);
-  }
-
-  .input-technical:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    border-color: var(--primary);
+    box-shadow: 0 0 30px -10px rgba(185, 28, 28, 0.2);
   }
 }
 
@@ -468,8 +324,7 @@
    KEYFRAME ANIMATIONS
    ============================================ */
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px);
   }
   50% {
@@ -478,22 +333,10 @@
 }
 
 @keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 20px -5px rgba(247, 147, 26, 0.5);
+  0%, 100% {
+    box-shadow: 0 0 20px -5px rgba(185, 28, 28, 0.5);
   }
   50% {
-    box-shadow: 0 0 40px -5px rgba(247, 147, 26, 0.8);
+    box-shadow: 0 0 40px -5px rgba(185, 28, 28, 0.8);
   }
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }

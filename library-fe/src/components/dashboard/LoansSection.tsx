@@ -280,7 +280,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
         
         {/* Header Controls */}
         <div className="p-6 md:px-8 border-b border-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <h2 className="text-[20px] font-extrabold text-[#0F172A] tracking-tight">Peminjaman & Persetujuan</h2>
+          <h2 className="text-[20px] font-extrabold text-foreground tracking-tight">Peminjaman & Persetujuan</h2>
           
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             {/* Filter Status */}
@@ -288,7 +288,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as "all" | "pending" | "approved" | "returned")}
-                className="appearance-none bg-[#F8FAFC] border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-muted-foreground focus:ring-2 focus:ring-red-500/10 cursor-pointer min-w-[200px]"
+                className="appearance-none bg-background border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-muted-foreground focus:ring-2 focus:ring-primary/10 cursor-pointer min-w-[200px]"
               >
                 <option value="pending">Menunggu Persetujuan</option>
                 <option value="approved">Sedang Dipinjam</option>
@@ -304,7 +304,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
               <input
                 type="text"
                 placeholder="Cari peminjaman..."
-                className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-[#F8FAFC] border-none rounded-xl text-[13px] font-medium text-muted-foreground focus:ring-2 focus:ring-red-500/10 placeholder:text-muted-foreground"
+                className="w-full md:w-64 pl-11 pr-4 py-2.5 bg-background border-none rounded-xl text-[13px] font-medium text-muted-foreground focus:ring-2 focus:ring-primary/10 placeholder:text-muted-foreground"
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
               />
@@ -313,7 +313,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
             {/* Refresh Button */}
             <button
               onClick={fetchLoans}
-              className="w-10 h-10 bg-[#F8FAFC] rounded-xl text-muted-foreground hover:text-slate-800 hover:bg-slate-200 transition-all flex items-center justify-center shrink-0"
+              className="w-10 h-10 bg-background rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex items-center justify-center shrink-0"
               title="Refresh data"
             >
               <RefreshCw size={16} strokeWidth={2.5} />
@@ -326,47 +326,47 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Card: Menunggu Persetujuan */}
-            <div className="bg-[#FEFCE8] rounded-2xl p-5 flex flex-col justify-between h-[100px]">
+            <div className="bg-yellow-50 rounded-2xl p-5 flex flex-col justify-between h-[100px]">
               <div className="flex items-start justify-between w-full">
-                <Clock className="text-[#A16207]" size={20} strokeWidth={2.5} />
-                <span className="text-[28px] font-black leading-none text-[#A16207]">
+                <Clock className="text-yellow-700" size={20} strokeWidth={2.5} />
+                <span className="text-[28px] font-black leading-none text-yellow-700">
                   {stats.pending}
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-[#A16207]">Menunggu Persetujuan</p>
+              <p className="text-[11px] font-bold text-yellow-700">Menunggu Persetujuan</p>
             </div>
 
             {/* Card: Sedang Dipinjam (Approved & Not Overdue) */}
-            <div className="bg-[#EFF6FF] rounded-2xl p-5 flex flex-col justify-between h-[100px]">
+            <div className="bg-blue-50 rounded-2xl p-5 flex flex-col justify-between h-[100px]">
               <div className="flex items-start justify-between w-full">
-                <BookOpen className="text-[#1D4ED8]" size={20} strokeWidth={2.5} />
-                <span className="text-[28px] font-black leading-none text-[#1D4ED8]">
+                <BookOpen className="text-blue-600" size={20} strokeWidth={2.5} />
+                <span className="text-[28px] font-black leading-none text-blue-600">
                   {stats.approved}
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-[#1D4ED8]">Sedang Dipinjam</p>
+              <p className="text-[11px] font-bold text-blue-600">Sedang Dipinjam</p>
             </div>
 
             {/* Card: Dikembalikan */}
-            <div className="bg-[#F3F4F6] rounded-2xl p-5 flex flex-col justify-between h-[100px]">
+            <div className="bg-muted rounded-2xl p-5 flex flex-col justify-between h-[100px]">
               <div className="flex items-start justify-between w-full">
-                <CheckCircle className="text-[#4B5563]" size={20} strokeWidth={2.5} />
-                <span className="text-[28px] font-black leading-none text-[#4B5563]">
+                <CheckCircle className="text-foreground" size={20} strokeWidth={2.5} />
+                <span className="text-[28px] font-black leading-none text-foreground">
                   {stats.returned}
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-[#4B5563]">Dikembalikan</p>
+              <p className="text-[11px] font-bold text-foreground">Dikembalikan</p>
             </div>
 
             {/* Card: Terlambat */}
-            <div className="bg-[#FEF2F2] rounded-2xl p-5 flex flex-col justify-between h-[100px]">
+            <div className="bg-red-50 rounded-2xl p-5 flex flex-col justify-between h-[100px]">
               <div className="flex items-start justify-between w-full">
-                <XCircle className="text-[#B91C1C]" size={20} strokeWidth={2.5} />
-                <span className="text-[28px] font-black leading-none text-[#B91C1C]">
+                <XCircle className="text-primary" size={20} strokeWidth={2.5} />
+                <span className="text-[28px] font-black leading-none text-primary">
                   {stats.overdue}
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-[#B91C1C]">Terlambat</p>
+              <p className="text-[11px] font-bold text-primary">Terlambat</p>
             </div>
 
           </div>
@@ -401,15 +401,15 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
               {paginatedLoans.map((loan) => (
                 <div 
                   key={loan.id} 
-                  className="bg-[#F8FAFC] rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
+                  className="bg-background rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
                 >
                   <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-5">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-card rounded-xl flex items-center justify-center shrink-0 border border-border group-hover:border-red-100 group-hover:bg-warning-bg transition-colors">
-                        <BookOpen className="text-muted-foreground group-hover:text-[#B91C1C] transition-colors" size={20} />
+                        <BookOpen className="text-muted-foreground group-hover:text-primary transition-colors" size={20} />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-[#0F172A] text-[15px] leading-snug hover:text-[#B91C1C] transition-colors">{loan.item?.bibliography?.title || 'Judul tidak tersedia'}</h4>
+                        <h4 className="font-extrabold text-foreground text-[15px] leading-snug hover:text-primary transition-colors">{loan.item?.bibliography?.title || 'Judul tidak tersedia'}</h4>
                         <div className="flex items-center gap-2 mt-1.5">
                           <User size={13} className="text-muted-foreground" />
                           <span className="text-[13px] font-bold text-muted-foreground">{loan.member?.user?.name || 'Nama tidak tersedia'}</span>
@@ -436,7 +436,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">Batas Kembali</p>
                       <div className="flex items-center gap-2 text-[13px]">
                         <Calendar size={14} className="text-muted-foreground" />
-                        <span className="font-bold text-[#B91C1C]">
+                        <span className="font-bold text-primary">
                           {loan.dueDate ? new Date(loan.dueDate).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : '-'}
                         </span>
                       </div>
@@ -660,7 +660,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                 </div>
 
                 <p className="text-[12px] text-muted-foreground font-medium mb-5 text-center">
-                  Denda keterlambatan: <strong className="text-[#B91C1C]">Rp 500 / hari</strong> jika melewati batas kembali.
+                  Denda keterlambatan: <strong className="text-primary">Rp 500 / hari</strong> jika melewati batas kembali.
                 </p>
 
                 <div className="flex gap-3">

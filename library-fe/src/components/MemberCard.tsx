@@ -104,7 +104,7 @@ const MemberCard = ({
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-5">
               <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-sm">
                   <Sparkles size={16} />
                 </div>
                 <div>
@@ -263,7 +263,7 @@ const MemberCard = ({
                   type="button"
                   onClick={() => void onRequestCard()}
                   disabled={requestLoading}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:bg-white/50"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-card px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-foreground transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:bg-white/50"
                 >
                   {requestLoading ? "Mengajukan..." : "Ajukan Kartu"}
                 </button>

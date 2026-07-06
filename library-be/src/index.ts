@@ -17,7 +17,8 @@ const app = express();
 
 // ponytail: HTTPS redirect — 3 lines, works behind PaaS proxy
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV === "production" && !req.headers["x-forwarded-proto"]?.startsWith("https")) {
+  const proto = req.headers["x-forwarded-proto"];
+  if (process.env.NODE_ENV === "production" && !(Array.isArray(proto) ? proto[0] : proto)?.startsWith("https")) {
     return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
   }
   next();

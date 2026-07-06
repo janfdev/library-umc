@@ -95,12 +95,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen bg-[#F1F3F6] flex items-center justify-center p-2 font-sans overflow-hidden">
+    <div className="h-screen bg-muted flex items-center justify-center p-2 font-sans overflow-hidden">
 
-      <div className="w-full max-w-[380px] bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col">
+      <div className="w-full max-w-[380px] bg-card rounded-[24px] shadow-2xl overflow-hidden flex flex-col">
 
         {/* Header Merah */}
-        <div className="bg-[#B21F24] pt-5 pb-7 px-6 text-center relative">
+        <div className="bg-primary pt-5 pb-7 px-6 text-center relative">
           <div className="flex justify-center mb-2">
             <div className="bg-white/10 p-2 rounded-full">
               <UserCircle2 className="text-white w-10 h-10" strokeWidth={1.5} />
@@ -116,15 +116,15 @@ const LoginPage = () => {
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 h-10 bg-[#B21F24] hover:bg-[#961a1e] text-white rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 h-10 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogIn size={16} />
             <span>{isLoading ? "Memproses..." : "Login SSO"}</span>
           </button>
 
           <div className="relative flex items-center justify-center">
-            <div className="absolute w-full border-t border-gray-200"></div>
-            <span className="relative px-3 bg-white text-gray-400 text-[9px] uppercase font-bold tracking-widest">
+            <div className="absolute w-full border-t border-border"></div>
+            <span className="relative px-3 bg-card text-muted-foreground text-[9px] uppercase font-bold tracking-widest">
               Atau
             </span>
           </div>
@@ -133,17 +133,17 @@ const LoginPage = () => {
           <form onSubmit={handleManualLogin} className="space-y-3">
             {/* Email Field */}
             <div>
-              <label className="block text-gray-700 text-[10px] font-bold mb-1 ml-1">
+              <label className="block text-foreground text-[10px] font-bold mb-1 ml-1">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Masukkan email"
-                  className="w-full pl-10 pr-4 h-10 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B21F24]/10 focus:border-[#B21F24] outline-none text-xs text-gray-900 placeholder-gray-400 transition-all"
+                  className="w-full pl-10 pr-4 h-10 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none text-xs text-foreground placeholder-muted-foreground transition-all"
                   required
                   disabled={isLoading}
                 />
@@ -153,32 +153,32 @@ const LoginPage = () => {
             {/* Password Field */}
             <div>
               <div className="flex justify-between mb-1 ml-1">
-                <label className="text-gray-700 text-[10px] font-bold">
+                <label className="text-foreground text-[10px] font-bold">
                   Kata Sandi
                 </label>
                 <button
                   type="button"
                   onClick={() => navigate("/forgot-password")}
-                  className="text-[#B21F24] text-[9px] font-bold hover:underline"
+                  className="text-primary text-[9px] font-bold hover:underline"
                 >
                   Lupa sandi?
                 </button>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 h-10 bg-[#F8FAFC] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#B21F24]/10 focus:border-[#B21F24] outline-none text-xs text-gray-900 placeholder-gray-400 transition-all"
+                  className="w-full pl-10 pr-10 h-10 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none text-xs text-foreground placeholder-muted-foreground transition-all"
                   required
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gray-600 transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -193,10 +193,10 @@ const LoginPage = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3 h-3 rounded border-gray-300 text-[#B21F24] focus:ring-[#B21F24]"
+                  className="w-3 h-3 rounded border-gray-300 text-primary focus:ring-primary"
                   disabled={isLoading}
                 />
-                <span className="text-gray-500 text-[10px]">Ingat saya</span>
+                <span className="text-muted-foreground text-[10px]">Ingat saya</span>
               </label>
             </div>
 
@@ -204,7 +204,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-10 bg-[#0F172A] hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-10 bg-foreground hover:bg-foreground/90 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -220,13 +220,13 @@ const LoginPage = () => {
 
           {/* Tombol Register */}
           <div className="pt-2 text-center">
-            <p className="text-gray-400 text-[10px] mb-1">Belum memiliki akun?</p>
+            <p className="text-muted-foreground text-[10px] mb-1">Belum memiliki akun?</p>
             <button
               onClick={() => navigate("/register")}
               disabled={isLoading}
-              className="flex items-center justify-center gap-1.5 w-full h-9 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-bold text-[11px] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-1.5 w-full h-9 bg-card border border-border text-foreground hover:bg-muted rounded-xl font-bold text-[11px] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <UserPlus size={14} className="text-[#B21F24]" />
+              <UserPlus size={14} className="text-primary" />
               Daftar Akun Baru
             </button>
           </div>

@@ -154,7 +154,7 @@ export default function ItemSection() {
   if (loading && items.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-[#B91C1C]" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -195,7 +195,7 @@ export default function ItemSection() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+              className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <button
@@ -365,7 +365,7 @@ function ItemDetail({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-[#B91C1C]" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -607,7 +607,7 @@ function ItemForm({
                 onChange={(e) => setFormData({ ...formData, bibliographyId: e.target.value })}
                 required
                 disabled={!!item}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C] disabled:bg-muted"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted"
               >
                 <option value="">Pilih bibliografi</option>
                 {bibliographies.map((bib) => (
@@ -622,7 +622,7 @@ function ItemForm({
                 value={formData.itemCode}
                 onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
                 required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -631,7 +631,7 @@ function ItemForm({
                 type="text"
                 value={formData.inventoryCode}
                 onChange={(e) => setFormData({ ...formData, inventoryCode: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -640,7 +640,7 @@ function ItemForm({
                 type="text"
                 value={formData.callNumber}
                 onChange={(e) => setFormData({ ...formData, callNumber: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -648,7 +648,7 @@ function ItemForm({
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="available">Tersedia</option>
                 <option value="loaned">Dipinjam</option>
@@ -669,7 +669,7 @@ function ItemForm({
                 type="text"
                 value={formData.source}
                 onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -679,7 +679,7 @@ function ItemForm({
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 min="0"
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -813,7 +813,7 @@ function BulkCreateForm({
                 value={selectedBibId}
                 onChange={(e) => setSelectedBibId(e.target.value)}
                 required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">Pilih bibliografi</option>
                 {bibliographies.map((bib) => (
@@ -830,7 +830,7 @@ function BulkCreateForm({
                 min="1"
                 max="1000"
                 required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -839,7 +839,7 @@ function BulkCreateForm({
                 type="text"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
@@ -849,7 +849,7 @@ function BulkCreateForm({
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
                 placeholder="Opsional"
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-[#B91C1C] focus:outline-none focus:ring-1 focus:ring-[#B91C1C]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div className="flex items-end">
