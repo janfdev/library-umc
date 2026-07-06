@@ -432,7 +432,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600 dark:text-blue-400"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -443,7 +443,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600 dark:text-blue-400"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -454,7 +454,7 @@ export default function ReportsSection({
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600 dark:text-blue-400"
               >
                 Pendapatan Denda Bulanan
               </DropdownMenuItem>
@@ -495,8 +495,8 @@ export default function ReportsSection({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Pengunjung */}
         <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
-          <div className="w-[60px] h-[60px] rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-            <Users className="w-7 h-7 text-blue-600" strokeWidth={2.5} />
+          <div className="w-[60px] h-[60px] rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
+            <Users className="w-7 h-7 text-blue-600 dark:text-blue-400" strokeWidth={2.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
@@ -514,8 +514,8 @@ export default function ReportsSection({
 
         {/* Peminjaman Sukses */}
         <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
-          <div className="w-[60px] h-[60px] rounded-full bg-green-50 flex items-center justify-center shrink-0">
-            <BookCheck className="w-7 h-7 text-green-600" strokeWidth={2.5} />
+          <div className="w-[60px] h-[60px] rounded-full bg-green-50 dark:bg-green-950 flex items-center justify-center shrink-0">
+            <BookCheck className="w-7 h-7 text-green-600 dark:text-green-400" strokeWidth={2.5} />
           </div>
           <div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
@@ -533,7 +533,7 @@ export default function ReportsSection({
 
         {/* Denda Terkumpul */}
         <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm flex items-center gap-5">
-          <div className="w-[60px] h-[60px] rounded-full bg-red-50 flex items-center justify-center shrink-0">
+          <div className="w-[60px] h-[60px] rounded-full bg-red-50 dark:bg-red-950 flex items-center justify-center shrink-0">
             <DollarSign className="w-7 h-7 text-destructive" strokeWidth={2.5} />
           </div>
           <div>
@@ -669,7 +669,7 @@ export default function ReportsSection({
                     {book.title}
                   </p>
                 </div>
-                <div className="px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black tracking-wide shrink-0">
+                <div className="px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px] font-black tracking-wide shrink-0">
                   {book.loanCount} Dipinjam
                 </div>
               </div>

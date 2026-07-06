@@ -246,7 +246,7 @@ export default function ItemSection() {
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-50 hover:bg-surface-hover/50">
+                  <tr key={item.id} className="border-b border-border hover:bg-surface-hover/50">
                     <td className="px-4 py-3 font-medium text-foreground">
                       {item.itemCode}
                     </td>
@@ -262,9 +262,9 @@ export default function ItemSection() {
                       <span
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                           item.status === "available"
-                            ? "bg-emerald-50 text-emerald-700"
+                            ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
                             : item.status === "loaned"
-                              ? "bg-amber-50 text-amber-700"
+                              ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
                               : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -289,7 +289,7 @@ export default function ItemSection() {
                         </button>
                         <button
                           onClick={() => handleEdit(item)}
-                          className="rounded-lg p-1.5 text-blue-400 hover:bg-blue-50 hover:text-blue-600"
+                          className="rounded-lg p-1.5 text-blue-400 hover:bg-blue-50 dark:bg-blue-950 hover:text-blue-600 dark:text-blue-400"
                           title="Edit"
                         >
                           <Pencil className="size-4" />
@@ -428,9 +428,9 @@ function ItemDetail({
               <span
                 className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                   item.status === "available"
-                    ? "bg-emerald-50 text-emerald-700"
+                    ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
                     : item.status === "loaned"
-                      ? "bg-amber-50 text-amber-700"
+                      ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
                       : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -798,8 +798,8 @@ function BulkCreateForm({
       )}
 
       {success && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-sm text-emerald-700">{success}</p>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950 p-4">
+          <p className="text-sm text-emerald-700 dark:text-emerald-400">{success}</p>
         </div>
       )}
 
@@ -878,7 +878,7 @@ function BulkCreateForm({
                 </thead>
                 <tbody>
                   {items.slice(0, 20).map((item, idx) => (
-                    <tr key={idx} className="border-b border-slate-50">
+                    <tr key={idx} className="border-b border-border">
                       <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
                       <td className="px-3 py-2 font-medium text-foreground">{item.itemCode}</td>
                       <td className="px-3 py-2">

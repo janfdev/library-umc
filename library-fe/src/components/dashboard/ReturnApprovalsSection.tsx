@@ -63,7 +63,7 @@ export default function ReturnApprovalsSection() {
         <h2 className="text-xl font-extrabold text-foreground">Persetujuan Pengembalian</h2>
         <button
           onClick={fetchRequests}
-          className="px-4 py-2 bg-muted text-muted-foreground rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
+          className="px-4 py-2 bg-muted text-muted-foreground rounded-xl text-sm font-bold hover:bg-muted transition-colors"
         >
           Refresh
         </button>
@@ -81,7 +81,7 @@ export default function ReturnApprovalsSection() {
           {paginatedRequests.map((req) => (
             <div key={req.id} className="bg-card border border-border rounded-[20px] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4 flex-1">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
                   <BookOpen size={24} />
                 </div>
                 <div>

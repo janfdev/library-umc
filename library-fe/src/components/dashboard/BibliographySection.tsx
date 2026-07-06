@@ -250,7 +250,7 @@ export default function BibliographySection({
               </thead>
               <tbody>
                 {data.items.map((bib) => (
-                  <tr key={bib.id} className="border-b border-slate-50 hover:bg-surface-hover/50">
+                  <tr key={bib.id} className="border-b border-border hover:bg-surface-hover/50">
                     <td className="px-4 py-3">
                       <div className="max-w-xs truncate font-medium text-foreground">
                         {bib.title}
@@ -276,7 +276,7 @@ export default function BibliographySection({
                       {bib.isbnIssn || "-"}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                         <Package className="size-3" />
                         {bib.availableItems}/{bib.totalItems}
                       </span>
@@ -292,7 +292,7 @@ export default function BibliographySection({
                         </button>
                         <button
                           onClick={() => handleEdit(bib)}
-                          className="rounded-lg p-1.5 text-blue-400 hover:bg-blue-50 hover:text-blue-600"
+                          className="rounded-lg p-1.5 text-blue-400 hover:bg-blue-50 dark:bg-blue-950 hover:text-blue-600 dark:text-blue-400"
                           title="Edit"
                         >
                           <Pencil className="size-4" />
@@ -405,7 +405,7 @@ function BibliographyDetail({
               <p className="mt-1 text-sm text-muted-foreground">{bib.sor}</p>
             )}
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950 px-3 py-1 text-sm font-medium text-emerald-700 dark:text-emerald-400">
             <Package className="size-4" />
             {bib.availableItems}/{bib.totalItems} tersedia
           </span>
@@ -460,14 +460,14 @@ function BibliographyDetail({
                   {author.position}
                 </span>
                 <span className="font-medium text-foreground">{author.name}</span>
-                <span className="rounded bg-slate-200 px-2 py-0.5 text-xs text-muted-foreground">
+                <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                   {author.role}
                 </span>
               </div>
             ))}
             {bib.unlistedAuthorsLabel && (
-              <div className="flex items-center gap-3 rounded-lg bg-amber-50 px-4 py-2">
-                <span className="text-xs text-amber-700">
+              <div className="flex items-center gap-3 rounded-lg bg-amber-50 dark:bg-amber-950 px-4 py-2">
+                <span className="text-xs text-amber-700 dark:text-amber-400">
                   + {bib.unlistedAuthorsLabel} (penulis lainnya)
                 </span>
               </div>
@@ -489,7 +489,7 @@ function BibliographyDetail({
             {bib.subjects.map((subject) => (
               <span
                 key={subject.id}
-                className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+                className="rounded-full bg-blue-50 dark:bg-blue-950 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-400"
               >
                 {subject.name}
               </span>
@@ -764,7 +764,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
             <button
               type="button"
               onClick={addAuthor}
-              className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-slate-200"
+              className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
             >
               <Plus className="size-3" />
               Tambah Penulis
@@ -818,7 +818,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
             <button
               type="button"
               onClick={addSubject}
-              className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-slate-200"
+              className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
             >
               <Plus className="size-3" />
               Tambah Subjek

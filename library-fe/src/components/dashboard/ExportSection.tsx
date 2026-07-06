@@ -68,8 +68,8 @@ export default function ExportSection() {
         {/* Bibliography Export */}
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-              <Book className="size-5 text-blue-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
+              <Book className="size-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <h3 className="font-semibold text-foreground">Export Bibliografi</h3>
@@ -102,7 +102,7 @@ export default function ExportSection() {
         {/* Item Export */}
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950">
               <Package className="size-5 text-emerald-600" />
             </div>
             <div>

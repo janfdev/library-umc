@@ -85,7 +85,7 @@ export default function UsersSection() {
 
   const roleBadgeClass = (role: string) => {
     if (role === "super_admin") return "bg-warning-bg text-destructive border-warning-border";
-    if (role === "staff") return "bg-blue-50 text-blue-700 border-blue-200";
+    if (role === "staff") return "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
     return "bg-muted text-muted-foreground border-border";
   };
 
@@ -107,9 +107,9 @@ export default function UsersSection() {
   const cardStatusClass = (status?: string | null) => {
     switch (status) {
       case "active":
-        return "bg-green-50 text-green-700 border-green-200";
+        return "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
       case "pending":
-        return "bg-amber-50 text-amber-700 border-amber-200";
+        return "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-200";
       case "rejected":
         return "bg-rose-50 text-rose-700 border-rose-200";
       case "expired":
@@ -280,7 +280,7 @@ export default function UsersSection() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
             Staff
           </p>
-          <p className="mt-2 text-2xl font-black text-blue-700">
+          <p className="mt-2 text-2xl font-black text-blue-700 dark:text-blue-400">
             {stats.staffs}
           </p>
         </div>
@@ -295,7 +295,7 @@ export default function UsersSection() {
       </div>
 
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:w-[360px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
@@ -375,7 +375,7 @@ export default function UsersSection() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center text-muted-foreground text-xs font-bold">
+                          <div className="w-9 h-9 rounded-full bg-muted overflow-hidden flex items-center justify-center text-muted-foreground text-xs font-bold">
                             {user.image ? (
                               <img
                                 src={user.image}
@@ -412,7 +412,7 @@ export default function UsersSection() {
                             <UserX size={12} className="mr-1.5" /> Banned
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border bg-green-50 text-green-700 border-green-200">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
                             Aktif
                           </span>
                         )}
@@ -450,7 +450,7 @@ export default function UsersSection() {
                           <button
                             onClick={() => void handleRecordVisit(user)}
                             disabled={recordSavingId === user.id}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50"
                             title="Catat Kunjungan Hari Ini"
                           >
                             <UserCheck size={12} />
@@ -483,7 +483,7 @@ export default function UsersSection() {
                               savingId === user.id ||
                               (roleDraft[user.id] || user.role) === user.role
                             }
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 disabled:bg-slate-200 disabled:text-muted-foreground"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
                           >
                             <Save size={12} />
                             {savingId === user.id ? "Menyimpan..." : "Simpan"}
@@ -496,8 +496,8 @@ export default function UsersSection() {
                             }
                             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:border-border ${
                               user.banned
-                                ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                                : "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+                                ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 dark:bg-green-900"
+                                : "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900"
                             }`}
                           >
                             <UserX size={12} />
@@ -521,14 +521,14 @@ export default function UsersSection() {
                             </button>
                           ) : (
                             <>
-                              <span className="inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                              <span className="inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                                 Sudah Sync
                               </span>
                               {user.cardStatus !== "active" ? (
                                 <button
                                   onClick={() => void handleIssueCard(user)}
                                   disabled={issueSavingId === user.id}
-                                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 disabled:bg-slate-200 disabled:text-muted-foreground"
+                                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
                                 >
                                   <ShieldCheck size={12} />
                                   {issueSavingId === user.id
@@ -548,7 +548,7 @@ export default function UsersSection() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-xs text-muted-foreground font-medium">
                   Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredUsers.length)}–
                   {Math.min(currentPage * itemsPerPage, filteredUsers.length)} dari {filteredUsers.length} user

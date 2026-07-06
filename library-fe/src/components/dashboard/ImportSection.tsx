@@ -62,12 +62,12 @@ export default function ImportSection() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      uploading: "bg-blue-50 text-blue-700",
-      parsing: "bg-blue-50 text-blue-700",
-      validating: "bg-amber-50 text-amber-700",
-      preview: "bg-amber-50 text-amber-700",
+      uploading: "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400",
+      parsing: "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400",
+      validating: "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
+      preview: "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
       approving: "bg-purple-50 text-purple-700",
-      committed: "bg-emerald-50 text-emerald-700",
+      committed: "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400",
       failed: "bg-warning-bg text-destructive",
       cancelled: "bg-muted text-muted-foreground",
     };
@@ -382,7 +382,7 @@ function BatchDetail({
           <div>
             <dt className="text-xs font-medium text-muted-foreground">Status</dt>
             <dd className="mt-0.5">
-              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+              <span className="rounded-full bg-blue-50 dark:bg-blue-950 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400">
                 {batch.status}
               </span>
             </dd>
@@ -405,17 +405,17 @@ function BatchDetail({
             <p className="text-2xl font-bold text-foreground">{batch.totalRows}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
-          <div className="rounded-lg bg-emerald-50 p-3 text-center">
-            <p className="text-2xl font-bold text-emerald-700">{batch.validRows}</p>
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-3 text-center">
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{batch.validRows}</p>
             <p className="text-xs text-emerald-600">Valid</p>
           </div>
-          <div className="rounded-lg bg-amber-50 p-3 text-center">
-            <p className="text-2xl font-bold text-amber-700">{batch.invalidRows}</p>
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-950 p-3 text-center">
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{batch.invalidRows}</p>
             <p className="text-xs text-amber-600">Invalid</p>
           </div>
-          <div className="rounded-lg bg-blue-50 p-3 text-center">
-            <p className="text-2xl font-bold text-blue-700">{batch.committedRows}</p>
-            <p className="text-xs text-blue-600">Committed</p>
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-3 text-center">
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{batch.committedRows}</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400">Committed</p>
           </div>
           <div className="rounded-lg bg-warning-bg p-3 text-center">
             <p className="text-2xl font-bold text-destructive">{batch.failedRows}</p>
@@ -472,8 +472,8 @@ function BatchDetail({
 
       {/* Approval Result */}
       {approvalResult && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-          <h3 className="mb-2 text-sm font-semibold text-emerald-700">Hasil Approval</h3>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950 p-6">
+          <h3 className="mb-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">Hasil Approval</h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <p className="text-2xl font-bold text-emerald-900">{approvalResult.processed}</p>
@@ -488,7 +488,7 @@ function BatchDetail({
               <p className="text-xs text-destructive">Failed</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-700">{approvalResult.remaining}</p>
+              <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{approvalResult.remaining}</p>
               <p className="text-xs text-amber-600">Remaining</p>
             </div>
           </div>
@@ -518,13 +518,13 @@ function BatchDetail({
               </thead>
               <tbody>
                 {preview.rows?.slice(0, 10).map((row) => (
-                  <tr key={row.id} className="border-b border-slate-50">
+                  <tr key={row.id} className="border-b border-border">
                     <td className="px-3 py-2 text-muted-foreground">{row.rowNumber}</td>
                     <td className="px-3 py-2">
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           row.status === "valid"
-                            ? "bg-emerald-50 text-emerald-700"
+                            ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
                             : row.status === "invalid"
                               ? "bg-warning-bg text-destructive"
                               : "bg-muted text-muted-foreground"

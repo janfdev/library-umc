@@ -109,10 +109,10 @@ export default function RecommendationsSection() {
 
   const getStatusBadge = (status: string) => {
     const config = {
-      pending: { color: "bg-yellow-100 text-yellow-700", icon: Clock, text: "Menunggu" },
-      approved: { color: "bg-green-100 text-green-700", icon: CheckCircle, text: "Disetujui" },
-      rejected: { color: "bg-red-100 text-destructive", icon: XCircle, text: "Ditolak" },
-    }[status] || { color: "bg-gray-100 text-gray-700", icon: Clock, text: status };
+      pending: { color: "bg-yellow-100 text-yellow-700 dark:text-yellow-400", icon: Clock, text: "Menunggu" },
+      approved: { color: "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400", icon: CheckCircle, text: "Disetujui" },
+      rejected: { color: "bg-red-100 dark:bg-red-900 text-destructive", icon: XCircle, text: "Ditolak" },
+    }[status] || { color: "bg-muted text-muted-foreground", icon: Clock, text: status };
 
     const Icon = config.icon;
     return (
@@ -127,7 +127,7 @@ export default function RecommendationsSection() {
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden flex flex-col min-h-[600px]">
         
         {/* Header */}
-        <div className="p-6 md:px-8 border-b border-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="p-6 md:px-8 border-b border-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h2 className="text-[20px] font-extrabold text-foreground tracking-tight">Usulan Pengadaan Koleksi</h2>
             <p className="text-xs text-muted-foreground font-medium mt-1">Rekomendasi buku baru dari dosen untuk perpustakaan</p>
@@ -164,7 +164,7 @@ export default function RecommendationsSection() {
         {/* Content Area */}
         <div className="flex-1 p-6 md:px-8">
           {error && (
-            <div className="mb-6 p-4 bg-warning-bg text-destructive rounded-2xl text-xs font-bold border border-red-100 flex items-center gap-3">
+            <div className="mb-6 p-4 bg-warning-bg text-destructive rounded-2xl text-xs font-bold border border-red-100 dark:border-red-900 flex items-center gap-3">
               <XCircle size={16} />
               {error}
             </div>
@@ -187,14 +187,14 @@ export default function RecommendationsSection() {
               {paginatedData.map((item) => (
                 <div 
                   key={item.id} 
-                  className="bg-background rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-slate-200/50 transition-all group"
+                  className="bg-background rounded-[20px] p-6 border border-border hover:bg-card hover:shadow-lg hover:shadow-lg transition-all group"
                 >
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Info Buku */}
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border group-hover:bg-warning-bg group-hover:border-red-100 transition-colors">
+                          <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border group-hover:bg-warning-bg group-hover:border-red-100 dark:border-red-900 transition-colors">
                             <BookMarked className="text-muted-foreground group-hover:text-primary" size={18} />
                           </div>
                           <div>
@@ -239,7 +239,7 @@ export default function RecommendationsSection() {
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(item.id, 'rejected')}
-                          className="flex-1 md:flex-none px-6 py-2.5 bg-card text-destructive border border-red-100 rounded-xl text-xs font-bold hover:bg-warning-bg transition-all"
+                          className="flex-1 md:flex-none px-6 py-2.5 bg-card text-destructive border border-red-100 dark:border-red-900 rounded-xl text-xs font-bold hover:bg-warning-bg transition-all"
                         >
                           Tolak
                         </button>

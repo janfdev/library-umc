@@ -119,7 +119,7 @@ export default function CardApprovalsSection() {
       </div>
 
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:w-[360px]">
             <input
               value={search}
@@ -165,7 +165,7 @@ export default function CardApprovalsSection() {
                       <h3 className="text-base font-bold text-foreground">
                         {item.user.name}
                       </h3>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200">
                         <BadgeCheck size={12} /> Pending
                       </span>
                     </div>
@@ -208,7 +208,7 @@ export default function CardApprovalsSection() {
           </div>
 
           {totalPages > 1 && (
-            <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-xs text-muted-foreground font-medium">
                 Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)}–
                 {Math.min(currentPage * itemsPerPage, filtered.length)} dari {filtered.length} data

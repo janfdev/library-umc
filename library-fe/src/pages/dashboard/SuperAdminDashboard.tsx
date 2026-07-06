@@ -422,35 +422,35 @@ export default function SuperAdminDashboard() {
         onSignOut={handleSignOut}
       />
 
-      <SidebarInset className="bg-slate-100">
-        <header className="sticky top-0 z-10 flex min-h-20 flex-wrap items-center gap-3 border-b border-slate-200/70 bg-white/85 px-4 py-3 backdrop-blur-sm sm:px-6 lg:px-8">
-          <SidebarTrigger className="size-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100" />
+      <SidebarInset className="bg-background">
+        <header className="sticky top-0 z-10 flex min-h-20 flex-wrap items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur-sm sm:px-6 lg:px-8">
+          <SidebarTrigger className="size-9 rounded-lg border border-border text-foreground hover:bg-muted" />
 
           <button
             type="button"
             onClick={() => setIsCommandOpen(true)}
-            className="flex min-w-55 flex-1 items-center gap-3 rounded-2xl bg-slate-100 px-4 py-2.5 text-left text-sm text-slate-400 transition-all hover:bg-slate-200/70"
+            className="flex min-w-55 flex-1 items-center gap-3 rounded-2xl bg-muted px-4 py-2.5 text-left text-sm text-muted-foreground transition-all hover:bg-muted/70"
           >
             <Search className="h-4 w-4" />
             <span className="flex-1">Cari menu dashboard...</span>
-            <span className="hidden rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-500 sm:inline-flex">
+            <span className="hidden rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground sm:inline-flex">
               Ctrl+K
             </span>
           </button>
 
           <div className="ml-auto flex items-center gap-4 sm:gap-6">
             <ThemeToggle />
-            <div className="flex items-center gap-3 border-l border-slate-100 pl-4 sm:pl-6">
+            <div className="flex items-center gap-3 border-l border-border pl-4 sm:pl-6">
               <div className="hidden text-right sm:block">
-                <p className="leading-tight text-sm font-bold text-slate-900">
+                <p className="leading-tight text-sm font-bold text-foreground">
                   {session?.user?.name || "Admin"}
                 </p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Super Admin
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-slate-200 shadow-sm">
-                <span className="text-sm font-bold text-slate-500">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-muted shadow-sm">
+                <span className="text-sm font-bold text-muted-foreground">
                   {session?.user?.name?.charAt(0) || "A"}
                 </span>
               </div>
@@ -476,7 +476,7 @@ export default function SuperAdminDashboard() {
               <Skeleton className="mt-8 h-100 w-full rounded-[32px]" />
             </div>
           ) : (
-            <div className="mx-auto max-w-7xl rounded-3xl border border-slate-200/70 bg-white/70 p-3 shadow-sm backdrop-blur-sm animate-in space-y-8 fade-in duration-500 delay-150 sm:p-5 lg:p-6">
+            <div className="mx-auto max-w-7xl rounded-3xl border border-border bg-card/70 p-3 shadow-sm backdrop-blur-sm animate-in space-y-8 fade-in duration-500 delay-150 sm:p-5 lg:p-6">
               {renderSection()}
             </div>
           )}
@@ -487,11 +487,11 @@ export default function SuperAdminDashboard() {
           onOpenChange={setIsCommandOpen}
           title="Pencarian Dashboard"
           description="Cari dan pilih tab dashboard"
-          className="border border-red-100 bg-card"
+          className="border border-red-100 dark:border-red-900 bg-card"
         >
           <CommandInput
             placeholder="Ketik nama menu dashboard..."
-            className="placeholder:text-slate-400"
+            className="placeholder:text-muted-foreground"
           />
           <CommandList>
             <CommandEmpty>Menu tidak ditemukan.</CommandEmpty>
@@ -512,7 +512,7 @@ export default function SuperAdminDashboard() {
                 >
                   <Icon className="size-4" />
                   <span>{label}</span>
-                  <CommandShortcut className="text-red-500">
+                  <CommandShortcut className="text-red-500 dark:text-red-400">
                     {activeMenu === key ? "Aktif" : ""}
                   </CommandShortcut>
                 </CommandItem>
