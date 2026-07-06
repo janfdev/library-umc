@@ -1,5 +1,6 @@
 import { type Request, type Response } from "express";
 import { type ZodSchema, ZodError, type ZodIssue } from "zod";
+import { auth } from "../lib/auth";
 
 
 
@@ -29,6 +30,10 @@ export async function getAuthenticatedUser(req: Request) {
 }
 
 /**
+ * Validate request body with Zod schema
+ */
+export function validateRequestBody<T>(
+  req: Request,
   schema: ZodSchema<T>,
 ): { data: T; error: null } | { data: null; error: string } {
   try {
@@ -88,8 +93,9 @@ export function generateSlug(name: string): string {
 }
 
 /**
- * Higher-order function to wrap a controller with authentication
+ * Calculate offset for pagination
  */
+export function getOffset(page: number, limit: number): number {
   return (page - 1) * limit;
 }
 
