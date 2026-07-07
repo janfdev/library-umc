@@ -106,9 +106,13 @@ export default function FinesSection() {
 
       if (unpaidData.success && Array.isArray(unpaidData.data)) {
         setUnpaidFines(unpaidData.data);
+      } else {
+        setUnpaidFines([]);
       }
       if (paidData.success && Array.isArray(paidData.data)) {
         setPaidFines(paidData.data);
+      } else {
+        setPaidFines([]);
       }
     } catch {
       showToast("Gagal memuat data denda. Periksa koneksi Anda.", "error");
@@ -354,17 +358,17 @@ export default function FinesSection() {
                         <td className="px-8 py-5">
                           <div>
                             <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
-                              {fine.loan.member.user.name}
+                              {fine.loan?.member?.user?.name || "-"}
                             </p>
                             <p className="text-[11px] font-medium text-muted-foreground mt-0.5">
-                              {fine.loan.member.user.email}
+                              {fine.loan?.member?.user?.email || "-"}
                             </p>
                           </div>
                         </td>
                         <td className="px-8 py-5">
                           <div>
                             <p className="text-[14px] font-bold text-foreground truncate max-w-[200px]">
-                              {fine.loan.item.bibliography.title}
+                              {fine.loan?.item?.bibliography?.title || "-"}
                             </p>
                             {lateDays > 0 && (
                               <p className="text-[12px] font-medium text-destructive mt-0.5">
@@ -424,15 +428,15 @@ export default function FinesSection() {
                     >
                       <td className="px-8 py-5">
                         <p className="text-[14px] font-bold text-foreground group-hover:text-primary transition-colors">
-                          {fine.loan.member.user.name}
+                          {fine.loan?.member?.user?.name || "-"}
                         </p>
                         <p className="text-[11px] font-medium text-muted-foreground">
-                          {fine.loan.member.user.email}
+                          {fine.loan?.member?.user?.email || "-"}
                         </p>
                       </td>
                       <td className="px-8 py-5">
                         <p className="text-[14px] font-bold text-foreground truncate max-w-[200px]">
-                          {fine.loan.item.bibliography.title}
+                          {fine.loan?.item?.bibliography?.title || "-"}
                         </p>
                       </td>
                       <td className="px-8 py-5">

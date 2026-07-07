@@ -173,13 +173,13 @@ describe("ImportSection Batch Detail", () => {
     });
   });
 
-  it("should show approve button for validated status", async () => {
-    const validatedBatch = { ...mockBatches[1], status: "validated" };
+  it("should show approve button for preview status", async () => {
+    const previewBatch = { ...mockBatches[1], status: "preview" };
     (importApi.list as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: [validatedBatch],
+      data: [previewBatch],
     });
     (importApi.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: validatedBatch,
+      data: previewBatch,
     });
     render(<ImportSection />);
     await waitFor(() => {
@@ -192,12 +192,12 @@ describe("ImportSection Batch Detail", () => {
   });
 
   it("should handle approval result", async () => {
-    const validatedBatch = { ...mockBatches[1], status: "validated" };
+    const previewBatch = { ...mockBatches[1], status: "preview" };
     (importApi.list as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: [validatedBatch],
+      data: [previewBatch],
     });
     (importApi.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: validatedBatch,
+      data: previewBatch,
     });
     (importApi.approve as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { processed: 5, committed: 5, failed: 0, remaining: 5, hasMore: true },
