@@ -40,7 +40,7 @@ export default function ItemSection() {
       const response = await fetch(url, { credentials: "include" });
       if (!response.ok) throw new Error("Gagal memuat data");
       const result = await response.json();
-      setItems(result.data || []);
+      setItems(result.data?.items || []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Gagal memuat data");
     } finally {
