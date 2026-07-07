@@ -118,7 +118,7 @@ export default function CategoriesSection({
 
   return (
     <div className="bg-card rounded-[32px] border border-border shadow-sm overflow-hidden">
-      <div className="p-8 flex flex-col md:flex-row md:items-center justify-between border-b border-slate-50 gap-4">
+      <div className="p-8 flex flex-col md:flex-row md:items-center justify-between border-b border-border gap-4">
         <div>
           <h3 className="text-xl font-bold text-foreground">Kategori Buku</h3>
           <p className="text-sm text-muted-foreground font-medium">Kelola kategori untuk klasifikasi koleksi.</p>
@@ -158,10 +158,10 @@ export default function CategoriesSection({
             {paginatedCategories.map((category) => (
               <div
                 key={category.id}
-                className="group relative bg-card p-6 rounded-[24px] border border-border hover:border-red-100 hover:shadow-xl hover:shadow-red-900/5 transition-all duration-300 overflow-hidden"
+                className="group relative bg-card p-6 rounded-[24px] border border-border hover:border-red-100 dark:border-red-900 hover:shadow-xl hover:shadow-red-900/5 transition-all duration-300 overflow-hidden"
               >
                 {/* Decorative Background Element */}
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning-bg/50 rounded-full blur-2xl group-hover:bg-red-100/50 transition-colors" />
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning-bg/50 rounded-full blur-2xl group-hover:bg-red-100 dark:bg-red-900/50 transition-colors" />
 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-6">
@@ -172,14 +172,14 @@ export default function CategoriesSection({
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
                         onClick={() => openEditModal(category)}
-                        className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all"
+                        className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-blue-600 dark:text-blue-400 hover:border-blue-100 hover:shadow-sm transition-all"
                         title="Edit Kategori"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDelete(category.id, category.name)}
-                        className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-destructive hover:border-red-100 hover:shadow-sm transition-all"
+                        className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-destructive hover:border-red-100 dark:border-red-900 hover:shadow-sm transition-all"
                         title="Hapus Kategori"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -197,7 +197,7 @@ export default function CategoriesSection({
                     </p>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
+                  <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       ID: #{category.id}
                     </span>
@@ -213,7 +213,7 @@ export default function CategoriesSection({
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-50">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
             <p className="text-xs text-muted-foreground font-medium">
               Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredCategories.length)}–
               {Math.min(currentPage * itemsPerPage, filteredCategories.length)} dari {filteredCategories.length} kategori

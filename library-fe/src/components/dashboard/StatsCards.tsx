@@ -16,30 +16,30 @@ export default function StatsCards({
       label: "Total Judul",
       value: totalBibliographies,
       icon: Book,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-50 dark:bg-blue-950",
     },
     {
       label: "Total Buku",
       value: totalItems,
       icon: Layers,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
+      color: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-50 dark:bg-purple-950",
     },
     {
       label: "Dipinjam",
       value: loanedCount,
       icon: Users,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
+      color: "text-orange-600 dark:text-orange-400",
+      bg: "bg-orange-50 dark:bg-orange-950",
     },
     {
       label: "Tersedia",
       value:
         totalItems - loanedCount > 0 ? totalItems - loanedCount : 0,
       icon: TrendingUp,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-green-600 dark:text-green-400",
+      bg: "bg-green-50 dark:bg-green-950",
     },
   ];
 
@@ -48,12 +48,12 @@ export default function StatsCards({
       {stats.map((stat, i) => (
         <div
           key={i}
-          className="bg-card p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+          className="bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-all duration-200"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-              <h3 className="text-3xl font-bold text-gray-900 mt-1">
+              <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+              <h3 className="text-3xl font-bold text-foreground mt-1">
                 {stat.value}
               </h3>
             </div>

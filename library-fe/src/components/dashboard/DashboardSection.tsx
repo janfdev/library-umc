@@ -39,19 +39,19 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
   const statusMeta: Record<string, { label: string; className: string }> = {
     approved: {
       label: "Dipinjam",
-      className: "bg-orange-50 text-orange-600"
+      className: "bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
     },
     pending: {
       label: "Menunggu",
-      className: "bg-blue-50 text-blue-600"
+      className: "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
     },
     returned: {
       label: "Dikembalikan",
-      className: "bg-green-50 text-green-600"
+      className: "bg-green-50 dark:bg-green-950 text-green-600 dark:bg-green-950 dark:text-green-400"
     },
     rejected: {
       label: "Ditolak",
-      className: "bg-red-50 text-destructive"
+      className: "bg-red-50 dark:bg-red-950 text-destructive dark:bg-red-950"
     }
   };
 
@@ -108,50 +108,50 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
       label: "Total Judul",
       value: displayStats.totalBibliographies,
       icon: <Book />,
-      color: "text-blue-600",
-      bg: "bg-blue-50"
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-50 dark:bg-blue-950"
     },
     {
       label: "Total Buku",
       value: displayStats.totalItems || 0,
       icon: <Layers />,
-      color: "text-purple-600",
-      bg: "bg-purple-50"
+      color: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-50 dark:bg-purple-950"
     },
     {
       label: "Sedang Dipinjam",
       value: displayStats.activeBorrowings ?? 0,
       icon: <Clock />,
-      color: "text-orange-600",
-      bg: "bg-orange-50"
+      color: "text-orange-600 dark:text-orange-400",
+      bg: "bg-orange-50 dark:bg-orange-950"
     },
     {
       label: "Kunjungan Fisik",
       value: displayStats.totalGuests,
       icon: <Users />,
-      color: "text-green-600",
-      bg: "bg-green-50"
+      color: "text-green-600 dark:text-green-400",
+      bg: "bg-green-50 dark:bg-green-950"
     },
     {
       label: "Kunjungan Web",
       value: displayStats.webVisits,
       icon: <Globe />,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50"
+      color: "text-indigo-600 dark:text-indigo-400",
+      bg: "bg-indigo-50 dark:bg-indigo-950"
     },
     {
       label: "Tagihan Denda Aktif",
       value: `Rp ${(displayStats.outstandingFines ?? 0).toLocaleString("id-ID")}`,
       icon: <Wallet />,
       color: "text-destructive",
-      bg: "bg-warning-bg"
+      bg: "bg-red-50 dark:bg-red-950"
     },
     {
       label: "Pendapatan Denda",
       value: `Rp ${(displayStats.totalFineRevenue ?? 0).toLocaleString("id-ID")}`,
       icon: <Wallet />,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50"
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-50 dark:bg-emerald-950"
     }
   ];
 
@@ -236,7 +236,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600 dark:text-blue-400"
               >
                 Laporan Peminjaman
               </DropdownMenuItem>
@@ -247,7 +247,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
                     "_blank"
                   )
                 }
-                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600"
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer text-muted-foreground focus:bg-muted focus:text-blue-600 dark:text-blue-400"
               >
                 Laporan Denda
               </DropdownMenuItem>
@@ -311,7 +311,7 @@ export default function DashboardSection({ stats }: DashboardSectionProps) {
               return (
                 <div
                   key={loan.id}
-                  className="flex items-center justify-between p-4 px-6 hover:bg-surface-hover transition-colors border-b border-slate-50 last:border-0 group cursor-pointer"
+                  className="flex items-center justify-between p-4 px-6 hover:bg-surface-hover transition-colors border-b border-border last:border-0 group cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-muted-foreground">

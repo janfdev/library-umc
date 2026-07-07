@@ -53,7 +53,7 @@ function InlineToast({
 }) {
   const styles =
     type === "success"
-      ? "bg-green-50 border-green-200 text-green-800"
+      ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-800"
       : "bg-warning-bg border-warning-border text-red-800";
   const Icon = type === "success" ? CheckCircle : AlertTriangle;
   return (
@@ -225,7 +225,7 @@ export default function FinesSection() {
         >
           Tagihan Belum Lunas
           {unpaidFines.length > 0 && (
-            <span className="ml-1.5 bg-red-100 text-destructive px-1.5 py-0.5 rounded-full text-[10px] font-black">
+            <span className="ml-1.5 bg-red-100 dark:bg-red-900 text-destructive px-1.5 py-0.5 rounded-full text-[10px] font-black">
               {unpaidFines.length}
             </span>
           )}
@@ -248,14 +248,14 @@ export default function FinesSection() {
       {/* Main Card */}
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden flex flex-col">
         {/* Controls Bar */}
-        <div className="p-6 flex flex-col sm:flex-row items-center justify-between border-b border-slate-50 gap-4">
+        <div className="p-6 flex flex-col sm:flex-row items-center justify-between border-b border-border gap-4">
           <div className="relative w-full sm:w-[350px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
               type="text"
               id="fines-search"
               placeholder="Cari nama mahasiswa..."
-              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-primary/40 transition-all outline-none placeholder:text-muted-foreground text-black"
+              className="w-full pl-11 pr-4 py-2.5 bg-muted border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/10 focus:border-primary/40 transition-all outline-none placeholder:text-muted-foreground text-foreground"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -376,12 +376,12 @@ export default function FinesSection() {
                         {/* STATUS BUKU BADGE */}
                         <td className="px-8 py-5">
                           {fine.loan.status === "returned" ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-[11px] font-bold whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-xl text-[11px] font-bold whitespace-nowrap">
                               <RotateCcw size={11} />
                               Sudah Dikembalikan
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[11px] font-bold whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 rounded-xl text-[11px] font-bold whitespace-nowrap">
                               <BookOpen size={11} />
                               Belum Dikembalikan
                             </span>
@@ -400,7 +400,7 @@ export default function FinesSection() {
                             id={`btn-pay-fine-${fine.id}`}
                             onClick={() => handlePayFine(fine)}
                             disabled={payingId === fine.id}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-600 hover:text-white transition-all disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-green-600 hover:text-white transition-all disabled:opacity-50"
                           >
                             {payingId === fine.id ? (
                               <Loader size={12} className="animate-spin" />
@@ -448,10 +448,10 @@ export default function FinesSection() {
                         </p>
                       </td>
                       <td className="px-8 py-5 text-right">
-                        <p className="text-[14px] font-bold text-green-600">
+                        <p className="text-[14px] font-bold text-green-600 dark:text-green-400">
                           {formatRupiah(fine.amount)}
                         </p>
-                        <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[10px] font-bold">
+                        <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400 rounded-lg text-[10px] font-bold">
                           <CheckCircle size={10} /> Lunas
                         </div>
                       </td>
@@ -464,7 +464,7 @@ export default function FinesSection() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="p-6 border-t border-slate-50 flex items-center justify-between">
+        <div className="p-6 border-t border-border flex items-center justify-between">
           <p className="text-xs text-muted-foreground font-medium">
             Menampilkan{" "}
             {Math.min((currentPage - 1) * itemsPerPage + 1, activeList.length)}–

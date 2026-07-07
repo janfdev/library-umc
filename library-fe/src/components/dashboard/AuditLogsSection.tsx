@@ -94,7 +94,7 @@ export default function AuditLogsSection() {
       </div>
 
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex flex-col xl:flex-row items-stretch xl:items-center gap-3">
+        <div className="p-6 border-b border-border flex flex-col xl:flex-row items-stretch xl:items-center gap-3">
           <div className="relative w-full xl:max-w-[340px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
@@ -230,7 +230,7 @@ export default function AuditLogsSection() {
             </div>
 
             {totalPages > 1 && (
-              <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-xs text-muted-foreground font-medium">
                   Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, filteredLogs.length)}–
                   {Math.min(currentPage * itemsPerPage, filteredLogs.length)} dari {filteredLogs.length} data

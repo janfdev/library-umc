@@ -306,7 +306,7 @@ export default function GuestsSection({
       {/* Main Card */}
       <div className="bg-card rounded-[24px] border border-border shadow-sm overflow-hidden flex flex-col">
         {/* Controls Bar */}
-        <div className="p-6 flex flex-col sm:flex-row items-center justify-end gap-3 border-b border-slate-50">
+        <div className="p-6 flex flex-col sm:flex-row items-center justify-end gap-3 border-b border-border">
           <button className="flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-muted text-muted-foreground rounded-xl text-sm font-bold transition-colors border border-border">
             Filter:{" "}
             <span className="font-medium text-muted-foreground">Tidak ada</span>
@@ -465,7 +465,7 @@ export default function GuestsSection({
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground font-medium">
               Menampilkan{" "}
               {Math.min(

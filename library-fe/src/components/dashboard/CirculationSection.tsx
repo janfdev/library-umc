@@ -243,8 +243,8 @@ export default function CirculationSection() {
       )}
 
       {mode === "loan" && loanResult && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-          <h3 className="mb-2 text-sm font-semibold text-emerald-700">Peminjaman Berhasil</h3>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950 p-6">
+          <h3 className="mb-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">Peminjaman Berhasil</h3>
           <p className="text-sm text-emerald-600">{loanResult.message}</p>
           {loanResult.loan && (
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -252,19 +252,19 @@ export default function CirculationSection() {
               <div><dt className="text-xs text-muted-foreground">Jatuh Tempo</dt><dd className="text-sm font-medium">{loanResult.loan.dueDate}</dd></div>
             </div>
           )}
-          <button onClick={reset} className="mt-4 text-sm text-emerald-700 hover:underline">
+          <button onClick={reset} className="mt-4 text-sm text-emerald-700 dark:text-emerald-400 hover:underline">
             <ArrowLeft className="size-4 inline mr-1" /> Kembali ke scan
           </button>
         </div>
       )}
 
       {mode === "fine" && returnResult && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
-          <h3 className="mb-2 text-sm font-semibold text-blue-700">Pengembalian Berhasil</h3>
-          <p className="text-sm text-blue-600">{returnResult.message}</p>
+        <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-6">
+          <h3 className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">Pengembalian Berhasil</h3>
+          <p className="text-sm text-blue-600 dark:text-blue-400">{returnResult.message}</p>
           {returnResult.fine && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm font-semibold text-amber-700">Denda</p>
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950 p-4">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Denda</p>
               <div className="grid gap-2 sm:grid-cols-3 mt-2">
                 <div><dt className="text-xs text-muted-foreground">Hari Terlambat</dt><dd className="text-sm font-medium">{returnResult.fine.overdueDays}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Jumlah</dt><dd className="text-sm font-medium">Rp {returnResult.fine.assessedAmount}</dd></div>
@@ -272,7 +272,7 @@ export default function CirculationSection() {
               </div>
             </div>
           )}
-          <button onClick={reset} className="mt-4 text-sm text-blue-700 hover:underline">
+          <button onClick={reset} className="mt-4 text-sm text-blue-700 dark:text-blue-400 hover:underline">
             <ArrowLeft className="size-4 inline mr-1" /> Kembali ke scan
           </button>
         </div>

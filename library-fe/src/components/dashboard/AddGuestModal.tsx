@@ -73,9 +73,9 @@ export default function AddGuestModal({ isOpen, onClose, onRefresh }: AddGuestMo
         </div>
 
         {/* Info Banner */}
-        <div className="mx-6 mt-5 flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+        <div className="mx-6 mt-5 flex items-start gap-2.5 bg-blue-50 dark:bg-blue-950 border border-blue-100 rounded-xl px-4 py-3">
           <Info size={15} className="text-blue-500 mt-0.5 shrink-0" />
-          <p className="text-[12px] text-blue-700 font-medium leading-relaxed">
+          <p className="text-[12px] text-blue-700 dark:text-blue-400 font-medium leading-relaxed">
             Masukkan email pengunjung yang terdaftar di sistem kampus UMC. Data nama, fakultas, dan NIM akan diambil otomatis.
           </p>
         </div>
