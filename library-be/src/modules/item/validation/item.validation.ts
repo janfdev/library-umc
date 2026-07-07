@@ -4,7 +4,7 @@ export const itemStatusSchema = z.enum(["available", "loaned", "damaged", "lost"
 
 export const createItemSchema = z.object({
   bibliographyId: z.string().uuid(),
-  locationId: z.coerce.number().int().positive().optional(),
+  locationId: z.coerce.number().int().positive(),
   barcode: z.string().min(1).max(50).optional(),
   uniqueCode: z.string().min(1).max(30).optional(),
   itemCode: z.string().min(1).max(50),

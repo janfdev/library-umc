@@ -80,11 +80,8 @@ export class ItemService {
     const bib = await db.query.bibliographies.findFirst({ where: eq(bibliographies.id, data.bibliographyId) });
     if (!bib) return { success: false, message: "Bibliography not found" };
 
-    // ponytail: locationId optional, skip validation if not provided
-    if (data.locationId) {
-      const location = await db.query.locations.findFirst({ where: eq(locations.id, data.locationId) });
-      if (!location) return { success: false, message: "Location not found" };
-    }
+    const location = await db.query.locations.findFirst({ where: eq(locations.id, data.locationId) });
+    if (!location) return { success: false, message: "Location not found" };
 
     let result: any;
     try {

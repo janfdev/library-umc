@@ -74,6 +74,7 @@ export interface Item {
   itemCode: string;
   inventoryCode?: string;
   callNumber?: string;
+  locationId?: number;
   status: string;
   site?: string;
   source?: string;
@@ -268,6 +269,21 @@ export const itemApi = {
 
   revokeQr: (id: string) =>
     apiFetch<Item>(`/api/items/${id}/qr/revoke`, { method: "POST" }),
+};
+
+// ==========================================
+// Location API
+// ==========================================
+
+export interface Location {
+  id: number;
+  room: string;
+  rack: string;
+  shelf: string;
+}
+
+export const locationApi = {
+  list: () => apiFetch<Location[]>("/api/locations"),
 };
 
 // ==========================================

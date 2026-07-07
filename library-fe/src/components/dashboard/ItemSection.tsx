@@ -15,7 +15,7 @@ import {
   RotateCcw,
   Ban,
 } from "lucide-react";
-import { itemApi, bibliographyApi, type Item, type Bibliography } from "@/api/client";
+import { itemApi, bibliographyApi, locationApi, type Item, type Bibliography, type Location } from "@/api/client";
 import { API_BASE_URL } from "@/utils/api-config";
 
 export default function ItemSection() {
@@ -525,11 +525,13 @@ function ItemForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bibliographies, setBibliographies] = useState<Bibliography[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [formData, setFormData] = useState({
     bibliographyId: item?.bibliographyId || "",
     itemCode: item?.itemCode || "",
     inventoryCode: item?.inventoryCode || "",
     callNumber: item?.callNumber || "",
+    locationId: item?.locationId?.toString() || "",
     status: item?.status || "available",
     source: item?.source || "",
     price: item?.price || "",
@@ -545,7 +547,16 @@ function ItemForm({
         // ignore
       }
     };
+    const loadLocations = async () => {
+      try {
+        const result = await locationApi.list();
+        setLocations(result.data || []);
+      } catch {
+        // ignore
+      }
+    };
     loadBibliographies();
+    loadLocations();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -554,16 +565,15 @@ function ItemForm({
     setError(null);
 
     try {
+      const payload = {
+        ...formData,
+        locationId: formData.locationId ? parseInt(formData.locationId) : undefined,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+      };
       if (item) {
-        await itemApi.update(item.id, {
-          ...formData,
-          price: formData.price ? parseFloat(formData.price) : undefined,
-        });
+        await itemApi.update(item.id, payload);
       } else {
-        await itemApi.create(formData.bibliographyId, {
-          ...formData,
-          price: formData.price ? parseFloat(formData.price) : undefined,
-        });
+        await itemApi.create(formData.bibliographyId, payload);
       }
       onSuccess();
     } catch (err: unknown) {
@@ -655,6 +665,22 @@ function ItemForm({
                 <option value="reserved">Direservasi</option>
                 <option value="maintenance">Maintenance</option>
                 <option value="lost">Hilang</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Lokasi *</label>
+              <select
+                value={formData.locationId}
+                onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
+                required
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Pilih lokasi</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.room} - {loc.rack} - {loc.shelf}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
