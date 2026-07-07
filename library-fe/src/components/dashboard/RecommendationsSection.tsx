@@ -59,10 +59,11 @@ export default function RecommendationsSection() {
         credentials: "include",
       });
       const data = await response.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
         setRecommendations(data.data);
       } else {
-        setError(data.message || "Gagal memuat data");
+        setRecommendations([]);
+        if (!data.success) setError(data.message || "Gagal memuat data");
       }
     } catch (err) {
       console.error(err);

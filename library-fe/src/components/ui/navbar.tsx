@@ -1,4 +1,3 @@
-// src/components/ui/navbar.tsx
 import { useState, useEffect, useRef } from "react";
 import LogoUmc from "@/assets/logo_umc.png";
 import { authClient } from "@/utils/auth-client";

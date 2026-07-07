@@ -9,7 +9,6 @@ import {
   ScanLine,
   Search,
   Shield,
-  Tag,
   Users,
   Wallet,
   BookMarked,
@@ -22,7 +21,6 @@ import {
 import Logo from "@/assets/logo_umc.png";
 import AuditLogsSection from "@/components/dashboard/AuditLogsSection";
 import CardApprovalsSection from "@/components/dashboard/CardApprovalsSection";
-import CategoriesSection from "@/components/dashboard/CategoriesSection";
 import CirculationSection from "@/components/dashboard/CirculationSection";
 import BibliographySection from "@/components/dashboard/BibliographySection";
 import ItemSection from "@/components/dashboard/ItemSection";
@@ -59,7 +57,6 @@ import {
   SidebarProvider,
   SidebarTrigger
 } from "@/components/ui/sidebar";
-import { useCategoriesData } from "@/hooks/dashboard/useCategoriesData";
 import { useDashboardStatsLazy } from "@/hooks/dashboard/useDashboardStatsLazy";
 import { useGuestsData } from "@/hooks/dashboard/useGuestsData";
 import { cn } from "@/lib/utils";
@@ -75,7 +72,6 @@ type ActiveMenu =
   | "exportData"
   | "guests"
   | "loans"
-  | "categories"
   | "fines"
   | "cardApprovals"
   | "returnApprovals"
@@ -102,7 +98,6 @@ const MENU_CONFIG: MenuConfig[] = [
   { key: "guests", label: "Data Pengunjung", icon: Users },
   { key: "loans", label: "Peminjaman & Persetujuan", icon: BookOpen },
   { key: "returnApprovals", label: "Konfirmasi Pengembalian", icon: CheckCircle, superAdminOnly: true },
-  { key: "categories", label: "Manajemen Kategori", icon: Tag },
   { key: "fines", label: "Manajemen Denda", icon: Wallet },
   { key: "cardApprovals", label: "Persetujuan Kartu", icon: Shield },
   { key: "users", label: "Manajemen User", icon: Users, superAdminOnly: true },
@@ -258,12 +253,6 @@ export default function SuperAdminDashboard() {
   } = useDashboardStatsLazy(activeMenu === "dashboard");
 
   const {
-    categories,
-    loading: categoriesLoading,
-    refetch: refetchCategories
-  } = useCategoriesData(activeMenu === "categories");
-
-  const {
     guests,
     members,
     loading: guestsLoading,
@@ -272,13 +261,11 @@ export default function SuperAdminDashboard() {
 
   const activeLoading = useMemo(() => {
     if (activeMenu === "dashboard") return statsLoading;
-    if (activeMenu === "categories") return categoriesLoading;
     if (activeMenu === "guests") return guestsLoading;
     return false;
   }, [
     activeMenu,
     statsLoading,
-    categoriesLoading,
     guestsLoading
   ]);
 
@@ -291,16 +278,6 @@ export default function SuperAdminDashboard() {
     setSidebarOpen(open);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open));
-    }
-  };
-
-  const handleDeleteCategory = async (id: number, name: string) => {
-    if (!confirm(`Hapus kategori "${name}"?`)) return;
-    try {
-      await dashboardDataService.deleteCategory(id);
-      await Promise.all([refetchCategories(), refetchStats()]);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -331,18 +308,6 @@ export default function SuperAdminDashboard() {
         return <ImportSection />;
       case "exportData":
         return <ExportSection />;
-      case "categories":
-        return (
-          <CategoriesSection
-            categories={categories}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onDelete={handleDeleteCategory}
-            onRefresh={() =>
-              void Promise.all([refetchCategories(), refetchStats()])
-            }
-          />
-        );
       case "guests":
         return (
           <GuestsSection

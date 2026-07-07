@@ -333,7 +333,7 @@ function BatchDetail({
 
   const canParse = ["uploading", "uploaded"].includes(batch.status);
   const canValidate = batch.status === "parsed";
-  const canApprove = batch.status === "validated";
+  const canApprove = batch.status === "preview" || batch.status === "approving";
   const canCancel = !["committed", "cancelled", "failed"].includes(batch.status);
 
   return (

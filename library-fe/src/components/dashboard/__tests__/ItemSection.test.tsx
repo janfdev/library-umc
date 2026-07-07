@@ -51,7 +51,7 @@ describe("ItemSection", () => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ data: mockItems }),
+      json: () => Promise.resolve({ data: { items: mockItems } }),
     });
   });
 
@@ -103,7 +103,7 @@ describe("ItemSection", () => {
   it("should show empty state when no items", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ data: [] }),
+      json: () => Promise.resolve({ data: { items: [] } }),
     });
     render(<ItemSection />);
     await waitFor(() => {
