@@ -47,8 +47,30 @@ const BookList = ({
     );
   };
 
-  // Helper: Dapatkan status buku (hanya berdasarkan reservasi user sendiri)
-  const getBookStatusReservation = (): string => {
+  // Helper: Dapatkan status ketersediaan riil buku
+  const getBookStatus = (bibliography: Bibliography): "available" | "borrowed" | "empty" => {
+    if (bibliography.items && bibliography.items.length > 0) {
+      const availableItems = bibliography.items.filter(
+        (i) => i.status === "available",
+      );
+      if (availableItems.length > 0) {
+        return "available";
+      }
+
+      const loanedItems = bibliography.items.filter(
+        (i) => i.status === "loaned",
+      );
+      if (loanedItems.length > 0) {
+        return "borrowed";
+      }
+
+      return "empty";
+    }
+
+    if (typeof bibliography.stock === "number") {
+      return bibliography.stock > 0 ? "available" : "empty";
+    }
+
     return "available";
   };
 
@@ -91,8 +113,8 @@ const BookList = ({
   // Filter berdasarkan ketersediaan (dari filter sidebar)
   const filteredByAvailability =
     availabilityFilter.length > 0
-      ? filteredBySearch.filter(() => {
-          const bookStatus = getBookStatusReservation();
+      ? filteredBySearch.filter((bibliography) => {
+          const bookStatus = getBookStatus(bibliography);
           return availabilityFilter.includes(bookStatus);
         })
       : filteredBySearch;
@@ -139,7 +161,10 @@ const BookList = ({
         return "Sedang Anda Pinjam";
       }
     }
-    return "Tersedia";
+    const status = getBookStatus(bibliography);
+    if (status === "available") return "Tersedia";
+    if (status === "borrowed") return "Sedang Dipinjam";
+    return "Stok Kosong";
   };
 
   // Helper: Status badge style
@@ -154,7 +179,14 @@ const BookList = ({
         return "px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-800 font-medium";
       }
     }
-    return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
+    const status = getBookStatus(bibliography);
+    if (status === "available") {
+      return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
+    }
+    if (status === "borrowed") {
+      return "px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium";
+    }
+    return "px-3 py-1 text-xs rounded-full bg-red-100 text-red-800 font-medium";
   };
 
   // Navigasi ke detail

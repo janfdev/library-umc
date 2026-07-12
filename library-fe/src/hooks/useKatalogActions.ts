@@ -48,7 +48,18 @@ export function useKatalogActions({
       const availableItems = bibliography.items.filter(
         (i) => i.status === "available",
       );
-      return availableItems.length > 0 ? "available" : "empty";
+      if (availableItems.length > 0) {
+        return "available";
+      }
+
+      const loanedItems = bibliography.items.filter(
+        (i) => i.status === "loaned",
+      );
+      if (loanedItems.length > 0) {
+        return "borrowed";
+      }
+
+      return "empty";
     }
 
     if (typeof bibliography?.stock === "number") {
