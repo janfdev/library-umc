@@ -14,7 +14,8 @@ if (!RESEND_API_KEY) {
   );
 }
 
-const resend = new Resend(RESEND_API_KEY);
+// Inisialisasi Resend secara opsional jika API key tersedia agar tidak crash saat startup
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 /**
  * Kirim email menggunakan Resend API (HTTP, tidak blokir seperti SMTP).
@@ -27,6 +28,13 @@ export const sendEmail = async (
   retryCount = 0,
 ): Promise<{ id: string }> => {
   const MAX_RETRY = 1;
+
+  if (!resend) {
+    console.log(
+      `[Mailer Mock] Email simulasi terkirim ke: ${to} | Subject: ${subject} (karena RESEND_API_KEY tidak dikonfigurasi)`
+    );
+    return { id: `mock-email-id-${Date.now()}` };
+  }
 
   try {
     const { data, error } = await resend.emails.send({

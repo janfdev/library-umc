@@ -108,7 +108,7 @@ export class BibliographyService {
         collectionType: true,
         bibliographyAuthors: { with: { author: true } },
         bibliographySubjects: { with: { subject: true } },
-        items: { where: isNull(items.deletedAt) },
+        items: { where: isNull(items.deletedAt), with: { location: true } },
       },
     });
     if (!bib) return null;

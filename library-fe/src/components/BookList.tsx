@@ -12,6 +12,7 @@ interface BookListProps {
   availabilityFilter?: string[];
   yearRange?: { start: string; end: string };
   currentUser?: LibraryUser | null;
+  categoryFilter?: number[];
 }
 
 const BookList = ({
@@ -20,6 +21,7 @@ const BookList = ({
   availabilityFilter = [],
   yearRange = { start: "", end: "" },
   currentUser = null,
+  categoryFilter = [],
 }: BookListProps) => {
   const navigate = useNavigate();
 
@@ -34,7 +36,7 @@ const BookList = ({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab]);
+  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab, categoryFilter]);
 
   // Helper: Cek apakah user sedang meminjam buku ini
   const isUserBorrowing = (bibliographyId: string): boolean => {
@@ -72,13 +74,16 @@ const BookList = ({
         return bibliography.author.toLowerCase().includes(query);
       case "isbn":
         return bibliography.isbn?.toLowerCase().includes(query);
+      case "subject":
+        return bibliography.subjects?.some((s) => s.name.toLowerCase().includes(query)) || false;
       case "all":
       default:
         return (
           bibliography.title.toLowerCase().includes(query) ||
           bibliography.author.toLowerCase().includes(query) ||
           bibliography.isbn?.toLowerCase().includes(query) ||
-          bibliography.publisher.toLowerCase().includes(query)
+          bibliography.publisher.toLowerCase().includes(query) ||
+          bibliography.subjects?.some((s) => s.name.toLowerCase().includes(query)) || false
         );
     }
   });
@@ -103,12 +108,19 @@ const BookList = ({
     return Number(year) >= Number(start) && Number(year) <= Number(end);
   });
 
+  // Filter berdasarkan kategori/jurusan
+  const filteredByCategory = categoryFilter.length > 0
+    ? filteredByYear.filter((bibliography) => {
+        return categoryFilter.includes(Number(bibliography.categoryId));
+      })
+    : filteredByYear;
+
   // Pagination Logic
-  const totalItems = filteredByYear.length;
+  const totalItems = filteredByCategory.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredByYear.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredByCategory.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);

@@ -1,5 +1,5 @@
 // src/pages/Katalog.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
@@ -7,6 +7,14 @@ import BookList from "@/components/BookList";
 import Background from "@/assets/bg-new.jpeg";
 import { Search, RotateCcw, Filter, X } from "lucide-react";
 import { authClient } from "@/utils/auth-client";
+import { API_BASE_URL } from "@/utils/api-config";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Katalog = () => {
   // Search parameters from URL
@@ -29,6 +37,72 @@ const Katalog = () => {
   const [availabilityFilter, setAvailabilityFilter] = useState<string[]>([]);
   const [yearRange, setYearRange] = useState({ start: "", end: "" });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [selectedFaculty, setSelectedFaculty] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | "">("");
+
+  // Dynamic faculty classification lookup
+  const getFacultyForCategory = (categoryName: string): string => {
+    const name = categoryName.toLowerCase();
+    if (name.includes("pendidikan") || name.includes("paud") || name.includes("bk") || name.includes("inggris") || name.includes("matematika") || name.includes("keguruan")) {
+      return "Fakultas Keguruan & Ilmu Pendidikan (FKIP)";
+    }
+    if (name.includes("fai") || name.includes("agama") || name.includes("islam")) {
+      return "Fakultas Agama Islam (FAI)";
+    }
+    if (name.includes("komunikasi") || name.includes("pemerintahan") || name.includes("psikologi") || name.includes("sosial") || name.includes("politik")) {
+      return "Fakultas Ilmu Sosial & Ilmu Politik (FISIP)";
+    }
+    if (name.includes("informatika") || name.includes("teknik") || name.includes("komputer") || name.includes("sains")) {
+      return "Fakultas Teknik (FT)";
+    }
+    if (name.includes("manajemen") || name.includes("ekonomi") || name.includes("akuntansi")) {
+      return "Fakultas Ekonomi (FE)";
+    }
+    if (name.includes("umum")) {
+      return "Umum";
+    }
+    return "Lainnya";
+  };
+
+  const FACULTIES = useMemo(() => [
+    "Fakultas Keguruan & Ilmu Pendidikan (FKIP)",
+    "Fakultas Agama Islam (FAI)",
+    "Fakultas Ilmu Sosial & Ilmu Politik (FISIP)",
+    "Fakultas Teknik (FT)",
+    "Fakultas Ekonomi (FE)",
+    "Umum",
+    "Lainnya"
+  ], []);
+
+  // Compute categoryFilter array based on selected faculty and major
+  const categoryFilter = useMemo(() => {
+    if (selectedCategoryId !== "") {
+      return [selectedCategoryId];
+    }
+    if (selectedFaculty !== "") {
+      return categories
+        .filter((cat) => getFacultyForCategory(cat.name) === selectedFaculty)
+        .map((cat) => cat.id);
+    }
+    return [];
+  }, [selectedFaculty, selectedCategoryId, categories]);
+
+  // Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/categories`);
+        const json = await response.json();
+        if (json.success && Array.isArray(json.data)) {
+          setCategories(json.data);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil kategori:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Update search query when URL changes
   useEffect(() => {
@@ -61,6 +135,8 @@ const Katalog = () => {
     setSearchType("all");
     setAvailabilityFilter([]);
     setYearRange({ start: "", end: "" });
+    setSelectedFaculty("");
+    setSelectedCategoryId("");
     setSearchParams({});
   };
 
@@ -69,7 +145,9 @@ const Katalog = () => {
     searchQuery.length > 0 ||
     availabilityFilter.length > 0 ||
     yearRange.start ||
-    yearRange.end;
+    yearRange.end ||
+    selectedFaculty !== "" ||
+    selectedCategoryId !== "";
 
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col">
@@ -92,8 +170,9 @@ const Katalog = () => {
             Temukan ribuan koleksi buku fisik dan digital terbaik Universitas Muhammadiyah Cirebon untuk mendukung kegiatan akademik Anda.
           </p>
 
-          <div className="bg-card rounded-2xl md:rounded-full p-1.5 shadow-2xl flex flex-col md:flex-row items-center gap-1 md:gap-0 mt-8 mx-2 sm:mx-0">
-            <div className="flex items-center grow w-full px-5 gap-3">
+          <div className="bg-card rounded-2xl md:rounded-full p-2 shadow-2xl flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0 mt-8 mx-2 sm:mx-0 border border-white/10 backdrop-blur-md">
+            {/* Kolom Input Pencarian */}
+            <div className="flex items-center grow px-4 gap-3 bg-muted/30 md:bg-transparent rounded-xl md:rounded-none py-3 md:py-0">
               <Search className="text-muted-foreground w-5 h-5 shrink-0" />
               <input
                 type="text"
@@ -101,30 +180,36 @@ const Katalog = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Cari Judul, Penulis, atau ISBN..."
-                className="w-full py-4 md:py-3.5 outline-none text-foreground placeholder-muted-foreground bg-transparent text-sm md:text-base"
+                className="w-full outline-none text-foreground placeholder-muted-foreground bg-transparent text-sm md:text-base font-medium"
               />
             </div>
 
-            <div className="hidden md:block w-[1px] h-8 bg-border mx-2"></div>
+            {/* Garis Pembatas (Desktop) */}
+            <div className="hidden md:block w-[1px] h-8 bg-border mx-3"></div>
 
+            {/* Dropdown Kategori Pencarian (Shadcn UI) */}
             <div className="w-full md:w-auto px-2 md:px-0">
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
-                className="w-full md:w-auto bg-transparent px-5 py-4 md:py-3.5 text-muted-foreground outline-none cursor-pointer text-sm font-medium border-t md:border-t-0 border-border"
-              >
-                <option value="all">Semua Kategori</option>
-                <option value="title">Judul</option>
-                <option value="author">Penulis</option>
-                <option value="isbn">ISBN</option>
-              </select>
+              <Select value={searchType} onValueChange={(val) => setSearchType(val)}>
+                <SelectTrigger className="w-full md:w-[170px] bg-muted/30 md:bg-transparent border-none text-muted-foreground focus:ring-0 focus:ring-offset-0 focus:ring-transparent focus:outline-none text-sm font-semibold h-12 justify-between rounded-xl md:rounded-none px-4 cursor-pointer">
+                  <SelectValue placeholder="Pilih Kategori" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover text-popover-foreground border-border rounded-xl">
+                  <SelectItem value="all" className="font-semibold text-sm">Semua Kategori</SelectItem>
+                  <SelectItem value="title" className="font-semibold text-sm">Judul</SelectItem>
+                  <SelectItem value="author" className="font-semibold text-sm">Penulis</SelectItem>
+                  <SelectItem value="isbn" className="font-semibold text-sm">ISBN</SelectItem>
+                  <SelectItem value="subject" className="font-semibold text-sm">Subjek</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="w-full md:w-auto p-1 md:p-0">
+            {/* Tombol Cari */}
+            <div className="p-0.5 md:p-0">
               <button
                 onClick={handleSearch}
-                className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-8 py-4 md:py-3.5 rounded-xl md:rounded-full font-bold transition-all active:scale-95 shadow-lg"
+                className="w-full md:w-auto bg-primary hover:bg-primary/95 text-white px-8 py-3.5 md:py-4 rounded-xl md:rounded-full font-extrabold text-sm md:text-base transition-all active:scale-[0.98] shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
+                <Search className="w-4 h-4 md:hidden" />
                 Cari Koleksi
               </button>
             </div>
@@ -238,6 +323,62 @@ const Katalog = () => {
                   </div>
                 </div>
 
+                {/* Filter: Fakultas Dropdown */}
+                <div>
+                  <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+                    Fakultas
+                  </h3>
+                  <Select
+                    value={selectedFaculty || "all"}
+                    onValueChange={(val) => {
+                      setSelectedFaculty(val === "all" ? "" : val);
+                      setSelectedCategoryId(""); // Reset jurusan when faculty changes
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-muted border-border font-semibold text-foreground text-left focus:ring-2 focus:ring-red-100 focus:border-primary transition-all cursor-pointer">
+                      <SelectValue placeholder="Semua Fakultas" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover text-popover-foreground border-border rounded-xl">
+                      <SelectItem value="all">Semua Fakultas</SelectItem>
+                      {FACULTIES.map((fac) => (
+                        <SelectItem key={fac} value={fac}>{fac}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filter: Jurusan Dropdown */}
+                {categories.length > 0 && (
+                  <div>
+                    <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+                      Jurusan / Program Studi
+                    </h3>
+                    <Select
+                      value={selectedCategoryId ? String(selectedCategoryId) : "all"}
+                      onValueChange={(val) => {
+                        setSelectedCategoryId(val === "all" ? "" : Number(val));
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-11 rounded-xl bg-muted border-border font-semibold text-foreground text-left focus:ring-2 focus:ring-red-100 focus:border-primary transition-all cursor-pointer">
+                        <SelectValue placeholder="Semua Jurusan" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover text-popover-foreground border-border rounded-xl">
+                        <SelectItem value="all">Semua Jurusan</SelectItem>
+                        {categories
+                          .filter((cat) => {
+                            if (!selectedFaculty) return true;
+                            return getFacultyForCategory(cat.name) === selectedFaculty;
+                          })
+                          .map((cat) => (
+                            <SelectItem key={cat.id} value={String(cat.id)}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {/* Filter: Tahun Terbit */}
                 <div>
                   <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">
@@ -288,6 +429,16 @@ const Katalog = () => {
                           {filter === "available" ? "Tersedia" : "Dipinjam"}
                         </span>
                       ))}
+                      {selectedFaculty && (
+                        <span className="px-3 py-1.5 bg-yellow-50 text-yellow-800 rounded-lg text-[10px] font-bold border border-yellow-100">
+                          Fakultas: {selectedFaculty.replace(/ \(.*\)/, "")}
+                        </span>
+                      )}
+                      {selectedCategoryId && (
+                        <span className="px-3 py-1.5 bg-orange-50 text-orange-800 rounded-lg text-[10px] font-bold border border-orange-100">
+                          Jurusan: {categories.find((c) => c.id === selectedCategoryId)?.name}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -303,6 +454,7 @@ const Katalog = () => {
               availabilityFilter={availabilityFilter}
               yearRange={yearRange}
               currentUser={currentUser}
+              categoryFilter={categoryFilter}
             />
           </section>
         </div>
