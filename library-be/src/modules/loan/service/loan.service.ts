@@ -478,7 +478,11 @@ export class LoanService {
     }
 
     if (filters.status) {
-      whereConditions.push(eq(loans.status, filters.status));
+      if (filters.status === "approved") {
+        whereConditions.push(sql`${loans.status} IN ('approved', 'extended')`);
+      } else {
+        whereConditions.push(eq(loans.status, filters.status));
+      }
     }
 
     const result = await db.query.loans.findMany({
@@ -496,7 +500,8 @@ export class LoanService {
           with: {
             user: true
           }
-        }
+        },
+        returnRequests: true
       },
       orderBy: (loans, { desc }) => [desc(loans.createdAt)]
     });
@@ -525,11 +530,104 @@ export class LoanService {
     };
   }
   /**
-   * 7. Extend Loan (Perpanjangan Peminjaman oleh Member)
+   * 7. Request Extension (Pengajuan Perpanjangan oleh Member)
    */
-  async extendLoan(loanId: string) {
+  async requestExtension(loanId: string, memberId: string) {
+    // 1. Cari data loan
+    const loan = await db.query.loans.findFirst({
+      where: and(
+        eq(loans.id, loanId),
+        isNull(loans.deletedAt)
+      ),
+      with: {
+        item: true
+      }
+    });
+
+    if (!loan) {
+      throw new Error("Data peminjaman tidak ditemukan.");
+    }
+
+    // 2. Validasi kepemilikan
+    if (loan.memberId !== memberId) {
+      throw new Error("Akses ditolak — Anda bukan peminjam buku ini.");
+    }
+
+    // 3. Validasi status: Hanya yang 'approved' atau 'extended' yang bisa diperpanjang.
+    if (loan.status !== "approved" && loan.status !== "extended") {
+      throw new Error(
+        "Hanya buku yang sedang dipinjam yang dapat diperpanjang."
+      );
+    }
+
+    // 4. Validasi status pengajuan saat ini
+    if (loan.extensionStatus === "pending") {
+      throw new Error(
+        "Permintaan perpanjangan untuk buku ini sedang diproses oleh admin."
+      );
+    }
+
+    // 5. Validasi extendCount: limit 1x
+    if (loan.extendCount >= 1) {
+      throw new Error(
+        "Buku ini sudah pernah diperpanjang sebelumnya. Batas perpanjangan adalah 1 kali."
+      );
+    }
+
+    // 6. Validasi Overdue: Tidak boleh extend jika sudah lewat dueDate.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(loan.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+
+    if (today > dueDate) {
+      throw new Error(
+        "Buku sudah melewati batas waktu pengembalian. Silakan kembalikan buku dan bayar denda jika ada."
+      );
+    }
+
+    // 7. Validasi Reservasi: Tidak boleh extend jika ada orang lain yang sudah antri (waiting) untuk koleksi ini.
+    const [waitingResCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.bibliographyId, loan.item.bibliographyId),
+          eq(reservations.status, "waiting"),
+          isNull(reservations.deletedAt)
+        )
+      );
+
+    if (Number(waitingResCount.count) > 0) {
+      throw new Error(
+        "Buku ini tidak dapat diperpanjang karena sudah dipesan (reserved) oleh orang lain di antrian."
+      );
+    }
+
+    // 8. Eksekusi pengajuan perpanjangan
+    await db
+      .update(loans)
+      .set({
+        extensionStatus: "pending",
+        updatedAt: new Date()
+      })
+      .where(eq(loans.id, loanId));
+
+    return {
+      success: true,
+      message: "Permintaan perpanjangan peminjaman berhasil diajukan. Menunggu persetujuan admin.",
+      data: {
+        loanId,
+        extensionStatus: "pending"
+      }
+    };
+  }
+
+  /**
+   * 8. Approve Extension (Admin/Staff Menyetujui Perpanjangan)
+   */
+  async approveExtension(loanId: string, adminId: string) {
     return await db.transaction(async (tx) => {
-      // 1. Cari data loan
       const loan = await tx.query.loans.findFirst({
         where: and(
           eq(loans.id, loanId),
@@ -544,33 +642,15 @@ export class LoanService {
         throw new Error("Data peminjaman tidak ditemukan.");
       }
 
-      // 2. Validasi status: Hanya yang 'approved' atau 'extended' yang bisa di-extend.
-      // Gunakan extendCount untuk tracking berapa kali sudah di-extend (limit 1x)
+      if (loan.extensionStatus !== "pending") {
+        throw new Error("Tidak ada permintaan perpanjangan yang aktif untuk peminjaman ini.");
+      }
+
       if (loan.extendCount >= 1) {
-        throw new Error(
-          "Buku ini sudah pernah diperpanjang sebelumnya. Batas perpanjangan adalah 1 kali."
-        );
+        throw new Error("Buku ini sudah mencapai batas maksimal perpanjangan.");
       }
 
-      if (loan.status !== "approved") {
-        throw new Error(
-          "Hanya buku yang sedang dipinjam yang dapat diperpanjang."
-        );
-      }
-
-      // 3. Validasi Overdue: Tidak boleh extend jika sudah lewat dueDate.
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dueDate = new Date(loan.dueDate);
-      dueDate.setHours(0, 0, 0, 0);
-
-      if (today > dueDate) {
-        throw new Error(
-          "Buku sudah melewati batas waktu pengembalian. Silakan kembalikan buku dan bayar denda jika ada."
-        );
-      }
-
-      // 4. Validasi Reservasi: Tidak boleh extend jika ada orang lain yang sudah antri (waiting) untuk koleksi ini.
+      // Validasi Reservasi ulang
       const [waitingResCount] = await tx
         .select({ count: sql<number>`count(*)` })
         .from(reservations)
@@ -583,12 +663,13 @@ export class LoanService {
         );
 
       if (Number(waitingResCount.count) > 0) {
-        throw new Error(
-          "Buku ini tidak dapat diperpanjang karena sudah dipesan (reserved) oleh orang lain di antrian."
-        );
+        throw new Error("Buku ini tidak dapat diperpanjang karena sudah dipesan oleh orang lain.");
       }
 
-      // 5. Eksekusi Perpanjangan: Tambah 7 hari dari dueDate lama dan increment extendCount.
+      const dueDate = new Date(loan.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+
+      // Tambah 7 hari dari dueDate lama
       const newDueDate = new Date(dueDate);
       newDueDate.setDate(newDueDate.getDate() + 7);
       const newDueDateStr = newDueDate.toISOString().split("T")[0];
@@ -598,6 +679,9 @@ export class LoanService {
         .set({
           dueDate: newDueDateStr,
           extendCount: loan.extendCount + 1,
+          status: "extended",
+          extensionStatus: "approved",
+          approvedBy: adminId,
           updatedAt: new Date()
         })
         .where(eq(loans.id, loanId));
@@ -607,9 +691,48 @@ export class LoanService {
         message: `Peminjaman berhasil diperpanjang hingga ${newDueDate.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}.`,
         data: {
           loanId,
-          newDueDate: newDueDateStr
+          newDueDate: newDueDateStr,
+          extensionStatus: "approved",
+          status: "extended"
         }
       };
     });
+  }
+
+  /**
+   * 9. Reject Extension (Admin/Staff Menolak Perpanjangan)
+   */
+  async rejectExtension(loanId: string, adminId: string) {
+    const loan = await db.query.loans.findFirst({
+      where: and(
+        eq(loans.id, loanId),
+        isNull(loans.deletedAt)
+      )
+    });
+
+    if (!loan) {
+      throw new Error("Data peminjaman tidak ditemukan.");
+    }
+
+    if (loan.extensionStatus !== "pending") {
+      throw new Error("Tidak ada permintaan perpanjangan yang aktif untuk peminjaman ini.");
+    }
+
+    await db
+      .update(loans)
+      .set({
+        extensionStatus: "rejected",
+        updatedAt: new Date()
+      })
+      .where(eq(loans.id, loanId));
+
+    return {
+      success: true,
+      message: "Permintaan perpanjangan peminjaman ditolak oleh admin.",
+      data: {
+        loanId,
+        extensionStatus: "rejected"
+      }
+    };
   }
 }

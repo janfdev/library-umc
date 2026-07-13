@@ -14,6 +14,8 @@ import {
   X,
   RotateCcw,
   Ban,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { itemApi, bibliographyApi, locationApi, type Item, type Bibliography, type Location } from "@/api/client";
 import { API_BASE_URL } from "@/utils/api-config";
@@ -23,6 +25,8 @@ export default function ItemSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -41,6 +45,8 @@ export default function ItemSection() {
       if (!response.ok) throw new Error("Gagal memuat data");
       const result = await response.json();
       setItems(result.data?.items || []);
+      setTotalPages(result.data?.pagination?.totalPages || 1);
+      setTotalItems(result.data?.pagination?.total || 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Gagal memuat data");
     } finally {
@@ -308,6 +314,31 @@ export default function ItemSection() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
+              <p className="text-sm text-muted-foreground">
+                Halaman {page} dari {totalPages} ({totalItems} total)
+              </p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-surface-hover disabled:opacity-50"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-surface-hover disabled:opacity-50"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

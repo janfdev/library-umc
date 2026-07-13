@@ -13,6 +13,9 @@ export interface Loan {
   dueDate: string;
   returnDate?: string;
   status: "pending" | "approved" | "rejected" | "returned" | "extended";
+  extensionStatus?: "none" | "pending" | "approved" | "rejected";
+  extendCount: number;
+  returnRequests?: Array<{ id: string; status: "pending" | "approved" }>;
   requestDate?: string;
   approvedBy?: string;
   createdAt?: string;
@@ -178,7 +181,7 @@ class LoanService {
     return result.data;
   }
 
-  // POST /api/loans/{loanId}/extend - Extend a book loan (Member)
+  // POST /api/loans/{loanId}/extend - Request extension (Member)
   async extendLoan(
     loanId: string
   ): Promise<{ success: boolean; message: string; data: unknown }> {
@@ -189,7 +192,37 @@ class LoanService {
     });
     const result = await response.json();
     if (!result.success)
-      throw new Error(result.message || "Gagal memperpanjang peminjaman");
+      throw new Error(result.message || "Gagal mengajukan perpanjangan");
+    return result;
+  }
+
+  // POST /api/loans/{loanId}/approve-extension - Approve extension (Admin)
+  async approveExtension(
+    loanId: string
+  ): Promise<{ success: boolean; message: string; data: unknown }> {
+    const response = await fetch(`${this.baseUrl}/api/loans/${loanId}/approve-extension`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+    const result = await response.json();
+    if (!result.success)
+      throw new Error(result.message || "Gagal menyetujui perpanjangan");
+    return result;
+  }
+
+  // POST /api/loans/{loanId}/reject-extension - Reject extension (Admin)
+  async rejectExtension(
+    loanId: string
+  ): Promise<{ success: boolean; message: string; data: unknown }> {
+    const response = await fetch(`${this.baseUrl}/api/loans/${loanId}/reject-extension`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    });
+    const result = await response.json();
+    if (!result.success)
+      throw new Error(result.message || "Gagal menolak perpanjangan");
     return result;
   }
 }

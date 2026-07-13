@@ -375,6 +375,7 @@ export const loans = pgTable("loans", {
   returnDate: date("return_date"),
   status: loansStatusEnum("status").notNull(),
   extendCount: integer("extend_count").default(0).notNull(),
+  extensionStatus: varchar("extension_status", { length: 50 }).default("none"),
   approvedBy: text("approved_by").references(() => Users.id),
   verificationToken: varchar("verification_token", { length: 100 }),
   verificationExpiresAt: timestamp("verification_expires_at"),
@@ -616,10 +617,11 @@ export const itemRelations = relations(items, ({ one, many }) => ({
   loans: many(loans)
 }));
 
-export const loanRelations = relations(loans, ({ one }) => ({
+export const loanRelations = relations(loans, ({ one, many }) => ({
   member: one(members, { fields: [loans.memberId], references: [members.id] }),
   item: one(items, { fields: [loans.itemId], references: [items.id] }),
-  authApproved: one(Users, { fields: [loans.approvedBy], references: [Users.id] })
+  authApproved: one(Users, { fields: [loans.approvedBy], references: [Users.id] }),
+  returnRequests: many(returnRequests)
 }));
 
 export const reservationRelations = relations(reservations, ({ one }) => ({

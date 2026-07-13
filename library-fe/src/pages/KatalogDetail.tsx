@@ -157,10 +157,10 @@ const KatalogDetail = () => {
                 />
               </div>
 
-              {/* ✅ Tanggal Pengembalian — otomatis 3 hari, diblokir dari input */}
+              {/* ✅ Tanggal Pengembalian — otomatis 7 hari, diblokir dari input */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tanggal Pengembalian (Maks 3 Hari)
+                  Tanggal Pengembalian (Maks 7 Hari)
                 </label>
                 <input
                   type="date"

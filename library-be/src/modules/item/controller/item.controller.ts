@@ -13,9 +13,10 @@ export class ItemController {
   async getAll(req: Request, res: Response, next: NextFunction) {
     try {
       const bibliographyId = req.query.bibliographyId as string | undefined;
+      const q = req.query.q as string | undefined;
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
-      const result = await itemService.getAllItems(bibliographyId, page, limit);
+      const result = await itemService.getAllItems(bibliographyId, page, limit, q);
       sendSuccess(res, result.message, { items: result.data, pagination: result.pagination });
     } catch (error) { next(error); }
   }

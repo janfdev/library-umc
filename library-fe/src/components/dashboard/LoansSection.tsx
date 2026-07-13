@@ -30,6 +30,7 @@ interface Loan {
   purpose?: string;
   notes?: string;
   status: "pending" | "approved" | "rejected" | "returned" | "extended";
+  extensionStatus?: "none" | "pending" | "approved" | "rejected";
   requestDate?: string;
   approvedBy?: string;
   approvedDate?: string;
@@ -55,7 +56,7 @@ interface LoansSectionProps {
 export default function LoansSection({ searchTerm, onSearchChange }: LoansSectionProps) {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "returned">("pending");
+  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "returned" | "pending_extension">("pending");
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [actionNotes, setActionNotes] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -78,7 +79,12 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     setLoading(true);
     setError(null);
     try {
-      const statusParam = filter !== "all" ? `?status=${filter}` : "";
+      let statusParam = "";
+      if (filter === "pending_extension") {
+        statusParam = "?status=approved";
+      } else if (filter !== "all") {
+        statusParam = `?status=${filter}`;
+      }
       const response = await fetch(`${API_BASE_URL}/api/loans${statusParam}`, {
         credentials: "include",
       });
@@ -202,7 +208,68 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     }
   };
 
-  const getStatusBadge = (status: string, dueDate?: string) => {
+  // ─── Handler: Approve Extension ─────────────────────────────────────
+  const handleApproveExtension = async (loanId: string) => {
+    setProcessingId(loanId);
+    const loadingId = toast.loading("Memproses...", "Menyetujui perpanjangan peminjaman");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}/approve-extension`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = await response.json();
+      toast.removeToast(loadingId);
+      if (data.success) {
+        toast.success("Berhasil", "Perpanjangan peminjaman disetujui");
+        fetchLoans();
+      } else {
+        toast.error("Gagal", data.message || "Gagal menyetujui perpanjangan");
+      }
+    } catch {
+      toast.removeToast(loadingId);
+      toast.error("Error", "Gagal terhubung ke server");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // ─── Handler: Reject Extension ─────────────────────────────────────
+  const handleRejectExtension = async (loanId: string) => {
+    setProcessingId(loanId);
+    const loadingId = toast.loading("Memproses...", "Menolak perpanjangan peminjaman");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}/reject-extension`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = await response.json();
+      toast.removeToast(loadingId);
+      if (data.success) {
+        toast.success("Berhasil", "Perpanjangan peminjaman ditolak");
+        fetchLoans();
+      } else {
+        toast.error("Gagal", data.message || "Gagal menolak perpanjangan");
+      }
+    } catch {
+      toast.removeToast(loadingId);
+      toast.error("Error", "Gagal terhubung ke server");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const getStatusBadge = (status: string, dueDate?: string, extensionStatus?: string) => {
+    // Check if pending extension
+    if (extensionStatus === 'pending') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide bg-purple-100 text-purple-700">
+          <Clock size={14} /> Menunggu Perpanjangan
+        </span>
+      );
+    }
+
     // Check if overdue
     if (status === 'approved' && dueDate) {
       const today = new Date();
@@ -247,6 +314,10 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
     ? loans.filter(loan => {
         if (!loan) return false;
         
+        if (filter === "pending_extension" && loan.extensionStatus !== "pending") {
+          return false;
+        }
+        
         const bookTitle = loan.item?.bibliography?.title?.toLowerCase() || '';
         const borrowerName = loan.member?.user?.name?.toLowerCase() || '';
         const borrowerNim = loan.member?.nimNidn?.toString() || '';
@@ -268,8 +339,8 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
   // Hitung statistik dengan pengecekan keamanan
   const stats = {
     pending: Array.isArray(loans) ? loans.filter(l => l?.status === 'pending').length : 0,
-    approved: Array.isArray(loans) ? loans.filter(l => l?.status === 'approved' && new Date(l.dueDate).setHours(0,0,0,0) >= new Date().setHours(0,0,0,0)).length : 0,
-    overdue: Array.isArray(loans) ? loans.filter(l => l?.status === 'approved' && new Date(l.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0)).length : 0,
+    approved: Array.isArray(loans) ? loans.filter(l => (l?.status === 'approved' || l?.status === 'extended') && new Date(l.dueDate).setHours(0,0,0,0) >= new Date().setHours(0,0,0,0)).length : 0,
+    overdue: Array.isArray(loans) ? loans.filter(l => (l?.status === 'approved' || l?.status === 'extended') && new Date(l.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0)).length : 0,
     returned: Array.isArray(loans) ? loans.filter(l => l?.status === 'returned').length : 0,
   };
 
@@ -287,10 +358,11 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
             <div className="relative">
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as "all" | "pending" | "approved" | "returned")}
+                onChange={(e) => setFilter(e.target.value as "all" | "pending" | "approved" | "returned" | "pending_extension")}
                 className="appearance-none bg-background border-none rounded-xl pl-4 pr-10 py-2.5 text-[13px] font-bold text-muted-foreground focus:ring-2 focus:ring-primary/10 cursor-pointer min-w-[200px]"
               >
                 <option value="pending">Menunggu Persetujuan</option>
+                <option value="pending_extension">Menunggu Perpanjangan</option>
                 <option value="approved">Sedang Dipinjam</option>
                 <option value="returned">Dikembalikan</option>
                 <option value="all">Semua</option>
@@ -419,7 +491,7 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                         </div>
                       </div>
                     </div>
-                    {getStatusBadge(loan.status, loan.dueDate)}
+                    {getStatusBadge(loan.status, loan.dueDate, loan.extensionStatus)}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-card p-4 rounded-xl border border-border">
@@ -472,9 +544,9 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                     </div>
                   )}
 
-                  {/* Action Buttons - Approved: Proses Pengembalian */}
-                  {loan.status === 'approved' && (
-                    <div className="pt-5 mt-5 border-t border-border">
+                  {/* Action Buttons - Approved / Extended */}
+                  {(loan.status === 'approved' || loan.status === 'extended') && (
+                    <div className="flex flex-wrap items-center gap-3 pt-5 mt-5 border-t border-border">
                       <button
                         id={`btn-return-${loan.id}`}
                         onClick={() => {
@@ -487,6 +559,25 @@ export default function LoansSection({ searchTerm, onSearchChange }: LoansSectio
                         <RotateCcw size={14} />
                         {processingId === loan.id ? 'Memproses...' : 'Proses Pengembalian'}
                       </button>
+
+                      {loan.extensionStatus === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleApproveExtension(loan.id)}
+                            disabled={processingId === loan.id}
+                            className="flex items-center gap-2 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-600 hover:text-white transition-all disabled:opacity-50"
+                          >
+                            ✓ Setujui Perpanjangan
+                          </button>
+                          <button
+                            onClick={() => handleRejectExtension(loan.id)}
+                            disabled={processingId === loan.id}
+                            className="flex items-center gap-2 bg-red-50 dark:bg-red-950 text-primary border border-red-200 dark:border-red-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-destructive hover:text-white transition-all disabled:opacity-50"
+                          >
+                            ✗ Tolak Perpanjangan
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
