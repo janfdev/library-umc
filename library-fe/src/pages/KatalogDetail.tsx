@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/Footer";
@@ -19,12 +20,16 @@ import {
   CheckCircle,
   Clock,
   BookOpen,
+  X,
 } from "lucide-react";
 import { generateColorFromSeed } from "@/utils/format";
 
 const KatalogDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { error: toastError } = useToast();
+
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedItemForQr, setSelectedItemForQr] = useState<{ id: string; itemCode?: string; status: string } | null>(null);
 
   const { data: session, isPending: sessionLoading } = authClient.useSession();
 
@@ -92,6 +97,21 @@ const KatalogDetail = () => {
       return;
     }
     handleCheckLoans();
+  };
+
+  const handleShowQrCode = () => {
+    if (!bibliography?.items || bibliography.items.length === 0) {
+      toastError("Tidak Ada Salinan", "Buku ini tidak memiliki salinan fisik (item).");
+      return;
+    }
+    // Filter available items first, fallback to any item
+    const availableItems = bibliography.items.filter((i) => i.status === "available");
+    const chosenItem = availableItems.length > 0
+      ? availableItems[Math.floor(Math.random() * availableItems.length)]
+      : bibliography.items[0];
+
+    setSelectedItemForQr(chosenItem);
+    setShowQrModal(true);
   };
 
   if (loading || sessionLoading)
@@ -195,6 +215,87 @@ const KatalogDetail = () => {
         </div>
       )}
 
+      {/* Modal QR Code Salinan Buku */}
+      {showQrModal && selectedItemForQr && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className="bg-card rounded-3xl p-6 max-w-md w-full border border-border shadow-2xl animate-in fade-in-0 zoom-in-95 duration-150">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-md font-extrabold text-slate-900 tracking-tight">
+                QR Code Salinan (Exemplar)
+              </h3>
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              {/* Detail Buku Singkat */}
+              <div className="p-3 bg-muted rounded-2xl">
+                <p className="font-bold text-xs text-foreground line-clamp-1">
+                  {bibliography?.title}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
+                  {bibliography?.author}
+                </p>
+              </div>
+
+              {/* QR Code Frame */}
+              <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 dark:bg-muted/30">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedItemForQr.itemCode || "")}`}
+                  alt={selectedItemForQr.itemCode}
+                  className="w-48 h-48 bg-white p-2 rounded-2xl shadow-md border border-slate-200"
+                />
+                <span className="mt-4 font-mono font-extrabold text-sm text-slate-800 tracking-wider">
+                  {selectedItemForQr.itemCode}
+                </span>
+                <span className={`mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                  selectedItemForQr.status === "available"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-primary"
+                }`}>
+                  Status: {selectedItemForQr.status === "available" ? "Tersedia" : "Dipinjam"}
+                </span>
+              </div>
+
+              {/* Dropdown Selector for other exemplars */}
+              {bibliography?.items && bibliography.items.length > 1 && (
+                <div>
+                  <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 ml-1">
+                    Pilih Salinan Lain
+                  </label>
+                  <select
+                    value={selectedItemForQr.id}
+                    onChange={(e) => {
+                      const found = bibliography.items?.find((i) => i.id === e.target.value);
+                      if (found) setSelectedItemForQr(found as any);
+                    }}
+                    className="w-full p-3 bg-muted border border-border rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-100 focus:border-primary transition-all cursor-pointer text-foreground font-semibold"
+                  >
+                    {bibliography.items.map((item, idx) => (
+                      <option key={item.id} value={item.id}>
+                        Salinan #{idx + 1} - {item.itemCode} ({item.status === "available" ? "Tersedia" : "Dipinjam"})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="w-full bg-foreground hover:bg-foreground/90 text-primary-foreground font-bold py-3 rounded-xl shadow-lg mt-2 transition-all active:scale-[0.98] text-xs uppercase tracking-wider"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-[13px] text-muted-foreground mb-6 font-medium">
@@ -245,7 +346,7 @@ const KatalogDetail = () => {
                 {
                   icon: <QrCode size={18} />,
                   label: "QR Code",
-                  onClick: () => {},
+                  onClick: handleShowQrCode,
                 },
               ].map((btn, idx) => (
                 <button
@@ -357,7 +458,26 @@ const KatalogDetail = () => {
               </div>
             </div>
 
-            
+            {/* Lokasi Buku */}
+            {bibliography?.items && bibliography.items.length > 0 && (
+              <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 dark:bg-muted/30">
+                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+                  Lokasi Penyimpanan Buku
+                </h3>
+                <div className="space-y-2">
+                  {Array.from(new Set(bibliography.items.map(item => {
+                    const loc = item.location;
+                    if (!loc) return "Lokasi tidak ditentukan";
+                    return `${loc.room} (Rak: ${loc.rack}, Baris: ${loc.shelf})`;
+                  }))).map((locationStr, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
+                      <span>{locationStr}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Tombol Aksi */}
             <div className="flex gap-3 mt-auto">

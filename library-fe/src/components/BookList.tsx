@@ -12,6 +12,7 @@ interface BookListProps {
   availabilityFilter?: string[];
   yearRange?: { start: string; end: string };
   currentUser?: LibraryUser | null;
+  categoryFilter?: number[];
 }
 
 const BookList = ({
@@ -20,6 +21,7 @@ const BookList = ({
   availabilityFilter = [],
   yearRange = { start: "", end: "" },
   currentUser = null,
+  categoryFilter = [],
 }: BookListProps) => {
   const navigate = useNavigate();
 
@@ -34,7 +36,7 @@ const BookList = ({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab]);
+  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab, categoryFilter]);
 
   // Helper: Cek apakah user sedang meminjam buku ini
   const isUserBorrowing = (bibliographyId: string): boolean => {
@@ -45,8 +47,30 @@ const BookList = ({
     );
   };
 
-  // Helper: Dapatkan status buku (hanya berdasarkan reservasi user sendiri)
-  const getBookStatusReservation = (): string => {
+  // Helper: Dapatkan status ketersediaan riil buku
+  const getBookStatus = (bibliography: Bibliography): "available" | "borrowed" | "empty" => {
+    if (bibliography.items && bibliography.items.length > 0) {
+      const availableItems = bibliography.items.filter(
+        (i) => i.status === "available",
+      );
+      if (availableItems.length > 0) {
+        return "available";
+      }
+
+      const loanedItems = bibliography.items.filter(
+        (i) => i.status === "loaned",
+      );
+      if (loanedItems.length > 0) {
+        return "borrowed";
+      }
+
+      return "empty";
+    }
+
+    if (typeof bibliography.stock === "number") {
+      return bibliography.stock > 0 ? "available" : "empty";
+    }
+
     return "available";
   };
 
@@ -72,13 +96,16 @@ const BookList = ({
         return bibliography.author.toLowerCase().includes(query);
       case "isbn":
         return bibliography.isbn?.toLowerCase().includes(query);
+      case "subject":
+        return bibliography.subjects?.some((s) => s.name.toLowerCase().includes(query)) || false;
       case "all":
       default:
         return (
           bibliography.title.toLowerCase().includes(query) ||
           bibliography.author.toLowerCase().includes(query) ||
           bibliography.isbn?.toLowerCase().includes(query) ||
-          bibliography.publisher.toLowerCase().includes(query)
+          bibliography.publisher.toLowerCase().includes(query) ||
+          bibliography.subjects?.some((s) => s.name.toLowerCase().includes(query)) || false
         );
     }
   });
@@ -86,8 +113,8 @@ const BookList = ({
   // Filter berdasarkan ketersediaan (dari filter sidebar)
   const filteredByAvailability =
     availabilityFilter.length > 0
-      ? filteredBySearch.filter(() => {
-          const bookStatus = getBookStatusReservation();
+      ? filteredBySearch.filter((bibliography) => {
+          const bookStatus = getBookStatus(bibliography);
           return availabilityFilter.includes(bookStatus);
         })
       : filteredBySearch;
@@ -103,12 +130,19 @@ const BookList = ({
     return Number(year) >= Number(start) && Number(year) <= Number(end);
   });
 
+  // Filter berdasarkan kategori/jurusan
+  const filteredByCategory = categoryFilter.length > 0
+    ? filteredByYear.filter((bibliography) => {
+        return categoryFilter.includes(Number(bibliography.categoryId));
+      })
+    : filteredByYear;
+
   // Pagination Logic
-  const totalItems = filteredByYear.length;
+  const totalItems = filteredByCategory.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredByYear.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredByCategory.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -127,7 +161,10 @@ const BookList = ({
         return "Sedang Anda Pinjam";
       }
     }
-    return "Tersedia";
+    const status = getBookStatus(bibliography);
+    if (status === "available") return "Tersedia";
+    if (status === "borrowed") return "Sedang Dipinjam";
+    return "Stok Kosong";
   };
 
   // Helper: Status badge style
@@ -142,7 +179,14 @@ const BookList = ({
         return "px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-800 font-medium";
       }
     }
-    return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
+    const status = getBookStatus(bibliography);
+    if (status === "available") {
+      return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
+    }
+    if (status === "borrowed") {
+      return "px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium";
+    }
+    return "px-3 py-1 text-xs rounded-full bg-red-100 text-red-800 font-medium";
   };
 
   // Navigasi ke detail

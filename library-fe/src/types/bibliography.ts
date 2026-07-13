@@ -33,8 +33,19 @@ export interface Bibliography {
   items?: {
     id: string;
     status: string;
+    itemCode?: string;
+    location?: {
+      id: number;
+      room: string;
+      rack: string;
+      shelf: string;
+    };
   }[];
   category?: BibliographyCategory;
+  subjects?: {
+    id: number;
+    name: string;
+  }[];
   createdAt?: string;
   updatedAt?: string;
 }
