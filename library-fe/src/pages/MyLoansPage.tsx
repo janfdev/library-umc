@@ -31,13 +31,13 @@ function getLoanStatus(loan: Loan): "active" | "warning" | "late" | "returned" |
   if (loan.status === "approved" || loan.status === "extended") {
     const lateDays = calcLateDays(loan.dueDate);
     if (lateDays > 0) return "late";
-    // Segera jatuh tempo: ≤ 3 hari
+    // Segera jatuh tempo: ≤ 7 hari
     const dueDate = new Date(loan.dueDate);
     dueDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const daysLeft = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return daysLeft <= 3 ? "warning" : "active";
+    return daysLeft <= 7 ? "warning" : "active";
   }
   return "active";
 }
@@ -80,11 +80,13 @@ interface LoanCardProps {
   loan: Loan;
   status: VisualStatus;
   isExtending: boolean;
+  isReturning: boolean;
   onExtend: (loanId: string) => void;
+  onReturn: (loanId: string) => void;
   onViewDetail: (loan: Loan) => void;
 }
 
-function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCardProps) {
+function LoanCard({ loan, status, isExtending, isReturning, onExtend, onReturn, onViewDetail }: LoanCardProps) {
   const title = loan.item?.bibliography?.title ?? loan.bibliographyTitle ?? "Judul tidak tersedia";
   const author = loan.item?.bibliography?.author ?? loan.bibliographyAuthor ?? "Penulis tidak tersedia";
   const image = loan.item?.bibliography?.image;
@@ -139,22 +141,53 @@ function LoanCard({ loan, status, isExtending, onExtend, onViewDetail }: LoanCar
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-auto">
-        {(status === "active" || status === "warning") && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onExtend(loan.id); }}
-            disabled={isExtending}
-            className="w-full bg-primary hover:bg-primary/90 disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
-          >
-            <RefreshCw size={13} strokeWidth={3} className={isExtending ? "animate-spin" : ""} />
-            {isExtending ? "MEMPROSES..." : "PERPANJANG"}
-          </button>
-        )}
+      <div className="mt-auto space-y-2">
+        {/* Status Menunggu Konfirmasi Pengembalian */}
+        {loan.returnRequests?.some(r => r.status === "pending") ? (
+          <div className="w-full bg-yellow-50 text-yellow-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+            <Clock size={13} />
+            MENUNGGU KONFIRMASI PENGEMBALIAN
+          </div>
+        ) : (status === "active" || status === "warning" || status === "late") ? (
+          <div className="flex flex-col gap-2">
+            {/* Tombol Perpanjang (jika memenuhi syarat) */}
+            {loan.extensionStatus === "pending" ? (
+              <div className="w-full bg-purple-50 text-purple-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                <Clock size={13} />
+                MENUNGGU PERSETUJUAN PERPANJANGAN
+              </div>
+            ) : loan.extendCount >= 1 ? (
+              <div className="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                <CheckCircle size={13} />
+                SUDAH DIPERPANJANG (MAKS 1X)
+              </div>
+            ) : status !== "late" ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); onExtend(loan.id); }}
+                disabled={isExtending || isReturning}
+                className="w-full bg-primary hover:bg-primary/90 disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                <RefreshCw size={13} strokeWidth={3} className={isExtending ? "animate-spin" : ""} />
+                {isExtending ? "MEMPROSES..." : "PERPANJANG"}
+              </button>
+            ) : null}
+
+            {/* Tombol Kembalikan */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onReturn(loan.id); }}
+              disabled={isExtending || isReturning}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <RotateCcw size={13} className={isReturning ? "animate-spin" : ""} />
+              {isReturning ? "MEMPROSES..." : "KEMBALIKAN BUKU"}
+            </button>
+          </div>
+        ) : null}
 
         {status === "pending" && (
           <div className="w-full bg-yellow-50 text-yellow-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
             <Clock size={13} />
-            MENUNGGU KONFIRMASI
+            MENUNGGU KONFIRMASI PEMINJAMAN
           </div>
         )}
 
@@ -189,11 +222,13 @@ interface DetailModalProps {
   loan: Loan;
   status: VisualStatus;
   isExtending: boolean;
+  isReturning: boolean;
   onExtend: (id: string) => void;
+  onReturn: (id: string) => void;
   onClose: () => void;
 }
 
-function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailModalProps) {
+function DetailModal({ loan, status, isExtending, isReturning, onExtend, onReturn, onClose }: DetailModalProps) {
   const title = loan.item?.bibliography?.title ?? loan.bibliographyTitle ?? "Judul tidak tersedia";
   const author = loan.item?.bibliography?.author ?? loan.bibliographyAuthor ?? "Penulis tidak tersedia";
   const lateDays = calcLateDays(loan.dueDate);
@@ -290,22 +325,56 @@ function DetailModal({ loan, status, isExtending, onExtend, onClose }: DetailMod
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-slate-100 flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
-            >
-              Tutup
-            </button>
-            {(status === "active" || status === "warning") && (
+          <div className="p-6 border-t border-slate-100 flex flex-col gap-2">
+            <div className="flex gap-3">
               <button
-                onClick={() => { onExtend(loan.id); onClose(); }}
-                disabled={isExtending}
-                className="flex-1 px-4 py-3 bg-primary hover:bg-primary/90 disabled:bg-slate-200 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                onClick={onClose}
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
               >
-                <RotateCcw size={15} />
-                Perpanjang
+                Tutup
               </button>
+              
+              {loan.returnRequests?.some(r => r.status === "pending") ? (
+                <div className="flex-1 px-4 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border border-yellow-200">
+                  <Clock size={15} />
+                  Menunggu Pengembalian
+                </div>
+              ) : (status === "active" || status === "warning" || status === "late") ? (
+                <button
+                  onClick={() => { onReturn(loan.id); onClose(); }}
+                  disabled={isReturning || isExtending}
+                  className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  <RotateCcw size={15} />
+                  Kembalikan
+                </button>
+              ) : null}
+            </div>
+
+            {/* Perpanjang Row */}
+            {!loan.returnRequests?.some(r => r.status === "pending") && (status === "active" || status === "warning" || status === "late") && (
+              <div className="w-full">
+                {loan.extensionStatus === "pending" ? (
+                  <div className="w-full px-4 py-3 bg-purple-50 text-purple-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                    <Clock size={15} />
+                    Menunggu Perpanjangan
+                  </div>
+                ) : loan.extendCount >= 1 ? (
+                  <div className="w-full px-4 py-3 bg-slate-100 text-slate-500 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                    <CheckCircle size={15} />
+                    Sudah Diperpanjang
+                  </div>
+                ) : status !== "late" ? (
+                  <button
+                    onClick={() => { onExtend(loan.id); onClose(); }}
+                    disabled={isExtending || isReturning}
+                    className="w-full px-4 py-3 bg-primary hover:bg-primary/90 disabled:bg-slate-200 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw size={15} />
+                    Perpanjang Buku
+                  </button>
+                ) : null}
+              </div>
             )}
           </div>
         </div>
@@ -384,6 +453,29 @@ export default function MyLoansPage() {
       );
     } finally {
       setExtendingId(null);
+    }
+  }, [fetchLoans]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Kembalikan ──────────────────────────────────────────────────────────────
+
+  const [returningId, setReturningId] = useState<string | null>(null);
+
+  const handleReturn = useCallback(async (loanId: string) => {
+    setReturningId(loanId);
+    const loadingId = toast.loading("Memproses...", "Sedang mengajukan pengembalian buku");
+    try {
+      const result = await loanService.createReturnRequest(loanId);
+      toast.removeToast(loadingId);
+      toast.success("Pengembalian Diajukan", result.message || "Menunggu konfirmasi admin");
+      await fetchLoans(true);
+    } catch (err) {
+      toast.removeToast(loadingId);
+      toast.error(
+        "Pengembalian Gagal",
+        err instanceof Error ? err.message : "Terjadi kesalahan"
+      );
+    } finally {
+      setReturningId(null);
     }
   }, [fetchLoans]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -567,7 +659,9 @@ export default function MyLoansPage() {
                 loan={loan}
                 status={status}
                 isExtending={extendingId === loan.id}
+                isReturning={returningId === loan.id}
                 onExtend={handleExtend}
+                onReturn={handleReturn}
                 onViewDetail={setSelectedLoan}
               />
             ))}
@@ -581,7 +675,9 @@ export default function MyLoansPage() {
           loan={selectedLoan}
           status={getLoanStatus(selectedLoan) as VisualStatus}
           isExtending={extendingId === selectedLoan.id}
+          isReturning={returningId === selectedLoan.id}
           onExtend={handleExtend}
+          onReturn={handleReturn}
           onClose={() => setSelectedLoan(null)}
         />
       )}

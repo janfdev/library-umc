@@ -456,11 +456,11 @@ export class MemberService {
 
       // Prepare update data
       const updateDataMember = {
-        nimNidn: data.nimNidn?.trim() || member.nimNidn,
-        faculty: data.faculty?.trim() || member.faculty,
-        originRegion: data.originRegion?.trim() || member.originRegion,
-        institution: data.institution?.trim() || member.institution,
-        phone: data.phone?.trim() || member.phone,
+        nimNidn: data.nimNidn !== undefined ? data.nimNidn.trim() : member.nimNidn,
+        faculty: data.faculty !== undefined ? data.faculty.trim() : member.faculty,
+        originRegion: data.originRegion !== undefined ? data.originRegion.trim() : member.originRegion,
+        institution: data.institution !== undefined ? data.institution.trim() : member.institution,
+        phone: data.phone !== undefined ? data.phone.trim() : member.phone,
         updatedAt: new Date()
       };
 
@@ -479,10 +479,18 @@ export class MemberService {
         };
       }
 
+      // Fetch the updated member with user populated
+      const updatedMemberWithUser = await db.query.members.findFirst({
+        where: and(eq(members.userId, userId), isNull(members.deletedAt)),
+        with: {
+          user: true
+        }
+      });
+
       return {
         success: true,
         message: "Profile updated successfully",
-        data: updatedMember
+        data: updatedMemberWithUser
       };
     } catch (err) {
       console.error("[MemberService] Error updating profile:", err);
