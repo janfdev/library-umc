@@ -174,6 +174,14 @@ router.post(
  *         description: Forbidden - Admin/Staff only
  */
 router.post(
+  "/loans/:loanId/return",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.returnLoan,
+);
+
+router.post(
   "/loans/:loanId/return-request",
   publicApiLimiter,
   isAuthenticated,

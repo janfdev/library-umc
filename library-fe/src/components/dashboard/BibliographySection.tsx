@@ -528,6 +528,8 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
     description: bib?.description || "",
     type: bib?.type || "physical_book",
     image: bib?.image || "",
+    isPopular: bib?.isPopular || false,
+    publisherName: bib?.publisher?.name || "",
   });
 
   const [authors, setAuthors] = useState<Array<{ name: string; role: string }>>(
@@ -659,6 +661,28 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 <option value="journal">Jurnal</option>
                 <option value="thesis">Skripsi</option>
               </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Penerbit</label>
+              <input
+                type="text"
+                value={formData.publisherName}
+                onChange={(e) => setFormData({ ...formData, publisherName: e.target.value })}
+                placeholder="Nama Penerbit"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="flex items-center gap-2 sm:col-span-2 mt-2">
+              <input
+                type="checkbox"
+                id="isPopular"
+                checked={formData.isPopular}
+                onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
+                className="w-4 h-4 text-primary border-border rounded focus:ring-primary cursor-pointer"
+              />
+              <label htmlFor="isPopular" className="text-sm font-semibold text-foreground cursor-pointer select-none">
+                Tampilkan di Beranda (Buku Populer)
+              </label>
             </div>
           </div>
         </div>

@@ -262,7 +262,8 @@ export const bibliographies = pgTable("bibliographies", {
   stock: integer("stock").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at")
+  deletedAt: timestamp("deleted_at"),
+  isPopular: boolean("is_popular").default(false).notNull()
 }, (table) => ({
   titleIdx: index("bibliography_title_idx").on(table.title),
   isbnIdx: index("bibliography_isbn_idx").on(table.isbnIssn),

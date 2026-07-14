@@ -5,7 +5,7 @@ import Navbar from "@/components/ui/navbar";
 import Background from "@/assets/bg1.jpeg";
 import DialogUnauthorized from "@/components/DialogUnauthorized";
 import Footer from "@/components/Footer";
-import BookList from "@/components/BookList";
+import HomeBookList from "@/components/HomeBookList";
 import { authClient } from "@/utils/auth-client";
 
 export default function Home() {
@@ -266,7 +266,7 @@ export default function Home() {
 
       {/* Daftar buku dan Ebook */}
       <div className="p-4 sm:p-6 lg:p-12.5 flex justify-center">
-        <BookList />
+        <HomeBookList />
       </div>
 
       {/* Footer */}
