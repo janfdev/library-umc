@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { PerspectiveBook } from "./perspective-book";
-import { BookOpen } from "lucide-react";
 import { useBookList } from "../hooks/useBookList";
 import type { Bibliography, LibraryUser } from "../types";
 import { generateColorFromSeed } from "@/utils/format";
@@ -149,44 +147,51 @@ const BookList = ({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Helper: Status label
-  const getStatusLabel = (bibliography: Bibliography) => {
+  // Helper: Status badge configuration (background, text, dot, label)
+  const getStatusBadgeConfig = (bibliography: Bibliography) => {
     if (currentUser && isUserBorrowing(bibliography.id)) {
       const reservation = userReservations.find(
         (r) => r.bibliographyId === bibliography.id,
       );
       if (reservation?.status === "waiting") {
-        return "Menunggu Konfirmasi";
+        return {
+          bg: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800/30",
+          text: "text-yellow-700 dark:text-yellow-400",
+          dot: "bg-yellow-500",
+          label: "Menunggu Konfirmasi",
+        };
       } else if (reservation?.status === "fulfilled") {
-        return "Sedang Anda Pinjam";
-      }
-    }
-    const status = getBookStatus(bibliography);
-    if (status === "available") return "Tersedia";
-    if (status === "borrowed") return "Sedang Dipinjam";
-    return "Stok Kosong";
-  };
-
-  // Helper: Status badge style
-  const getStatusBadge = (bibliography: Bibliography) => {
-    if (currentUser && isUserBorrowing(bibliography.id)) {
-      const reservation = userReservations.find(
-        (r) => r.bibliographyId === bibliography.id,
-      );
-      if (reservation?.status === "waiting") {
-        return "px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium";
-      } else if (reservation?.status === "fulfilled") {
-        return "px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-800 font-medium";
+        return {
+          bg: "bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800/30",
+          text: "text-purple-700 dark:text-purple-400",
+          dot: "bg-purple-500",
+          label: "Sedang Anda Pinjam",
+        };
       }
     }
     const status = getBookStatus(bibliography);
     if (status === "available") {
-      return "px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium";
+      return {
+        bg: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/30",
+        text: "text-green-700 dark:text-green-400",
+        dot: "bg-green-500",
+        label: "Tersedia",
+      };
     }
     if (status === "borrowed") {
-      return "px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium";
+      return {
+        bg: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30",
+        text: "text-blue-700 dark:text-blue-400",
+        dot: "bg-blue-500",
+        label: "Dipinjam",
+      };
     }
-    return "px-3 py-1 text-xs rounded-full bg-red-100 text-red-800 font-medium";
+    return {
+      bg: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30",
+      text: "text-red-700 dark:text-red-400",
+      dot: "bg-red-500",
+      label: "Stok Kosong",
+    };
   };
 
   // Navigasi ke detail
@@ -196,7 +201,7 @@ const BookList = ({
 
   if (loading) {
     return (
-      <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+      <div className="w-full max-w-6xl mx-auto bg-card border border-border rounded-2xl p-6 shadow-sm">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Memuat data koleksi...</p>
@@ -207,7 +212,7 @@ const BookList = ({
 
   if (error) {
     return (
-      <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+      <div className="w-full max-w-6xl mx-auto bg-card border border-border rounded-2xl p-6 shadow-sm">
         <div className="text-center py-12">
           <div className="text-5xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-primary mb-2">Error</h3>
@@ -224,18 +229,15 @@ const BookList = ({
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <div className="w-full md:w-auto">
-          <h2 className="text-lg md:text-xl font-bold text-foreground">
-            Koleksi Perpustakaan
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalItems} Buku
+    <div className="w-full max-w-6xl mx-auto space-y-5">
+      {/* Header & Tabs */}
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+        <div className="w-full sm:w-auto">
+          <p className="text-sm font-bold text-foreground">
+            Menampilkan {totalItems} hasil pencarian
           </p>
           {currentUser && (
-            <p className="text-xs text-purple-600 mt-1">
+            <p className="text-xs text-primary font-medium mt-1">
               Anda sedang meminjam{" "}
               {userReservations.filter((r) => r.status === "fulfilled").length}{" "}
               buku
@@ -246,7 +248,7 @@ const BookList = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="hidden md:flex border-b border-border ml-auto">
+        <div className="flex border-b border-border w-full sm:w-auto overflow-x-auto whitespace-nowrap sm:border-none gap-2">
           {["Buku Fisik", "E-Book"].map((tab, index) => (
             <button
               key={index}
@@ -254,10 +256,10 @@ const BookList = ({
                 setActiveTab(index);
                 setCurrentPage(1);
               }}
-              className={`px-6 py-3 text-sm font-medium ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === index
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-foreground hover:text-primary"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
               {tab}
@@ -266,32 +268,12 @@ const BookList = ({
         </div>
       </div>
 
-      {/* Mobile Tab Navigation */}
-      <div className="md:hidden flex border-b border-border mb-6 overflow-x-auto whitespace-nowrap">
-        {["Buku Fisik", "E-Book"].map((tab, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              setActiveTab(index);
-              setCurrentPage(1);
-            }}
-            className={`px-6 py-3 text-sm font-medium ${
-              activeTab === index
-                ? "text-primary border-b-2 border-primary"
-                : "text-foreground hover:text-primary"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Book Grid — PerspectiveBook */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-6 justify-items-center">
+      {/* Book List Stack */}
+      <div className="flex flex-col gap-4">
         {currentItems.length === 0 ? (
-          <div className="col-span-full text-center py-8 sm:py-12 text-muted-foreground">
-            <div className="text-3xl sm:text-4xl mb-4">🔍</div>
-            <p className="text-lg font-semibold mb-2">
+          <div className="bg-card border border-border rounded-2xl text-center py-16 text-muted-foreground shadow-sm">
+            <div className="text-4xl mb-4">🔍</div>
+            <p className="text-lg font-bold text-foreground mb-2">
               Tidak ada hasil ditemukan
             </p>
             <p className="text-sm">
@@ -299,65 +281,118 @@ const BookList = ({
             </p>
           </div>
         ) : (
-          currentItems.map((bibliography) => (
-            <div
-              key={bibliography.id}
-              onClick={() => handleBookClick(bibliography.id)}
-              className="flex flex-col items-center gap-2 cursor-pointer group"
-            >
-              <PerspectiveBook
-                size="sm"
-                className={generateColorFromSeed(bibliography.id)}
+          currentItems.map((bibliography) => {
+            const config = getStatusBadgeConfig(bibliography);
+            const isEbook = bibliography.type === "ebook";
+            const actionLabel = getBookStatus(bibliography) === "borrowed" && !isEbook
+              ? "LAKUKAN RESERVASI" 
+              : "LIHAT DETAIL";
+            const showCalendarIcon = getBookStatus(bibliography) === "borrowed" && !isEbook;
+            const seedColor = generateColorFromSeed(bibliography.id);
+
+            return (
+              <div
+                key={bibliography.id}
+                onClick={() => handleBookClick(bibliography.id)}
+                className="bg-card hover:bg-card/90 border border-border rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-row gap-4 sm:gap-5 md:gap-6 cursor-pointer group hover:-translate-y-0.5"
               >
-                <div className="flex flex-col h-full gap-1.5">
-                  <p className="font-semibold capitalize leading-4 text-white text-xs line-clamp-3">
-                    {bibliography.title}
-                  </p>
-                  <div className="mt-auto flex flex-col gap-1">
-                    <span className="text-white/70 text-[10px] leading-tight line-clamp-1">
-                      {bibliography.author}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="size-3 text-white/70" />
-                      <span className="text-white/60 text-[9px]">
-                        {bibliography.publicationYear ?? ""}
+                {/* Cover Image on the Left */}
+                <div className="shrink-0 w-24 h-36 sm:w-28 sm:h-40 rounded-xl overflow-hidden shadow-sm bg-muted border border-border/40 relative">
+                  {bibliography.image ? (
+                    <img
+                      src={bibliography.image}
+                      alt={bibliography.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-br ${seedColor} flex flex-col justify-between p-3 text-white`}>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-white/50">
+                        {isEbook ? "E-Book" : "Fisik"}
+                      </span>
+                      <span className="font-bold text-[11px] leading-tight italic line-clamp-3 text-center my-auto">
+                        {bibliography.title}
+                      </span>
+                      <span className="text-[9px] text-white/40 line-clamp-1 text-right">
+                        {bibliography.author}
                       </span>
                     </div>
+                  )}
+                </div>
+
+                {/* Content on the Right */}
+                <div className="flex-1 flex flex-col justify-between min-w-0">
+                  <div>
+                    {/* Header Row: Title & Badge */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-1.5">
+                      <h3 className="font-bold text-foreground text-sm sm:text-base md:text-lg leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                        {bibliography.title}
+                      </h3>
+                      {/* Status Badge */}
+                      <span className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold border ${config.bg} ${config.text}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
+                        {config.label}
+                      </span>
+                    </div>
+
+                    {/* Author Name */}
+                    <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-3">
+                      {bibliography.author}
+                    </p>
+
+                    {/* Tags / Subjects */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {bibliography.subjects && bibliography.subjects.length > 0 ? (
+                        bibliography.subjects.slice(0, 3).map((sub) => (
+                          <span
+                            key={sub.id}
+                            className="px-2.5 py-0.5 text-[9px] sm:text-[10px] bg-muted text-muted-foreground border border-border rounded-full font-medium"
+                          >
+                            {sub.name}
+                          </span>
+                        ))
+                      ) : bibliography.category ? (
+                        <span className="px-2.5 py-0.5 text-[9px] sm:text-[10px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
+                          {bibliography.category.name}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 text-[9px] sm:text-[10px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
+                          Umum
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Link Row */}
+                  <div className="flex justify-end items-center mt-3">
+                    <span className="text-primary font-bold text-xs sm:text-sm hover:underline flex items-center gap-1.5 group-hover:translate-x-0.5 transition-transform">
+                      {actionLabel}
+                      {showCalendarIcon ? (
+                        <span className="text-sm">📅</span>
+                      ) : (
+                        <span className="text-sm">→</span>
+                      )}
+                    </span>
                   </div>
                 </div>
-              </PerspectiveBook>
-              {/* Info & status di bawah buku */}
-              <div className="text-center max-w-[120px] sm:max-w-[150px]">
-                <div className="flex flex-wrap justify-center gap-1 mt-1">
-                  <span className="px-1.5 py-0.5 text-[9px] bg-muted text-muted-foreground rounded">
-                    {bibliography.type === "physical_book" ? "Fisik" : "E-Book"}
-                  </span>
-                  <span
-                    className={`px-1.5 py-0.5 text-[9px] rounded ${getStatusBadge(bibliography)}`}
-                  >
-                    {getStatusLabel(bibliography)}
-                  </span>
-                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-10">
+        <div className="flex justify-center items-center gap-2 mt-8">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="p-2 border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
+            className="w-10 h-10 border border-border bg-card rounded-xl hover:bg-muted disabled:opacity-50 transition-all flex items-center justify-center font-bold text-foreground cursor-pointer"
           >
             &lt;
           </button>
           
           {[...Array(totalPages)].map((_, i) => {
             const pageNum = i + 1;
-            // Hanya tampilkan beberapa halaman jika total halaman banyak
             if (
               totalPages > 7 &&
               pageNum !== 1 &&
@@ -374,10 +409,10 @@ const BookList = ({
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
-                className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                className={`w-10 h-10 rounded-xl font-bold transition-all cursor-pointer ${
                   currentPage === pageNum
                     ? "bg-primary text-white shadow-md"
-                    : "hover:bg-muted text-foreground"
+                    : "bg-card border border-border hover:bg-muted text-foreground"
                 }`}
               >
                 {pageNum}
@@ -388,34 +423,12 @@ const BookList = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="p-2 border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
+            className="w-10 h-10 border border-border bg-card rounded-xl hover:bg-muted disabled:opacity-50 transition-all flex items-center justify-center font-bold text-foreground cursor-pointer"
           >
             &gt;
           </button>
         </div>
       )}
-
-      {/* Keterangan status */}
-      <div className="mt-8 pt-6 border-t border-border">
-        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            <span>Tersedia</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span>Dipinjam (orang lain)</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-purple-500"></span>
-            <span>Sedang Anda pinjam</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-            <span>Menunggu konfirmasi</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

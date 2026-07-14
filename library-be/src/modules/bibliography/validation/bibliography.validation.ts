@@ -5,6 +5,7 @@ export const createBibliographySchema = z.object({
   isbnIssn: z.string().max(255).optional().or(z.literal("")),
   edition: z.string().max(100).optional().or(z.literal("")),
   publisherId: z.coerce.number().int().positive().optional(),
+  publisherName: z.string().optional().or(z.literal("")),
   publishYear: z.coerce.number().int().min(1000).max(9999).optional(),
   collation: z.string().max(255).optional().or(z.literal("")),
   seriesTitle: z.string().max(255).optional().or(z.literal("")),
@@ -20,6 +21,7 @@ export const createBibliographySchema = z.object({
   description: z.string().optional().or(z.literal("")),
   image: z.string().optional().or(z.literal("")),
   type: z.enum(["physical_book", "ebook", "journal", "thesis"]).optional(),
+  isPopular: z.boolean().optional(),
   authors: z.array(z.object({
     name: z.string().min(1),
     role: z.string().default("primary")
@@ -44,6 +46,7 @@ export const bibliographyQuerySchema = z.object({
   publishYearFrom: z.coerce.number().int().optional(),
   publishYearTo: z.coerce.number().int().optional(),
   hasAvailableItems: z.coerce.boolean().optional(),
+  isPopular: z.coerce.boolean().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(["title", "publishYear", "createdAt"]).default("title"),

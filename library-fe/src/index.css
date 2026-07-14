@@ -7,7 +7,7 @@
 /* ============================================
    UMC LIBRARY DESIGN SYSTEM
    ============================================
-   University brand: Crimson Red (#B91C1C)
+   University brand: Crimson Red (#9D171D)
    Light/dark mode support via CSS variables.
    ============================================ */
 
@@ -24,7 +24,7 @@
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  --primary: #B91C1C;
+  --primary: #9D171D;
   --primary-foreground: #ffffff;
 
   --secondary: #f1f5f9;
@@ -34,23 +34,23 @@
   --muted-foreground: #64748b;
 
   --accent: #fef2f2;
-  --accent-foreground: #B91C1C;
+  --accent-foreground: #9D171D;
 
   --destructive: #dc2626;
 
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #B91C1C;
+  --ring: #9D171D;
 
   /* Sidebar (dark in both modes) */
   --sidebar: #0f172a;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #B91C1C;
+  --sidebar-primary: #9D171D;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #1e293b;
-  --sidebar-ring: #B91C1C;
+  --sidebar-ring: #9D171D;
 
   /* Extra semantic tokens */
   --success: #059669;
@@ -68,7 +68,7 @@
   --popover: #111827;
   --popover-foreground: #f8fafc;
 
-  --primary: #B91C1C;
+  --primary: #9D171D;
   --primary-foreground: #ffffff;
 
   --secondary: #1e293b;
@@ -84,16 +84,16 @@
 
   --border: #1e293b;
   --input: #1e293b;
-  --ring: #B91C1C;
+  --ring: #9D171D;
 
   --sidebar: #0f172a;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #B91C1C;
+  --sidebar-primary: #9D171D;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #1e293b;
-  --sidebar-ring: #B91C1C;
+  --sidebar-ring: #9D171D;
 
   --success: #34d399;
   --warning: #fb923c;
@@ -186,28 +186,28 @@
 @layer utilities {
   /* Red Glow (UMC brand) */
   .glow-red {
-    box-shadow: 0 0 20px -5px rgba(185, 28, 28, 0.5);
+    box-shadow: 0 0 20px -5px rgba(157, 23, 29, 0.5);
   }
 
   .glow-red-lg {
-    box-shadow: 0 0 30px -5px rgba(185, 28, 28, 0.6);
+    box-shadow: 0 0 30px -5px rgba(157, 23, 29, 0.6);
   }
 
   /* Card Elevation */
   .card-elevation {
-    box-shadow: 0 0 50px -10px rgba(185, 28, 28, 0.1);
+    box-shadow: 0 0 50px -10px rgba(157, 23, 29, 0.1);
   }
 
   /* Gradient Text (red shades) */
   .gradient-text {
-    background: linear-gradient(to right, #B91C1C, #ef4444);
+    background: linear-gradient(to right, #B11226, #860E1D);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
   .gradient-text-red {
-    background: linear-gradient(to right, #991b1b, #B91C1C);
+    background: linear-gradient(to right, #860E1D, #B11226);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -239,7 +239,7 @@
   .radial-blur-red {
     position: absolute;
     border-radius: 9999px;
-    background-color: #B91C1C;
+    background-color: #9D171D;
     opacity: 0.1;
     filter: blur(120px);
   }
@@ -260,19 +260,36 @@
 @layer components {
   /* Primary Button - UMC Red */
   .btn-primary {
-    @apply bg-primary text-primary-foreground font-bold;
+    background: linear-gradient(to right, #B11226, #860E1D);
+    color: var(--primary-foreground);
+    @apply font-bold;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
     min-height: 44px;
     transition: all 300ms;
-    box-shadow: 0 0 20px -5px rgba(185, 28, 28, 0.5);
+    box-shadow: 0 0 20px -5px rgba(157, 23, 29, 0.5);
   }
 
   .btn-primary:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 30px -5px rgba(185, 28, 28, 0.6);
+    box-shadow: 0 0 30px -5px rgba(157, 23, 29, 0.6);
+    opacity: 0.95;
+  }
+
+  /* Apply linear button gradient to all buttons using bg-primary */
+  button.bg-primary,
+  .bg-primary[role="button"],
+  a.bg-primary {
+    background: linear-gradient(to right, #B11226, #860E1D) !important;
+    border-color: transparent !important;
+    color: var(--primary-foreground) !important;
+  }
+  button.bg-primary:hover,
+  .bg-primary[role="button"]:hover,
+  a.bg-primary:hover {
+    opacity: 0.95 !important;
   }
 
   /* Outline Button */
@@ -316,7 +333,7 @@
   .card-standard:hover {
     transform: translateY(-4px);
     border-color: var(--primary);
-    box-shadow: 0 0 30px -10px rgba(185, 28, 28, 0.2);
+    box-shadow: 0 0 30px -10px rgba(157, 23, 29, 0.2);
   }
 }
 
@@ -334,9 +351,9 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px -5px rgba(185, 28, 28, 0.5);
+    box-shadow: 0 0 20px -5px rgba(157, 23, 29, 0.5);
   }
   50% {
-    box-shadow: 0 0 40px -5px rgba(185, 28, 28, 0.8);
+    box-shadow: 0 0 40px -5px rgba(157, 23, 29, 0.8);
   }
 }

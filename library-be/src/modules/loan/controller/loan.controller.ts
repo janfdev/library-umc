@@ -115,8 +115,8 @@ export class LoanController {
     try {
       const user = req.user;
 
-      if (!user || user.role !== "super_admin") {
-        return sendError(res, "Akses ditolak — hanya Super Admin", 403);
+      if (!user || (user.role !== "super_admin" && user.role !== "staff")) {
+        return sendError(res, "Akses ditolak — hanya Admin/Staff", 403);
       }
 
       const result = await loanService.returnLoan(

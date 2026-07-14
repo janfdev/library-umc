@@ -29,6 +29,15 @@ export class BibliographyService {
     return created.id;
   }
 
+  private async resolveOrCreatePublisher(tx: any, publisherName: string): Promise<number | null> {
+    if (!publisherName.trim()) return null;
+    const normalized = normalizeName(publisherName);
+    const existing = await tx.query.publishers.findFirst({ where: eq(publishers.normalizedName, normalized) });
+    if (existing) return existing.id;
+    const [created] = await tx.insert(publishers).values({ name: publisherName.trim(), normalizedName: normalized }).returning();
+    return created.id;
+  }
+
   private async syncAuthors(tx: any, bibliographyId: string, authorList: { name: string; role: string }[]) {
     await tx.delete(bibliographyAuthors).where(eq(bibliographyAuthors.bibliographyId, bibliographyId));
     for (const a of authorList) {
@@ -47,6 +56,11 @@ export class BibliographyService {
 
   async create(data: CreateBibliographyData) {
     const result = await db.transaction(async (tx) => {
+      let publisherId = data.publisherId || null;
+      if ((data as any).publisherName) {
+        const resolvedId = await this.resolveOrCreatePublisher(tx, (data as any).publisherName);
+        if (resolvedId) publisherId = resolvedId;
+      }
       const insertData: any = {
         title: data.title,
         description: data.description || null,
@@ -66,8 +80,9 @@ export class BibliographyService {
         collectionTypeId: data.collectionTypeId || null,
         languageId: data.languageId || null,
         publicationPlaceId: data.publicationPlaceId || null,
-        publisherId: data.publisherId || null,
+        publisherId: publisherId,
         stock: 0,
+        isPopular: data.isPopular ?? false,
       };
       const [bib] = await tx.insert(bibliographies).values(insertData).returning();
       if (data.authors && data.authors.length > 0) await this.syncAuthors(tx, bib.id, data.authors);
@@ -79,12 +94,22 @@ export class BibliographyService {
 
   async update(id: string, data: UpdateBibliographyData) {
     await db.transaction(async (tx) => {
+      let publisherId = data.publisherId;
+      if ((data as any).publisherName !== undefined) {
+        const resolvedId = (data as any).publisherName
+          ? await this.resolveOrCreatePublisher(tx, (data as any).publisherName)
+          : null;
+        publisherId = resolvedId !== null ? resolvedId : undefined;
+      }
       const updateData: any = {};
       for (const key of Object.keys(data)) {
-        if (key === "authors" || key === "subjects") continue;
+        if (key === "authors" || key === "subjects" || key === "publisherName") continue;
         if (data[key as keyof UpdateBibliographyData] !== undefined) {
           updateData[key] = data[key as keyof UpdateBibliographyData];
         }
+      }
+      if (publisherId !== undefined) {
+        updateData.publisherId = publisherId;
       }
       updateData.updatedAt = new Date();
       if (Object.keys(updateData).length > 1) {
@@ -127,6 +152,9 @@ export class BibliographyService {
 
   async list(query: BibliographyQuery) {
     const conditions: any[] = [isNull(bibliographies.deletedAt)];
+    if (query.isPopular !== undefined) {
+      conditions.push(eq(bibliographies.isPopular, query.isPopular));
+    }
     if (query.q) {
       const term = `%${query.q}%`;
       conditions.push(or(

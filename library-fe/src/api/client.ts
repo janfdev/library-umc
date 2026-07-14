@@ -55,6 +55,7 @@ export interface Bibliography {
   language?: { id: number; code: string; name: string };
   gmd?: { id: number; name: string };
   category?: { id: number; name: string };
+  isPopular?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
