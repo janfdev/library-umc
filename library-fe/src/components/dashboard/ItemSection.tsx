@@ -34,6 +34,8 @@ export default function ItemSection() {
   const [showForm, setShowForm] = useState(false);
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrModalItem, setQrModalItem] = useState<Item | null>(null);
   const limit = 10;
 
   const fetchData = useCallback(async () => {
@@ -57,6 +59,7 @@ export default function ItemSection() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
 
   const handleSearch = () => {
     setPage(1);
@@ -279,7 +282,17 @@ export default function ItemSection() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {item.qrToken ? (
-                        <QrCode className="mx-auto size-4 text-emerald-500" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQrModalItem(item);
+                            setShowQrModal(true);
+                          }}
+                          className="rounded-lg p-1 hover:bg-muted text-emerald-500 hover:text-emerald-700 transition-colors"
+                          title="Lihat QR Code"
+                        >
+                          <QrCode className="mx-auto size-4" />
+                        </button>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
@@ -339,6 +352,59 @@ export default function ItemSection() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal QR Code Salinan Buku */}
+      {showQrModal && qrModalItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className="bg-card rounded-3xl p-6 max-w-md w-full border border-border shadow-2xl animate-in fade-in-0 zoom-in-95 duration-150 animate-out fade-out-0 zoom-out-95">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-md font-extrabold text-foreground tracking-tight">
+                QR Code Salinan (Exemplar)
+              </h3>
+              <button
+                onClick={() => {
+                  setShowQrModal(false);
+                  setQrModalItem(null);
+                }}
+                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              {/* Detail Buku Singkat */}
+              <div className="p-3 bg-muted rounded-2xl">
+                <p className="font-bold text-xs text-foreground line-clamp-1">
+                  {qrModalItem.bibliography?.title || "Buku"}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
+                  Kode Item: {qrModalItem.itemCode}
+                </p>
+              </div>
+
+              {/* QR Code Frame */}
+              <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 dark:bg-muted/30">
+                <img
+                  src={itemApi.getQrSvg(qrModalItem.id)}
+                  alt="QR Code"
+                  className="w-48 h-48 bg-white p-2 rounded-2xl shadow-md border border-slate-200"
+                />
+                <span className="mt-4 font-mono font-extrabold text-sm text-slate-800 tracking-wider dark:text-white">
+                  {qrModalItem.itemCode}
+                </span>
+                <span className={`mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                  qrModalItem.status === "available"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-red-700"
+                }`}>
+                  Status: {qrModalItem.status === "available" ? "Tersedia" : "Dipinjam"}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -568,16 +634,25 @@ function ItemForm({
     price: item?.price || "",
     priceCurrency: item?.priceCurrency || "IDR",
   });
+  const [searchBibQuery, setSearchBibQuery] = useState(item?.bibliography?.title || "");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const loadBibliographies = async () => {
+    if (!!item) return;
+
+    const delayDebounceFn = setTimeout(async () => {
       try {
-        const result = await bibliographyApi.list({ limit: 100 });
-        setBibliographies(result.data.items);
+        const result = await bibliographyApi.list({ q: searchBibQuery, limit: 50 });
+        setBibliographies(result.data.items || []);
       } catch {
         // ignore
       }
-    };
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchBibQuery, item]);
+
+  useEffect(() => {
     const loadLocations = async () => {
       try {
         const result = await locationApi.list();
@@ -586,7 +661,6 @@ function ItemForm({
         // ignore
       }
     };
-    loadBibliographies();
     loadLocations();
   }, []);
 
@@ -641,20 +715,60 @@ function ItemForm({
         <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Informasi Item</h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 relative">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Bibliografi *</label>
-              <select
-                value={formData.bibliographyId}
-                onChange={(e) => setFormData({ ...formData, bibliographyId: e.target.value })}
-                required
-                disabled={!!item}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted"
-              >
-                <option value="">Pilih bibliografi</option>
-                {bibliographies.map((bib) => (
-                  <option key={bib.id} value={bib.id}>{bib.title}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cari bibliografi..."
+                  value={searchBibQuery}
+                  onChange={(e) => {
+                    setSearchBibQuery(e.target.value);
+                    setIsDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  onBlur={() => {
+                    setTimeout(() => setIsDropdownOpen(false), 200);
+                  }}
+                  disabled={!!item}
+                  required={!formData.bibliographyId}
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted"
+                />
+                {formData.bibliographyId && !item && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, bibliographyId: "" });
+                      setSearchBibQuery("");
+                    }}
+                    className="absolute right-3 top-2.5 text-xs text-red-500 hover:text-red-700"
+                  >
+                    Hapus
+                  </button>
+                )}
+              </div>
+              {isDropdownOpen && !item && (
+                <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-border bg-card shadow-lg custom-scrollbar">
+                  {bibliographies.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Tidak ditemukan</div>
+                  ) : (
+                    bibliographies.map((bib) => (
+                      <button
+                        key={bib.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, bibliographyId: bib.id });
+                          setSearchBibQuery(bib.title);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted hover:text-foreground text-foreground transition-colors"
+                      >
+                        {bib.title}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Kode Item *</label>
@@ -663,6 +777,7 @@ function ItemForm({
                 value={formData.itemCode}
                 onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
                 required
+                maxLength={15}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -784,18 +899,21 @@ function BulkCreateForm({
   const [prefix, setPrefix] = useState("ITEM");
   const [locationId, setLocationId] = useState("");
   const [items, setItems] = useState<Array<{ itemCode: string; inventoryCode: string }>>([]);
+  const [searchBibQuery, setSearchBibQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const loadBibliographies = async () => {
+    const delayDebounceFn = setTimeout(async () => {
       try {
-        const result = await bibliographyApi.list({ limit: 100 });
-        setBibliographies(result.data.items);
+        const result = await bibliographyApi.list({ q: searchBibQuery, limit: 50 });
+        setBibliographies(result.data.items || []);
       } catch {
         // ignore
       }
-    };
-    loadBibliographies();
-  }, []);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchBibQuery]);
 
   const generateItems = () => {
     const newItems = [];
@@ -864,19 +982,59 @@ function BulkCreateForm({
         <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Konfigurasi</h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 relative">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Bibliografi *</label>
-              <select
-                value={selectedBibId}
-                onChange={(e) => setSelectedBibId(e.target.value)}
-                required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                <option value="">Pilih bibliografi</option>
-                {bibliographies.map((bib) => (
-                  <option key={bib.id} value={bib.id}>{bib.title}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cari bibliografi..."
+                  value={searchBibQuery}
+                  onChange={(e) => {
+                    setSearchBibQuery(e.target.value);
+                    setIsDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  onBlur={() => {
+                    setTimeout(() => setIsDropdownOpen(false), 200);
+                  }}
+                  required={!selectedBibId}
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                {selectedBibId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBibId("");
+                      setSearchBibQuery("");
+                    }}
+                    className="absolute right-3 top-2.5 text-xs text-red-500 hover:text-red-700"
+                  >
+                    Hapus
+                  </button>
+                )}
+              </div>
+              {isDropdownOpen && (
+                <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-border bg-card shadow-lg custom-scrollbar">
+                  {bibliographies.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Tidak ditemukan</div>
+                  ) : (
+                    bibliographies.map((bib) => (
+                      <button
+                        key={bib.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedBibId(bib.id);
+                          setSearchBibQuery(bib.title);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted hover:text-foreground text-foreground transition-colors"
+                      >
+                        {bib.title}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Jumlah Item *</label>
@@ -891,11 +1049,12 @@ function BulkCreateForm({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Prefix Kode Item</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Prefix Kode Item (Maks 10 Karakter)</label>
               <input
                 type="text"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
+                maxLength={10}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
