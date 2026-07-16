@@ -8,7 +8,7 @@ describe("Bibliography Validation Schema", () => {
   it("menerima create bibliography valid", () => {
     const result = createBibliographySchema.safeParse({
       title: "Algoritma dan Pemrograman",
-      isbnIssn: "978-602-xxx",
+      isbnIssn: "ISBN 978-602-8519-93-9",
       publishYear: 2023,
       type: "physical_book",
     });
@@ -18,7 +18,7 @@ describe("Bibliography Validation Schema", () => {
 
   it("menolak bibliography tanpa title", () => {
     const result = createBibliographySchema.safeParse({
-      isbnIssn: "978-602-xxx",
+      isbnIssn: "ISBN 978-602-8519-93-9",
     });
 
     expect(result.success).toBe(false);

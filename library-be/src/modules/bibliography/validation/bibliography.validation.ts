@@ -2,7 +2,25 @@ import z from "zod";
 
 export const createBibliographySchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
-  isbnIssn: z.string().max(255).optional().or(z.literal("")),
+  isbnIssn: z.string().max(255).optional().or(z.literal(""))
+    .refine((val) => {
+      if (!val) return true;
+      const isISBN = /^ISBN\s/i.test(val);
+      const isISSN = /^ISSN\s/i.test(val);
+      if (isISBN) {
+        const isbnRegex = /^ISBN\s(978|979)-\d+-\d+-\d+-\d$/i;
+        if (!isbnRegex.test(val)) return false;
+        const digits = val.replace(/[^0-9]/g, "");
+        return digits.length === 13;
+      }
+      if (isISSN) {
+        const issnRegex = /^ISSN\s\d{4}-\d{3}[\dX]$/i;
+        return issnRegex.test(val);
+      }
+      return false;
+    }, {
+      message: "ISBN harus berformat 'ISBN 978-xxx-xxx-xx-x' (13 digit angka) atau ISSN berformat 'ISSN xxxx-xxxx'"
+    }),
   edition: z.string().max(100).optional().or(z.literal("")),
   publisherId: z.coerce.number().int().positive().optional(),
   publisherName: z.string().optional().or(z.literal("")),

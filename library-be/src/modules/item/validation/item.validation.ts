@@ -7,7 +7,7 @@ export const createItemSchema = z.object({
   locationId: z.coerce.number().int().positive(),
   barcode: z.string().min(1).max(50).optional(),
   uniqueCode: z.string().min(1).max(30).optional(),
-  itemCode: z.string().min(1).max(50),
+  itemCode: z.string().min(1).max(15, "Kode item tidak boleh lebih dari 15 karakter"),
   inventoryCode: z.string().max(50).optional().or(z.literal("")),
   callNumber: z.string().max(100).optional().or(z.literal("")),
   collectionTypeId: z.coerce.number().int().positive().optional(),
@@ -26,7 +26,7 @@ export const createItemSchema = z.object({
 
 export const bulkCreateItemSchema = z.object({
   items: z.array(z.object({
-    itemCode: z.string().min(1).max(50),
+    itemCode: z.string().min(1).max(15, "Kode item tidak boleh lebih dari 15 karakter"),
     barcode: z.string().min(1).max(50).optional(),
     locationId: z.coerce.number().int().positive().optional(),
     callNumber: z.string().max(100).optional().or(z.literal("")),

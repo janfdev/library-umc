@@ -40,9 +40,15 @@ export class BibliographyService {
 
   private async syncAuthors(tx: any, bibliographyId: string, authorList: { name: string; role: string }[]) {
     await tx.delete(bibliographyAuthors).where(eq(bibliographyAuthors.bibliographyId, bibliographyId));
-    for (const a of authorList) {
+    for (let i = 0; i < authorList.length; i++) {
+      const a = authorList[i];
       const authorId = await this.resolveOrCreateAuthor(tx, a.name);
-      await tx.insert(bibliographyAuthors).values({ bibliographyId, authorId, role: a.role || "primary" });
+      await tx.insert(bibliographyAuthors).values({
+        bibliographyId,
+        authorId,
+        role: a.role || "primary",
+        position: i + 1,
+      });
     }
   }
 

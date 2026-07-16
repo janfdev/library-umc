@@ -128,6 +128,9 @@ export default function HomeBookList() {
               const config = getStatusBadgeConfig(bibliography);
               const isEbook = bibliography.type === "ebook";
               const seedColor = generateColorFromSeed(bibliography.id);
+              const authorNames = bibliography.authors && bibliography.authors.length > 0
+                ? bibliography.authors.map((a) => a.name).join(", ")
+                : "";
 
               return (
                 <div
@@ -154,7 +157,7 @@ export default function HomeBookList() {
                             {bibliography.title}
                           </span>
                           <span className="text-[7px] text-white/40 line-clamp-1 text-right">
-                            {bibliography.sor || bibliography.publisher?.name || ""}
+                            {authorNames || bibliography.sor || bibliography.publisher?.name || ""}
                           </span>
                         </div>
                       )}
@@ -166,7 +169,7 @@ export default function HomeBookList() {
                         {bibliography.title}
                       </h3>
                       <p className="text-xs text-muted-foreground font-medium mb-2.5">
-                        {bibliography.sor || "Penulis Tidak Diketahui"}
+                        {authorNames || bibliography.sor || "Penulis Tidak Diketahui"}
                       </p>
                       {/* Subjects / Categories */}
                       <div className="flex flex-wrap gap-1.5">
