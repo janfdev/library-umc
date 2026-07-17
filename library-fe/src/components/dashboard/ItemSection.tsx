@@ -775,7 +775,10 @@ function ItemForm({
               <input
                 type="text"
                 value={formData.itemCode}
-                onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\s/g, "");
+                  setFormData({ ...formData, itemCode: val });
+                }}
                 required
                 maxLength={15}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -795,7 +798,12 @@ function ItemForm({
               <input
                 type="text"
                 value={formData.callNumber}
-                onChange={(e) => setFormData({ ...formData, callNumber: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setFormData({ ...formData, callNumber: val });
+                }}
+                maxLength={13}
+                placeholder="Maksimal 13 angka"
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
