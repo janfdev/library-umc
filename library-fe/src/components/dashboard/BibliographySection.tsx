@@ -20,7 +20,6 @@ import {
   BookOpen,
   Database,
   Image as ImageIcon,
-  FileText,
   UploadCloud,
   Check,
 } from "lucide-react";
@@ -881,7 +880,6 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
       <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-2">
           {stepsConfig.map((item) => {
-            const Icon = item.icon;
             const isActive = step === item.num;
             const isCompleted = step > item.num;
             return (
