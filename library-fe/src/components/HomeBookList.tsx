@@ -136,12 +136,12 @@ export default function HomeBookList() {
                 <div
                   key={bibliography.id}
                   onClick={() => handleBookClick(bibliography.id)}
-                  className="bg-card hover:bg-muted/40 border border-border/40 rounded-2xl p-3 sm:p-4 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-row items-center justify-between cursor-pointer group hover:-translate-y-0.5"
+                  className="bg-card hover:bg-muted/40 border border-border/40 rounded-2xl p-2.5 sm:p-4 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-row items-center justify-between cursor-pointer group hover:-translate-y-0.5"
                 >
                   {/* Left Side: Cover & Details */}
-                  <div className="flex flex-row items-center gap-4 min-w-0">
+                  <div className="flex flex-row items-center gap-3 sm:gap-4 min-w-0 flex-1">
                     {/* Book Cover Image */}
-                    <div className="shrink-0 w-16 h-24 sm:w-20 sm:h-28 rounded-xl overflow-hidden shadow-xs bg-muted border border-border/30 relative">
+                    <div className="shrink-0 w-14 h-20 sm:w-20 sm:h-28 rounded-xl overflow-hidden shadow-xs bg-muted border border-border/30 relative">
                       {bibliography.image ? (
                         <img
                           src={bibliography.image}
@@ -149,14 +149,14 @@ export default function HomeBookList() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${seedColor} flex flex-col justify-between p-2 text-white`}>
-                          <span className="text-[7px] font-bold uppercase tracking-wider text-white/50">
+                        <div className={`w-full h-full bg-gradient-to-br ${seedColor} flex flex-col justify-between p-1.5 text-white`}>
+                          <span className="text-[6px] sm:text-[7px] font-bold uppercase tracking-wider text-white/50">
                             {isEbook ? "E-Book" : "Fisik"}
                           </span>
-                          <span className="font-bold text-[9px] leading-tight italic line-clamp-3 text-center my-auto">
+                          <span className="font-bold text-[8px] sm:text-[9px] leading-tight italic line-clamp-3 text-center my-auto">
                             {bibliography.title}
                           </span>
-                          <span className="text-[7px] text-white/40 line-clamp-1 text-right">
+                          <span className="text-[6px] sm:text-[7px] text-white/40 line-clamp-1 text-right">
                             {authorNames || bibliography.sor || bibliography.publisher?.name || ""}
                           </span>
                         </div>
@@ -164,30 +164,32 @@ export default function HomeBookList() {
                     </div>
 
                     {/* Book Details */}
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-foreground text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-primary transition-colors mb-1">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-foreground text-[13px] sm:text-sm md:text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-0.5 sm:mb-1">
                         {bibliography.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-medium mb-2.5">
+                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mb-1.5 sm:mb-2 line-clamp-1">
                         {authorNames || bibliography.sor || "Penulis Tidak Diketahui"}
                       </p>
                       {/* Subjects / Categories */}
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1">
                         {bibliography.subjects && bibliography.subjects.length > 0 ? (
-                          bibliography.subjects.slice(0, 2).map((sub) => (
+                          bibliography.subjects.slice(0, 2).map((sub, idx) => (
                             <span
                               key={sub.id}
-                              className="px-2 py-0.5 text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium"
+                              className={`px-1.5 py-0.5 text-[8px] sm:text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium ${
+                                idx > 0 ? "max-[480px]:hidden" : ""
+                              }`}
                             >
                               {sub.name}
                             </span>
                           ))
                         ) : bibliography.category ? (
-                          <span className="px-2 py-0.5 text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
+                          <span className="px-1.5 py-0.5 text-[8px] sm:text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
                             {bibliography.category.name}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
+                          <span className="px-1.5 py-0.5 text-[8px] sm:text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
                             Umum
                           </span>
                         )}
@@ -196,9 +198,9 @@ export default function HomeBookList() {
                   </div>
 
                   {/* Right Side: Status Badge */}
-                  <div className="shrink-0 ml-4">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold border ${config.bg} ${config.text}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
+                  <div className="shrink-0 ml-2 sm:ml-3">
+                    <span className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-medium sm:font-semibold border ${config.bg} ${config.text}`}>
+                      <span className={`w-1 h-1 rounded-full ${config.dot}`}></span>
                       {config.label}
                     </span>
                   </div>

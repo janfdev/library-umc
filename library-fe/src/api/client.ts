@@ -149,6 +149,15 @@ async function apiFetch<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
+    if (error.message === "Validation Error" && error.data?.fieldErrors) {
+      const details = Object.entries(error.data.fieldErrors)
+        .map(([field, msgs]) => {
+          const fieldLabel = field === "isbnIssn" ? "ISBN/ISSN" : field === "title" ? "Judul" : field;
+          return `${fieldLabel}: ${(msgs as string[]).join(", ")}`;
+        })
+        .join("; ");
+      throw new Error(`Validasi Gagal - ${details}`);
+    }
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 

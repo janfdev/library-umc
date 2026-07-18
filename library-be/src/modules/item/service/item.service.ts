@@ -178,10 +178,24 @@ export class ItemService {
     });
     if (!existingItem) return { success: false, message: "Item not found" };
 
+    // Validasi duplikasi itemCode jika diubah
+    if (data.itemCode && data.itemCode !== existingItem.itemCode) {
+      const duplicate = await db.query.items.findFirst({
+        where: and(eq(items.itemCode, data.itemCode), isNull(items.deletedAt)),
+      });
+      if (duplicate) {
+        return { success: false, message: "Kode item sudah digunakan oleh item lain" };
+      }
+    }
+
     const result = await db.transaction(async (tx) => {
       const updateData: any = { ...data, updatedAt: new Date() };
       if (data.price != null) updateData.price = String(data.price);
       const [updated] = await tx.update(items).set(updateData).where(eq(items.id, id)).returning();
+      
+      // Sinkronisasi stok koleksi agar tetap sinkron jika status item berubah
+      await syncCollectionAvailableStock(tx, existingItem.bibliographyId);
+      
       return updated;
     });
 
