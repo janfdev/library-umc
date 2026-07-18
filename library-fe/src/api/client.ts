@@ -52,6 +52,7 @@ export interface Bibliography {
   totalItems: number;
   availableItems: number;
   publisher?: { id: number; name: string };
+  publicationPlace?: { id: number; name: string };
   language?: { id: number; code: string; name: string };
   gmd?: { id: number; name: string };
   category?: { id: number; name: string };
