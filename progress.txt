@@ -1,0 +1,12 @@
+# Ralph Progress — PRD Features (FR-12 & FR-14)
+Started: 2026-07-19
+
+## US-001: Schema — COMPLETED
+## US-002: Faculties CRUD — COMPLETED
+## US-003: Study Programs CRUD — COMPLETED
+## US-004: Bibliography Updates — COMPLETED
+## US-005: Duplicate Detection — COMPLETED
+## US-006: Seed Data — COMPLETED
+## US-007: Swagger Docs — COMPLETED
+
+All user stories complete. Typecheck: ✅ passes. Tests: 174/179 pass (5 pre-existing failures unrelated to this PRD).
