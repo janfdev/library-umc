@@ -148,6 +148,51 @@ export const subjects = pgTable("subjects", {
 }));
 
 // ==========================================
+// 2b. FACULTIES & STUDY PROGRAMS
+// ==========================================
+
+export const faculties = pgTable("faculties", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+});
+
+export const studyPrograms = pgTable("study_programs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  facultyId: integer("faculty_id").notNull().references(() => faculties.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+}, (table) => ({
+  facultyIdx: index("sp_faculty_idx").on(table.facultyId)
+}));
+
+export const bibliographyFaculties = pgTable("bibliography_faculties", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
+  facultyId: integer("faculty_id").notNull().references(() => faculties.id),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  unique: unique("bf_unique").on(table.bibliographyId, table.facultyId),
+  bibIdx: index("bf_bibliography_idx").on(table.bibliographyId),
+  facultyIdx: index("bf_faculty_idx").on(table.facultyId)
+}));
+
+export const bibliographyStudyPrograms = pgTable("bibliography_study_programs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
+  studyProgramId: integer("study_program_id").notNull().references(() => studyPrograms.id),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  unique: unique("bsp_unique").on(table.bibliographyId, table.studyProgramId),
+  bibIdx: index("bsp_bibliography_idx").on(table.bibliographyId),
+  spIdx: index("bsp_study_program_idx").on(table.studyProgramId)
+}));
+
+// ==========================================
 // 3. AUTHENTICATION (BETTER AUTH)
 // ==========================================
 
@@ -597,7 +642,9 @@ export const bibliographyRelations = relations(bibliographies, ({ one, many }) =
   items: many(items),
   contents: many(bibliographyContents),
   bibliographyAuthors: many(bibliographyAuthors),
-  bibliographySubjects: many(bibliographySubjects)
+  bibliographySubjects: many(bibliographySubjects),
+  bibliographyFaculties: many(bibliographyFaculties),
+  bibliographyStudyPrograms: many(bibliographyStudyPrograms)
 }));
 
 export const bibliographyAuthorsRelations = relations(bibliographyAuthors, ({ one }) => ({
@@ -652,4 +699,24 @@ export const importItemRowRelations = relations(importItemRows, ({ one }) => ({
 
 export const importErrorRelations = relations(importErrors, ({ one }) => ({
   batch: one(importBatches, { fields: [importErrors.batchId], references: [importBatches.id] })
+}));
+
+export const facultyRelations = relations(faculties, ({ many }) => ({
+  studyPrograms: many(studyPrograms),
+  bibliographyFaculties: many(bibliographyFaculties)
+}));
+
+export const studyProgramRelations = relations(studyPrograms, ({ one, many }) => ({
+  faculty: one(faculties, { fields: [studyPrograms.facultyId], references: [faculties.id] }),
+  bibliographyStudyPrograms: many(bibliographyStudyPrograms)
+}));
+
+export const bibliographyFacultyRelations = relations(bibliographyFaculties, ({ one }) => ({
+  bibliography: one(bibliographies, { fields: [bibliographyFaculties.bibliographyId], references: [bibliographies.id] }),
+  faculty: one(faculties, { fields: [bibliographyFaculties.facultyId], references: [faculties.id] })
+}));
+
+export const bibliographyStudyProgramRelations = relations(bibliographyStudyPrograms, ({ one }) => ({
+  bibliography: one(bibliographies, { fields: [bibliographyStudyPrograms.bibliographyId], references: [bibliographies.id] }),
+  studyProgram: one(studyPrograms, { fields: [bibliographyStudyPrograms.studyProgramId], references: [studyPrograms.id] })
 }));
