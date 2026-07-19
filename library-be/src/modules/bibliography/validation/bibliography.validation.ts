@@ -46,7 +46,9 @@ export const createBibliographySchema = z.object({
   })).optional(),
   subjects: z.array(z.object({
     name: z.string().min(1)
-  })).optional()
+  })).optional(),
+  facultyIds: z.array(z.number().int().positive()).optional(),
+  studyProgramIds: z.array(z.number().int().positive()).optional()
 });
 
 export const updateBibliographySchema = createBibliographySchema.partial();
@@ -65,6 +67,8 @@ export const bibliographyQuerySchema = z.object({
   publishYearTo: z.coerce.number().int().optional(),
   hasAvailableItems: z.coerce.boolean().optional(),
   isPopular: z.coerce.boolean().optional(),
+  facultyId: z.coerce.number().int().optional(),
+  studyProgramId: z.coerce.number().int().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(["title", "publishYear", "createdAt"]).default("title"),

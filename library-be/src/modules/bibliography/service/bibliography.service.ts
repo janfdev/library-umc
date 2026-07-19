@@ -1,9 +1,10 @@
 import { db } from "../../../db";
 import {
   bibliographies, bibliographyAuthors, bibliographySubjects,
+  bibliographyFaculties, bibliographyStudyPrograms,
   authors, subjects, publishers, publicationPlaces, items
 } from "../../../db/schema";
-import { eq, and, isNull, ilike, or, sql, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, isNull, ilike, or, sql, desc, asc, inArray, notExists } from "drizzle-orm";
 import type { CreateBibliographyData, UpdateBibliographyData, BibliographyQuery } from "../validation/bibliography.validation";
 import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 
@@ -60,6 +61,20 @@ export class BibliographyService {
     }
   }
 
+  private async syncFaculties(tx: any, bibliographyId: string, facultyIds: number[]) {
+    await tx.delete(bibliographyFaculties).where(eq(bibliographyFaculties.bibliographyId, bibliographyId));
+    for (const fid of facultyIds) {
+      await tx.insert(bibliographyFaculties).values({ bibliographyId, facultyId: fid });
+    }
+  }
+
+  private async syncStudyPrograms(tx: any, bibliographyId: string, studyProgramIds: number[]) {
+    await tx.delete(bibliographyStudyPrograms).where(eq(bibliographyStudyPrograms.bibliographyId, bibliographyId));
+    for (const spid of studyProgramIds) {
+      await tx.insert(bibliographyStudyPrograms).values({ bibliographyId, studyProgramId: spid });
+    }
+  }
+
   async create(data: CreateBibliographyData) {
     const result = await db.transaction(async (tx) => {
       let publisherId = data.publisherId || null;
@@ -93,6 +108,8 @@ export class BibliographyService {
       const [bib] = await tx.insert(bibliographies).values(insertData).returning();
       if (data.authors && data.authors.length > 0) await this.syncAuthors(tx, bib.id, data.authors);
       if (data.subjects && data.subjects.length > 0) await this.syncSubjects(tx, bib.id, data.subjects);
+      if (data.facultyIds) await this.syncFaculties(tx, bib.id, data.facultyIds);
+      if (data.studyProgramIds) await this.syncStudyPrograms(tx, bib.id, data.studyProgramIds);
       return bib;
     });
     return this.getById(result.id);
@@ -109,7 +126,7 @@ export class BibliographyService {
       }
       const updateData: any = {};
       for (const key of Object.keys(data)) {
-        if (key === "authors" || key === "subjects" || key === "publisherName") continue;
+        if (key === "authors" || key === "subjects" || key === "publisherName" || key === "facultyIds" || key === "studyProgramIds") continue;
         if (data[key as keyof UpdateBibliographyData] !== undefined) {
           updateData[key] = data[key as keyof UpdateBibliographyData];
         }
@@ -123,6 +140,8 @@ export class BibliographyService {
       }
       if (data.authors !== undefined) await this.syncAuthors(tx, id, data.authors);
       if (data.subjects !== undefined) await this.syncSubjects(tx, id, data.subjects);
+      if (data.facultyIds !== undefined) await this.syncFaculties(tx, id, data.facultyIds);
+      if (data.studyProgramIds !== undefined) await this.syncStudyPrograms(tx, id, data.studyProgramIds);
     });
     return this.getById(id);
   }
@@ -139,6 +158,8 @@ export class BibliographyService {
         collectionType: true,
         bibliographyAuthors: { with: { author: true } },
         bibliographySubjects: { with: { subject: true } },
+        bibliographyFaculties: { with: { faculty: true } },
+        bibliographyStudyPrograms: { with: { studyProgram: { with: { faculty: true } } } },
         items: { where: isNull(items.deletedAt), with: { location: true } },
       },
     });
@@ -149,10 +170,19 @@ export class BibliographyService {
       ...bib,
       authors: bib.bibliographyAuthors.map((ba: any) => ({ id: ba.author.id, name: ba.author.name, role: ba.role })),
       subjects: bib.bibliographySubjects.map((bs: any) => ({ id: bs.subject.id, name: bs.subject.name })),
+      faculties: bib.bibliographyFaculties.map((bf: any) => ({ id: bf.faculty.id, name: bf.faculty.name, code: bf.faculty.code })),
+      studyPrograms: bib.bibliographyStudyPrograms.map((bsp: any) => ({
+        id: bsp.studyProgram.id,
+        name: bsp.studyProgram.name,
+        code: bsp.studyProgram.code,
+        faculty: { id: bsp.studyProgram.faculty.id, name: bsp.studyProgram.faculty.name }
+      })),
       totalItems,
       availableItems,
       bibliographyAuthors: undefined,
       bibliographySubjects: undefined,
+      bibliographyFaculties: undefined,
+      bibliographyStudyPrograms: undefined,
     };
   }
 
@@ -204,6 +234,60 @@ export class BibliographyService {
       else return { items: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
     }
 
+    if (query.facultyId) {
+      const facultyBibIds = db.$with("faculty_bibs").as(
+        db.select({ bibId: bibliographyFaculties.bibliographyId })
+          .from(bibliographyFaculties)
+          .where(eq(bibliographyFaculties.facultyId, query.facultyId))
+      );
+      const allBibIds = db.$with("all_bibs").as(
+        db.select({ id: bibliographies.id })
+          .from(bibliographies)
+          .where(
+            and(
+              isNull(bibliographies.deletedAt),
+              notExists(
+                db.select().from(bibliographyFaculties)
+                  .where(eq(bibliographyFaculties.bibliographyId, bibliographies.id))
+              )
+            )
+          )
+      );
+      conditions.push(
+        or(
+          inArray(bibliographies.id, sql`(select bib_id from ${facultyBibIds})`),
+          inArray(bibliographies.id, sql`(select id from ${allBibIds})`)
+        )
+      );
+    }
+
+    if (query.studyProgramId) {
+      const spBibIds = db.$with("sp_bibs").as(
+        db.select({ bibId: bibliographyStudyPrograms.bibliographyId })
+          .from(bibliographyStudyPrograms)
+          .where(eq(bibliographyStudyPrograms.studyProgramId, query.studyProgramId))
+      );
+      const allSpBibIds = db.$with("all_sp_bibs").as(
+        db.select({ id: bibliographies.id })
+          .from(bibliographies)
+          .where(
+            and(
+              isNull(bibliographies.deletedAt),
+              notExists(
+                db.select().from(bibliographyStudyPrograms)
+                  .where(eq(bibliographyStudyPrograms.bibliographyId, bibliographies.id))
+              )
+            )
+          )
+      );
+      conditions.push(
+        or(
+          inArray(bibliographies.id, sql`(select bib_id from ${spBibIds})`),
+          inArray(bibliographies.id, sql`(select id from ${allSpBibIds})`)
+        )
+      );
+    }
+
     const where = and(...conditions);
     const sortCol = query.sort === "publishYear" ? bibliographies.publishYear
       : query.sort === "createdAt" ? bibliographies.createdAt : bibliographies.title;
@@ -219,6 +303,8 @@ export class BibliographyService {
         category: true, publisher: true, language: true, gmd: true,
         bibliographyAuthors: { with: { author: true } },
         bibliographySubjects: { with: { subject: true } },
+        bibliographyFaculties: { with: { faculty: true } },
+        bibliographyStudyPrograms: { with: { studyProgram: { with: { faculty: true } } } },
         items: { where: isNull(items.deletedAt) },
       },
       orderBy: [sortDir(sortCol)],
@@ -230,10 +316,19 @@ export class BibliographyService {
       ...bib,
       authors: bib.bibliographyAuthors.map((ba: any) => ({ id: ba.author.id, name: ba.author.name, role: ba.role })),
       subjects: bib.bibliographySubjects.map((bs: any) => ({ id: bs.subject.id, name: bs.subject.name })),
+      faculties: bib.bibliographyFaculties.map((bf: any) => ({ id: bf.faculty.id, name: bf.faculty.name, code: bf.faculty.code })),
+      studyPrograms: bib.bibliographyStudyPrograms.map((bsp: any) => ({
+        id: bsp.studyProgram.id,
+        name: bsp.studyProgram.name,
+        code: bsp.studyProgram.code,
+        faculty: { id: bsp.studyProgram.faculty.id, name: bsp.studyProgram.faculty.name }
+      })),
       totalItems: bib.items.length,
       availableItems: bib.items.filter((i: any) => i.status === "available").length,
       bibliographyAuthors: undefined,
       bibliographySubjects: undefined,
+      bibliographyFaculties: undefined,
+      bibliographyStudyPrograms: undefined,
     }));
 
     return { items: mapped, total, page: query.page, limit: query.limit, totalPages: Math.ceil(total / query.limit) };
