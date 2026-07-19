@@ -75,6 +75,14 @@ export const bibliographyQuerySchema = z.object({
   order: z.enum(["asc", "desc"]).default("asc")
 });
 
+export const checkDuplicateSchema = z.object({
+  isbn: z.string().max(255).optional(),
+  title: z.string().max(500).optional(),
+  author: z.string().max(255).optional(),
+}).refine((d) => d.isbn || d.title || d.author, {
+  message: "At least one of isbn, title, or author is required",
+});
+
 export type CreateBibliographyData = z.infer<typeof createBibliographySchema>;
 export type UpdateBibliographyData = z.infer<typeof updateBibliographySchema>;
 export type BibliographyQuery = z.infer<typeof bibliographyQuerySchema>;

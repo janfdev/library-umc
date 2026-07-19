@@ -338,6 +338,58 @@ export class BibliographyService {
     await db.update(bibliographies).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(bibliographies.id, id));
   }
 
+  async checkDuplicate(params: { isbn?: string; title?: string; author?: string }) {
+    const duplicates: any[] = [];
+    const seen = new Set<string>();
+
+    if (params.isbn) {
+      const exact = await db.query.bibliographies.findMany({
+        where: and(eq(bibliographies.isbnIssn, params.isbn), isNull(bibliographies.deletedAt)),
+        with: { bibliographyAuthors: { with: { author: true } } },
+      });
+      for (const bib of exact) {
+        if (!seen.has(bib.id)) {
+          seen.add(bib.id);
+          duplicates.push({
+            id: bib.id, title: bib.title, isbnIssn: bib.isbnIssn,
+            classification: bib.classification, callNumber: bib.callNumber,
+            authors: bib.bibliographyAuthors.map((ba: any) => ({ name: ba.author.name })),
+            similarity: "isbn",
+          });
+        }
+      }
+    }
+
+    if (params.title) {
+      const titleMatch = await db.query.bibliographies.findMany({
+        where: and(ilike(bibliographies.title, `%${params.title}%`), isNull(bibliographies.deletedAt)),
+        with: { bibliographyAuthors: { with: { author: true } } },
+      });
+      for (const bib of titleMatch) {
+        if (params.author) {
+          const hasAuthor = bib.bibliographyAuthors.some(
+            (ba: any) => ba.author.name.toLowerCase().includes(params.author!.toLowerCase())
+          );
+          if (!hasAuthor) continue;
+        }
+        if (!seen.has(bib.id)) {
+          seen.add(bib.id);
+          duplicates.push({
+            id: bib.id, title: bib.title, isbnIssn: bib.isbnIssn,
+            classification: bib.classification, callNumber: bib.callNumber,
+            authors: bib.bibliographyAuthors.map((ba: any) => ({ name: ba.author.name })),
+            similarity: "title_author",
+          });
+        }
+      }
+    }
+
+    return {
+      hasExactMatch: params.isbn ? duplicates.some((d) => d.similarity === "isbn") : false,
+      duplicates,
+    };
+  }
+
   async getItemsForBibliography(bibliographyId: string) {
     return db.query.items.findMany({
       where: and(eq(items.bibliographyId, bibliographyId), isNull(items.deletedAt)),
