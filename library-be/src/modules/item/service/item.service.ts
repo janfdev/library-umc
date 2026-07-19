@@ -1,18 +1,35 @@
 import { db } from "../../../db";
 import { items, bibliographies, locations, logs } from "../../../db/schema";
-import { eq, and, like, isNull, sql } from "drizzle-orm";
+import { eq, and, like, ilike, or, isNull, sql } from "drizzle-orm";
 import type { CreateItemData, BulkCreateItemData, UpdateItemData } from "../validation/item.validation";
 import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
 import crypto from "crypto";
 
 export class ItemService {
 
-  async getAllItems(bibliographyId?: string, page: number = 1, limit: number = 20) {
+  async getAllItems(bibliographyId?: string, page: number = 1, limit: number = 20, q?: string) {
     const skip = (page - 1) * limit;
     let whereClause: any = isNull(items.deletedAt);
+    
     if (bibliographyId) {
       whereClause = and(eq(items.bibliographyId, bibliographyId), isNull(items.deletedAt));
     }
+    
+    if (q) {
+      const searchPattern = `%${q}%`;
+      whereClause = and(
+        whereClause,
+        or(
+          ilike(items.itemCode, searchPattern),
+          ilike(items.inventoryCode, searchPattern),
+          sql`${items.bibliographyId} IN (
+            SELECT id FROM bibliographies 
+            WHERE title ILIKE ${searchPattern} AND deleted_at IS NULL
+          )`
+        )
+      );
+    }
+
     const [data, total] = await Promise.all([
       db.query.items.findMany({
         where: whereClause,
@@ -161,10 +178,24 @@ export class ItemService {
     });
     if (!existingItem) return { success: false, message: "Item not found" };
 
+    // Validasi duplikasi itemCode jika diubah
+    if (data.itemCode && data.itemCode !== existingItem.itemCode) {
+      const duplicate = await db.query.items.findFirst({
+        where: and(eq(items.itemCode, data.itemCode), isNull(items.deletedAt)),
+      });
+      if (duplicate) {
+        return { success: false, message: "Kode item sudah digunakan oleh item lain" };
+      }
+    }
+
     const result = await db.transaction(async (tx) => {
       const updateData: any = { ...data, updatedAt: new Date() };
       if (data.price != null) updateData.price = String(data.price);
       const [updated] = await tx.update(items).set(updateData).where(eq(items.id, id)).returning();
+      
+      // Sinkronisasi stok koleksi agar tetap sinkron jika status item berubah
+      await syncCollectionAvailableStock(tx, existingItem.bibliographyId);
+      
       return updated;
     });
 

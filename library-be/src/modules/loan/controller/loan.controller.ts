@@ -115,8 +115,8 @@ export class LoanController {
     try {
       const user = req.user;
 
-      if (!user || user.role !== "super_admin") {
-        return sendError(res, "Akses ditolak — hanya Super Admin", 403);
+      if (!user || (user.role !== "super_admin" && user.role !== "staff")) {
+        return sendError(res, "Akses ditolak — hanya Admin/Staff", 403);
       }
 
       const result = await loanService.returnLoan(
@@ -228,18 +228,79 @@ export class LoanController {
    */
   async extendLoan(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user;
+      if (!user) {
+        return sendError(res, "Tidak terautentikasi", 401);
+      }
       const { loanId } = req.params;
+      const memberId = await loanService.getMemberIdByUserId(user.id);
+      if (!memberId) {
+        return sendError(res, "Member tidak ditemukan", 400);
+      }
 
-      const result = await loanService.extendLoan(String(loanId));
+      const result = await loanService.requestExtension(String(loanId), memberId);
       sendSuccess(res, result.message, result.data);
     } catch (error: unknown) {
       const err = error as Error;
-      // Jika error message kita kenali, kirim sebagai 400
       if (
         err.message &&
         (err.message.includes("sudah pernah diperpanjang") ||
           err.message.includes("melewati batas waktu") ||
-          err.message.includes("dipesan (reserved)"))
+          err.message.includes("dipesan (reserved)") ||
+          err.message.includes("sedang diproses") ||
+          err.message.includes("Akses ditolak"))
+      ) {
+        return sendError(res, err.message, 400);
+      }
+      next(error);
+    }
+  }
+
+  /**
+   * POST /loans/:loanId/approve-extension — Admin approve perpanjangan
+   */
+  async approveExtension(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+      if (!user || (user.role !== "super_admin" && user.role !== "staff")) {
+        return sendError(res, "Akses ditolak — hanya Admin/Staff", 403);
+      }
+      const { loanId } = req.params;
+      const result = await loanService.approveExtension(String(loanId), user.id);
+      sendSuccess(res, result.message, result.data);
+    } catch (error: unknown) {
+      const err = error as Error;
+      if (
+        err.message &&
+        (err.message.includes("tidak ditemukan") ||
+          err.message.includes("Tidak ada permintaan") ||
+          err.message.includes("batas maksimal") ||
+          err.message.includes("dipesan"))
+      ) {
+        return sendError(res, err.message, 400);
+      }
+      next(error);
+    }
+  }
+
+  /**
+   * POST /loans/:loanId/reject-extension — Admin reject perpanjangan
+   */
+  async rejectExtension(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+      if (!user || (user.role !== "super_admin" && user.role !== "staff")) {
+        return sendError(res, "Akses ditolak — hanya Admin/Staff", 403);
+      }
+      const { loanId } = req.params;
+      const result = await loanService.rejectExtension(String(loanId), user.id);
+      sendSuccess(res, result.message, result.data);
+    } catch (error: unknown) {
+      const err = error as Error;
+      if (
+        err.message &&
+        (err.message.includes("tidak ditemukan") ||
+          err.message.includes("Tidak ada permintaan"))
       ) {
         return sendError(res, err.message, 400);
       }

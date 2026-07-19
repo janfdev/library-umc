@@ -27,14 +27,27 @@ export interface Bibliography {
   description?: string;
   /** URL gambar cover (Cloudinary) */
   image: string | null;
+  /** Menunjukkan apakah buku populer / ditampilkan di home */
+  isPopular?: boolean;
   /** Jumlah stok yang tersedia (hanya relevan untuk physical_book / agregat) */
   stock?: number;
   /** Daftar item fisik individual (buku yang memiliki barcode / ID unik) */
   items?: {
     id: string;
     status: string;
+    itemCode?: string;
+    location?: {
+      id: number;
+      room: string;
+      rack: string;
+      shelf: string;
+    };
   }[];
   category?: BibliographyCategory;
+  subjects?: {
+    id: number;
+    name: string;
+  }[];
   createdAt?: string;
   updatedAt?: string;
 }

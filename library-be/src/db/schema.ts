@@ -262,7 +262,8 @@ export const bibliographies = pgTable("bibliographies", {
   stock: integer("stock").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at")
+  deletedAt: timestamp("deleted_at"),
+  isPopular: boolean("is_popular").default(false).notNull()
 }, (table) => ({
   titleIdx: index("bibliography_title_idx").on(table.title),
   isbnIdx: index("bibliography_isbn_idx").on(table.isbnIssn),
@@ -375,6 +376,7 @@ export const loans = pgTable("loans", {
   returnDate: date("return_date"),
   status: loansStatusEnum("status").notNull(),
   extendCount: integer("extend_count").default(0).notNull(),
+  extensionStatus: varchar("extension_status", { length: 50 }).default("none"),
   approvedBy: text("approved_by").references(() => Users.id),
   verificationToken: varchar("verification_token", { length: 100 }),
   verificationExpiresAt: timestamp("verification_expires_at"),
@@ -616,10 +618,11 @@ export const itemRelations = relations(items, ({ one, many }) => ({
   loans: many(loans)
 }));
 
-export const loanRelations = relations(loans, ({ one }) => ({
+export const loanRelations = relations(loans, ({ one, many }) => ({
   member: one(members, { fields: [loans.memberId], references: [members.id] }),
   item: one(items, { fields: [loans.itemId], references: [items.id] }),
-  authApproved: one(Users, { fields: [loans.approvedBy], references: [Users.id] })
+  authApproved: one(Users, { fields: [loans.approvedBy], references: [Users.id] }),
+  returnRequests: many(returnRequests)
 }));
 
 export const reservationRelations = relations(reservations, ({ one }) => ({

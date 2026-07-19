@@ -174,6 +174,14 @@ router.post(
  *         description: Forbidden - Admin/Staff only
  */
 router.post(
+  "/loans/:loanId/return",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.returnLoan,
+);
+
+router.post(
   "/loans/:loanId/return-request",
   publicApiLimiter,
   isAuthenticated,
@@ -284,8 +292,23 @@ router.post(
   "/loans/:loanId/extend",
   publicApiLimiter,
   isAuthenticated,
-  requireRole(["super_admin", "staff"]),
   loanController.extendLoan,
+);
+
+router.post(
+  "/loans/:loanId/approve-extension",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.approveExtension,
+);
+
+router.post(
+  "/loans/:loanId/reject-extension",
+  publicApiLimiter,
+  isAuthenticated,
+  requireRole(["super_admin", "staff"]),
+  loanController.rejectExtension,
 );
 
 export const loanRoutes = router;

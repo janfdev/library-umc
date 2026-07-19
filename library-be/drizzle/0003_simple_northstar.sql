@@ -1,0 +1,1 @@
+ALTER TABLE "bibliographies" ADD COLUMN "is_popular" boolean DEFAULT false NOT NULL;

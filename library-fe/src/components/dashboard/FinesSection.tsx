@@ -141,7 +141,18 @@ export default function FinesSection() {
           },
         );
 
-        const returnData = await returnRes.json();
+        let returnData;
+        try {
+          returnData = await returnRes.json();
+        } catch (jsonErr) {
+          console.error("Gagal mengurai respons pengembalian:", jsonErr);
+          showToast(
+            `Gagal memproses pengembalian buku (HTTP ${returnRes.status}).`,
+            "error"
+          );
+          return;
+        }
+
         if (!returnData.success) {
           showToast(
             returnData.message ||
@@ -158,7 +169,18 @@ export default function FinesSection() {
         credentials: "include",
         body: JSON.stringify({ paymentMethod: "cash" }),
       });
-      const data = await response.json();
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error("Gagal mengurai respons pembayaran:", jsonErr);
+        showToast(
+          `Gagal memproses pembayaran denda (HTTP ${response.status}).`,
+          "error"
+        );
+        return;
+      }
 
       if (data.success) {
         showToast("Pembayaran denda berhasil dikonfirmasi!", "success");
@@ -167,8 +189,9 @@ export default function FinesSection() {
       } else {
         showToast(data.message || "Gagal memproses pembayaran.", "error");
       }
-    } catch {
-      showToast("Terjadi kesalahan saat memproses pembayaran.", "error");
+    } catch (err) {
+      console.error("Kesalahan pembayaran denda:", err);
+      showToast("Terjadi kesalahan koneksi saat memproses pembayaran.", "error");
     } finally {
       setPayingId(null);
     }

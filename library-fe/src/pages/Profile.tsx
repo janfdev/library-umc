@@ -126,7 +126,18 @@ const Profile = () => {
     e.preventDefault();
     try {
       setUpdateLoading(true);
-      const updated = await memberService.updateMyProfile(formData);
+      const payload: UpdateProfilePayload = isExternal
+        ? {
+            institution: formData.institution,
+            originRegion: formData.originRegion,
+            phone: formData.phone
+          }
+        : {
+            nimNidn: formData.nimNidn,
+            faculty: formData.faculty,
+            phone: formData.phone
+          };
+      const updated = await memberService.updateMyProfile(payload);
       setProfile(updated);
       success("Berhasil", "Profil berhasil diperbarui", 3000);
     } catch (err) {
@@ -249,9 +260,19 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="w-full mx-auto md:px-8 px-4 pt-10 pb-16">
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}} />
+
+      <main className="w-full max-w-7xl mx-auto md:px-8 px-4 pt-10 pb-16">
         {/* Banner with Wavy Pattern placeholder */}
-        <div className="relative rounded-t-[24px] overflow-hidden h-44 bg-red-900 shadow-sm">
+        <div className="relative rounded-t-[24px] overflow-hidden h-36 md:h-44 bg-red-900 shadow-sm">
           <div
             className="absolute inset-0 opacity-30"
             style={{
@@ -261,8 +282,8 @@ const Profile = () => {
         </div>
 
         {/* Profile Card Section */}
-        <div className="px-10 -mt-20 flex flex-col md:flex-row items-end gap-8 mb-12 relative z-10">
-          <div className="w-48 h-56 bg-card rounded-[32px] shadow-xl border border-slate-50 overflow-hidden flex items-center justify-center p-1">
+        <div className="px-6 md:px-10 -mt-20 flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 mb-12 relative z-10">
+          <div className="w-40 h-48 md:w-48 md:h-56 bg-card rounded-[32px] shadow-xl border border-slate-50 overflow-hidden flex items-center justify-center p-1 shrink-0">
             <div className="w-full h-full bg-slate-100 rounded-[28px] overflow-hidden flex items-center justify-center">
               {profile?.user?.image ? (
                 <img
@@ -277,25 +298,25 @@ const Profile = () => {
               )}
             </div>
           </div>
-          <div className="flex-1 pb-4">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-2 underline decoration-red-600/10 underline-offset-8">
+          <div className="flex-1 pb-4 text-center md:text-left flex flex-col items-center md:items-start w-full">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2 underline decoration-red-600/10 underline-offset-8">
               {profile?.user?.name || authUser?.name}
             </h2>
-            <p className="text-lg text-slate-500 font-bold mb-2">
+            <p className="text-base md:text-lg text-slate-500 font-bold mb-2">
               {isExternal
                 ? profile?.institution || profile?.originRegion || "Umum"
                 : profile?.faculty || "Teknik Informatika"}
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest">
-              <Mail size={14} className="text-primary" />
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest justify-center md:justify-start">
+              <Mail size={14} className="text-primary shrink-0" />
               {profile?.user?.email || authUser?.email}
             </div>
           </div>
         </div>
 
         {/* Custom Navigation Tabs */}
-        <div className="border-b border-slate-100 mb-10 px-2 overflow-x-auto scroller-hide">
-          <div className="flex gap-10 min-w-max">
+        <div className="border-b border-slate-100 mb-10 px-2 overflow-x-auto no-scrollbar">
+          <div className="flex gap-6 md:gap-10 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -476,7 +497,7 @@ const Profile = () => {
             </section>
           )}
           {activeTab === "edit-profil" && (
-            <div className="bg-slate-50/50 rounded-[40px] p-10 max-w-3xl border border-slate-100 shadow-sm">
+            <div className="bg-slate-50/50 rounded-3xl sm:rounded-[40px] p-6 sm:p-10 max-w-3xl border border-slate-100 shadow-sm">
               <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center text-primary">
                   <Settings size={20} />

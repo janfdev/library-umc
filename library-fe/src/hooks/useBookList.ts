@@ -84,6 +84,7 @@ export function useBookList(
       stock: item.stock ?? item.totalItems ?? 0,
       items: item.items || [],
       category: item.category,
+      subjects: item.subjects || [],
     }));
 
     setBibliographies(mapped);

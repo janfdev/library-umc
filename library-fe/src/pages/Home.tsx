@@ -5,8 +5,15 @@ import Navbar from "@/components/ui/navbar";
 import Background from "@/assets/bg1.jpeg";
 import DialogUnauthorized from "@/components/DialogUnauthorized";
 import Footer from "@/components/Footer";
-import BookList from "@/components/BookList";
+import HomeBookList from "@/components/HomeBookList";
 import { authClient } from "@/utils/auth-client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -105,16 +112,17 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <select
-                    value={searchType}
-                    onChange={(e) => setSearchType(e.target.value)}
-                    className="px-4 py-2.5 sm:py-3 border text-sm sm:text-base text-foreground border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="all">Semua</option>
-                    <option value="title">Judul</option>
-                    <option value="author">Penulis</option>
-                    <option value="isbn">ISBN</option>
-                  </select>
+                  <Select value={searchType} onValueChange={setSearchType}>
+                    <SelectTrigger className="w-full sm:w-[130px] rounded-full h-[42px] sm:h-[48px] px-4 border border-border bg-card text-foreground focus:ring-2 focus:ring-primary">
+                      <SelectValue placeholder="Pilih tipe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="title">Judul</SelectItem>
+                      <SelectItem value="author">Penulis</SelectItem>
+                      <SelectItem value="isbn">ISBN</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Tombol Telusuri Koleksi - Diubah agar selalu full */}
@@ -266,7 +274,7 @@ export default function Home() {
 
       {/* Daftar buku dan Ebook */}
       <div className="p-4 sm:p-6 lg:p-12.5 flex justify-center">
-        <BookList />
+        <HomeBookList />
       </div>
 
       {/* Footer */}

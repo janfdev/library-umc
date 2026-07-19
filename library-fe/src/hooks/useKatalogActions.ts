@@ -33,7 +33,7 @@ export function useKatalogActions({
   const [showLoanForm, setShowLoanForm] = useState(false);
 
   const defaultLoanDate = new Date().toISOString().split("T")[0];
-  const defaultDueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+  const defaultDueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
 
@@ -48,7 +48,18 @@ export function useKatalogActions({
       const availableItems = bibliography.items.filter(
         (i) => i.status === "available",
       );
-      return availableItems.length > 0 ? "available" : "empty";
+      if (availableItems.length > 0) {
+        return "available";
+      }
+
+      const loanedItems = bibliography.items.filter(
+        (i) => i.status === "loaned",
+      );
+      if (loanedItems.length > 0) {
+        return "borrowed";
+      }
+
+      return "empty";
     }
 
     if (typeof bibliography?.stock === "number") {
@@ -70,7 +81,7 @@ export function useKatalogActions({
     if (name === "loanDate") {
       const selectedDate = new Date(value);
       const calculatedDueDate = new Date(
-        selectedDate.getTime() + 3 * 24 * 60 * 60 * 1000,
+        selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000,
       )
         .toISOString()
         .split("T")[0];
