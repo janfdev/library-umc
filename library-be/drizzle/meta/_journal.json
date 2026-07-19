@@ -15,6 +15,13 @@
       "when": 1781902775738,
       "tag": "0001_phase_2a_author_import_normalization",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783871929942,
+      "tag": "0002_fine_tenebrous",
+      "breakpoints": true
     }
   ]
 }

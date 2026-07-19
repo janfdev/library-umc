@@ -5,6 +5,10 @@
 .env.development
 *.env
 
+.agent-screenshots
+.hermes/plans
+docs/superpowers/specs
+
 # Dependencies
 node_modules/
 bun.lockb
