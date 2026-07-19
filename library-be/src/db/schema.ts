@@ -37,7 +37,7 @@ export const logsStatusEnum = pgEnum("logs_status", [
   "create", "update", "delete", "approve", "blacklist", "failed_login", "rate_limited"
 ]);
 export const logsEntityEnum = pgEnum("logs_entity", [
-  "loan", "item", "fine", "Users", "category", "bibliography", "reservation", "auth"
+  "loan", "item", "fine", "Users", "category", "bibliography", "reservation", "auth", "faculty", "study_program"
 ]);
 export const recommendationStatusEnum = pgEnum("recommendation_status", [
   "pending", "approved", "rejected"

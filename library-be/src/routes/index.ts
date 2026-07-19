@@ -12,6 +12,7 @@ import { recommendationRoutes } from "../modules/recommendation/route/recommenda
 import { auditRoutes } from "../modules/audit/route/audit.route";
 import { reportRoutes } from "../modules/report/route/report.route";
 import { locationRoutes } from "../modules/location/route/location.route";
+import { facultyRoutes } from "../modules/faculty/route/faculty.route";
 import bibliographyRoutes from "../modules/bibliography/route/bibliography.route";
 import { collectionRoutes } from "../modules/collection/route/collection.route";
 import importRoutes from "../modules/import/route/import.route";
@@ -69,5 +70,8 @@ router.use(reportRoutes);
 
 // Locations
 router.use(locationRoutes);
+
+// Faculties
+router.use(facultyRoutes);
 
 export const routes = router;
