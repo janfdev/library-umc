@@ -57,6 +57,8 @@ export interface Bibliography {
   gmd?: { id: number; name: string };
   category?: { id: number; name: string };
   isPopular?: boolean;
+  faculties?: Array<{ id: number; name: string }>;
+  studyPrograms?: Array<{ id: number; name: string }>;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -222,6 +224,16 @@ export const bibliographyApi = {
 
   getItems: (id: string) =>
     apiFetch<Item[]>(`/api/bibliographies/${id}/items`),
+
+  checkDuplicate: (params: { isbn?: string; title?: string; author?: string }) => {
+    const search = new URLSearchParams();
+    if (params.isbn) search.set("isbn", params.isbn);
+    if (params.title) search.set("title", params.title);
+    if (params.author) search.set("author", params.author);
+    return apiFetch<{ hasExactMatch: boolean; duplicates: Array<{ id: string; title: string; isbnIssn?: string; authors: Array<{ name: string }>; similarity: string }> }>(
+      `/api/bibliographies/check-duplicate?${search.toString()}`
+    );
+  },
 };
 
 // ==========================================
@@ -280,6 +292,9 @@ export const itemApi = {
 
   revokeQr: (id: string) =>
     apiFetch<Item>(`/api/items/${id}/qr/revoke`, { method: "POST" }),
+
+  generateCode: (bibliographyId: string) =>
+    apiFetch<{ itemCode: string }>(`/api/items/generate-code/${bibliographyId}`),
 };
 
 // ==========================================

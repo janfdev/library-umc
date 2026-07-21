@@ -44,8 +44,6 @@ export default function BibliographySection({
   const [detailLoading, setDetailLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingBib, setEditingBib] = useState<Bibliography | null>(null);
-  const [duplicates, setDuplicates] = useState<Array<{ id: string; title: string; isbnIssn?: string; authors: Array<{ name: string }>; similarity: string }>>([]);
-  const [checkingDup, setCheckingDup] = useState(false);
   const limit = 10;
 
   const fetchData = useCallback(async (pageNum: number, query?: string) => {
@@ -519,6 +517,11 @@ function BibliographyDetail({
 // BIBLIOGRAPHY FORM COMPONENT
 // ==========================================
 
+interface DuplicateItem {
+  id: string; title: string; isbnIssn?: string;
+  authors: Array<{ name: string }>; similarity: string;
+}
+
 interface BibliographyFormProps {
   bib: Bibliography | null;
   onClose: () => void;
@@ -567,15 +570,18 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
   // Subject adding input state
   const [subjectInput, setSubjectInput] = useState("");
 
+  // Duplicate detection
+  const [duplicates, setDuplicates] = useState<DuplicateItem[]>([]);
+  const [checkingDup, setCheckingDup] = useState(false);
+
   // Faculty / Study Program
   const [facultyOptions, setFacultyOptions] = useState<{ id: number; name: string }[]>([]);
   const [studyProgramOptions, setStudyProgramOptions] = useState<{ id: number; name: string; facultyId: number }[]>([]);
   const [selectedFacultyIds, setSelectedFacultyIds] = useState<number[]>(bib?.faculties?.map((f: any) => f.id) || []);
   const [selectedStudyProgramIds, setSelectedStudyProgramIds] = useState<number[]>(bib?.studyPrograms?.map((sp: any) => sp.id) || []);
 
-  // Duplicate detection
   useEffect(() => {
-    if (editingBib || !showForm) { setDuplicates([]); return; }
+    if (bib) { setDuplicates([]); return; }
     const title = formData.title.trim();
     const isbn = formData.isbnIssn.trim().replace(/[^0-9Xx]/g, "");
     if (title.length < 3 && isbn.length < 3) { setDuplicates([]); return; }
@@ -586,12 +592,12 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
         if (isbn.length >= 3) params.isbn = isbn;
         if (title.length >= 3) params.title = title;
         if (Object.keys(params).length === 0) { setDuplicates([]); return; }
-        const res = await bibliographyApi.checkDuplicate(params);
-        setDuplicates(res.data.duplicates.filter((d) => d.id !== editingBib?.id) || []);
+        const data = await bibliographyApi.checkDuplicate(params);
+        setDuplicates(data.data.duplicates);
       } catch { setDuplicates([]); } finally { setCheckingDup(false); }
     }, 800);
     return () => clearTimeout(timer);
-  }, [formData?.title, formData?.isbnIssn, editingBib, showForm]);
+  }, [formData?.title, formData?.isbnIssn, bib]);
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -1035,7 +1041,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => openDetail(d.id)}
+                  onClick={() => window.open(`/dashboard?tab=bibliography&id=${d.id}`, '_blank')}
                   className="shrink-0 text-xs font-semibold text-primary hover:underline"
                 >
                   Lihat
