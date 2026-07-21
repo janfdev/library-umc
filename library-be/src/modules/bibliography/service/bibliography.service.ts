@@ -39,6 +39,15 @@ export class BibliographyService {
     return created.id;
   }
 
+  private async resolveOrCreatePublicationPlace(tx: any, placeName: string): Promise<number | null> {
+    if (!placeName.trim()) return null;
+    const normalized = normalizeName(placeName);
+    const existing = await tx.query.publicationPlaces.findFirst({ where: eq(publicationPlaces.normalizedName, normalized) });
+    if (existing) return existing.id;
+    const [created] = await tx.insert(publicationPlaces).values({ name: placeName.trim(), normalizedName: normalized }).returning();
+    return created.id;
+  }
+
   private async syncAuthors(tx: any, bibliographyId: string, authorList: { name: string; role: string }[]) {
     await tx.delete(bibliographyAuthors).where(eq(bibliographyAuthors.bibliographyId, bibliographyId));
     for (let i = 0; i < authorList.length; i++) {
@@ -82,12 +91,16 @@ export class BibliographyService {
         const resolvedId = await this.resolveOrCreatePublisher(tx, (data as any).publisherName);
         if (resolvedId) publisherId = resolvedId;
       }
+      let publicationPlaceId = data.publicationPlaceId || null;
+      if ((data as any).publishPlace) {
+        const resolvedId = await this.resolveOrCreatePublicationPlace(tx, (data as any).publishPlace);
+        if (resolvedId) publicationPlaceId = resolvedId;
+      }
       const insertData: any = {
         title: data.title,
         description: data.description || null,
         image: data.image || null,
         type: data.type || null,
-        categoryId: data.categoryId || null,
         isbnIssn: data.isbnIssn || null,
         edition: data.edition || null,
         publishYear: data.publishYear || null,
@@ -100,7 +113,7 @@ export class BibliographyService {
         gmdId: data.gmdId || null,
         collectionTypeId: data.collectionTypeId || null,
         languageId: data.languageId || null,
-        publicationPlaceId: data.publicationPlaceId || null,
+        publicationPlaceId: publicationPlaceId,
         publisherId: publisherId,
         stock: 0,
         isPopular: data.isPopular ?? false,
@@ -124,15 +137,25 @@ export class BibliographyService {
           : null;
         publisherId = resolvedId !== null ? resolvedId : undefined;
       }
+      let publicationPlaceId = data.publicationPlaceId;
+      if ((data as any).publishPlace !== undefined) {
+        const resolvedId = (data as any).publishPlace
+          ? await this.resolveOrCreatePublicationPlace(tx, (data as any).publishPlace)
+          : null;
+        publicationPlaceId = resolvedId !== null ? resolvedId : undefined;
+      }
       const updateData: any = {};
       for (const key of Object.keys(data)) {
-        if (key === "authors" || key === "subjects" || key === "publisherName" || key === "facultyIds" || key === "studyProgramIds") continue;
+        if (key === "authors" || key === "subjects" || key === "publisherName" || key === "publishPlace" || key === "facultyIds" || key === "studyProgramIds") continue;
         if (data[key as keyof UpdateBibliographyData] !== undefined) {
           updateData[key] = data[key as keyof UpdateBibliographyData];
         }
       }
       if (publisherId !== undefined) {
         updateData.publisherId = publisherId;
+      }
+      if (publicationPlaceId !== undefined) {
+        updateData.publicationPlaceId = publicationPlaceId;
       }
       updateData.updatedAt = new Date();
       if (Object.keys(updateData).length > 1) {
@@ -150,7 +173,6 @@ export class BibliographyService {
     const bib = await db.query.bibliographies.findFirst({
       where: and(eq(bibliographies.id, id), isNull(bibliographies.deletedAt)),
       with: {
-        category: true,
         publisher: true,
         language: true,
         publicationPlace: true,
@@ -300,7 +322,7 @@ export class BibliographyService {
     const rows = await db.query.bibliographies.findMany({
       where,
       with: {
-        category: true, publisher: true, language: true, gmd: true,
+        publisher: true, language: true, gmd: true,
         bibliographyAuthors: { with: { author: true } },
         bibliographySubjects: { with: { subject: true } },
         bibliographyFaculties: { with: { faculty: true } },

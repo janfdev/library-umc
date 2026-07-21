@@ -88,14 +88,45 @@ export class ItemService {
     return crypto.randomBytes(20).toString("hex");
   }
 
-  async createItem(data: CreateItemData) {
-    const existing = await db.query.items.findFirst({
-      where: and(eq(items.itemCode, data.itemCode), isNull(items.deletedAt)),
-    });
-    if (existing) return { success: false, message: "item_code already exists" };
+  private async generateItemCode(bibliographyId: string): Promise<string> {
+    const bib = await db.query.bibliographies.findFirst({ where: eq(bibliographies.id, bibliographyId) });
+    if (!bib) throw new Error("Bibliography not found");
+    const title = bib.title.replace(/[^a-zA-Z]/g, "").toLowerCase();
+    const prefix = title.slice(0, 2).padEnd(2, "x");
+    const suffix = title.slice(-2).padEnd(2, "x");
 
+    const existingCodes = await db.query.items.findMany({
+      where: and(eq(items.bibliographyId, bibliographyId), isNull(items.deletedAt)),
+      columns: { itemCode: true },
+    });
+
+    const used = new Set(existingCodes.map((i) => i.itemCode));
+    for (let n = 1; n <= 999; n++) {
+      const code = `${prefix}${String(n).padStart(3, "0")}${suffix}`;
+      if (!used.has(code)) return code;
+    }
+    throw new Error("No available item code");
+  }
+
+  async generateItemCodePreview(bibliographyId: string): Promise<string> {
+    return this.generateItemCode(bibliographyId);
+  }
+
+  async createItem(data: CreateItemData) {
     const bib = await db.query.bibliographies.findFirst({ where: eq(bibliographies.id, data.bibliographyId) });
     if (!bib) return { success: false, message: "Bibliography not found" };
+
+    const userProvidedCode = data.itemCode;
+    let itemCode: string;
+    if (!userProvidedCode) {
+      itemCode = await this.generateItemCode(data.bibliographyId);
+    } else {
+      const existing = await db.query.items.findFirst({
+        where: and(eq(items.itemCode, userProvidedCode), isNull(items.deletedAt)),
+      });
+      if (existing) return { success: false, message: "item_code already exists" };
+      itemCode = userProvidedCode;
+    }
 
     const location = await db.query.locations.findFirst({ where: eq(locations.id, data.locationId) });
     if (!location) return { success: false, message: "Location not found" };
@@ -105,6 +136,7 @@ export class ItemService {
       result = await db.transaction(async (tx) => {
         const insertData: any = {
           ...data,
+          itemCode,
           price: data.price != null ? String(data.price) : null,
           qrToken: this.generateQrToken(),
           qrVersion: 1,

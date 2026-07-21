@@ -5,9 +5,11 @@
 .env.development
 *.env
 
+/docs
+
 .agent-screenshots
 .hermes/plans
-docs/superpowers/specs
+/docs/superpowers
 
 # Dependencies
 node_modules/
@@ -30,9 +32,6 @@ Thumbs.db
 
 # Docker
 .dockerignore
-
-# Agent
-/.agent
 
 # Database
 *.db

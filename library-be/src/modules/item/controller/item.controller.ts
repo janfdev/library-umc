@@ -143,6 +143,15 @@ export class ItemController {
       sendSuccess(res, "Label data retrieved", data);
     } catch (error) { next(error); }
   }
+
+  async generateCode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bibId = req.params.bibliographyId as string;
+      if (!bibId) return sendError(res, "bibliographyId required", 400);
+      const code = await itemService.generateItemCodePreview(bibId);
+      sendSuccess(res, "Generated item code", { itemCode: code });
+    } catch (error) { next(error); }
+  }
 }
 
 export const itemController = new ItemController();

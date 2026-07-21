@@ -1,6 +1,6 @@
 {
-  "id": "42be0216-8026-4c76-8f17-ee52babca11d",
-  "prevId": "20bd043f-57a5-45b1-85d7-b15ac9574547",
+  "id": "8f43c417-2c6e-4fa0-9be6-ab7c831e519e",
+  "prevId": "fd92427c-e847-4052-bc58-7e03c1665f5b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -504,6 +504,30 @@
           "name": "type",
           "type": "collection_type",
           "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_type": {
+          "name": "media_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "carrier_type": {
+          "name": "carrier_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "frequency": {
+          "name": "frequency",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },
@@ -4255,7 +4279,9 @@
         "category",
         "bibliography",
         "reservation",
-        "auth"
+        "auth",
+        "faculty",
+        "study_program"
       ]
     },
     "public.logs_status": {

@@ -1,6 +1,6 @@
 {
-  "id": "42be0216-8026-4c76-8f17-ee52babca11d",
-  "prevId": "20bd043f-57a5-45b1-85d7-b15ac9574547",
+  "id": "fd92427c-e847-4052-bc58-7e03c1665f5b",
+  "prevId": "42be0216-8026-4c76-8f17-ee52babca11d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4255,7 +4255,9 @@
         "category",
         "bibliography",
         "reservation",
-        "auth"
+        "auth",
+        "faculty",
+        "study_program"
       ]
     },
     "public.logs_status": {

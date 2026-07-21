@@ -5,14 +5,14 @@ import {
 } from "../validation/reservation.validation";
 
 describe("Reservation Validation Schema", () => {
-  it("menolak create reservation jika collectionId kosong", () => {
-    const result = createReservationSchema.safeParse({ collectionId: "" });
+  it("menolak create reservation jika bibliographyId kosong", () => {
+    const result = createReservationSchema.safeParse({ bibliographyId: "" });
     expect(result.success).toBe(false);
   });
 
-  it("menerima create reservation jika collectionId terisi", () => {
+  it("menerima create reservation jika bibliographyId terisi", () => {
     const result = createReservationSchema.safeParse({
-      collectionId: "collection-123",
+      bibliographyId: "biblio-123",
     });
     expect(result.success).toBe(true);
   });

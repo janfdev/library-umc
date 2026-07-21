@@ -3,8 +3,9 @@ import {
   importBatches, importBibliographyRows, importItemRows, importErrors,
   importBibliographyItemCodes,
   bibliographies, items, bibliographyAuthors, bibliographySubjects,
+  bibliographyFaculties, bibliographyStudyPrograms,
   authors, subjects, publishers, publicationPlaces, gmds, collectionTypes,
-  languages, locations, vendors
+  languages, locations, vendors, faculties, studyPrograms
 } from "../../../db/schema";
 import { eq, and, isNull, sql, asc, inArray } from "drizzle-orm";
 import { syncCollectionAvailableStock } from "../../shared/utils/stock-sync";
@@ -667,6 +668,41 @@ export class ImportService {
                 bibliographyId: bib.id,
                 subjectId: subject.id,
               });
+            }
+          }
+
+          // Resolve faculty
+          if (resolved.faculty_name?.trim()) {
+            const names = resolved.faculty_name.split(",").map((n: string) => n.trim()).filter(Boolean);
+            for (const name of names) {
+              const norm = normalizeName(name);
+              let fac = await tx.query.faculties.findFirst({ where: sql`LOWER(${faculties.name}) = ${norm}` });
+              if (!fac) {
+                [fac] = await tx.insert(faculties).values({ name, code: null }).returning();
+              }
+              await tx.insert(bibliographyFaculties).values({
+                bibliographyId: bib.id,
+                facultyId: fac.id,
+              }).onConflictDoNothing();
+            }
+          }
+
+          // Resolve study programs
+          if (resolved.study_program_name?.trim()) {
+            const names = resolved.study_program_name.split(",").map((n: string) => n.trim()).filter(Boolean);
+            for (const name of names) {
+              const norm = normalizeName(name);
+              let sp = await tx.query.studyPrograms.findFirst({ where: sql`LOWER(${studyPrograms.name}) = ${norm}` });
+              if (!sp) {
+                [sp] = await tx.insert(studyPrograms).values({
+                  name,
+                  facultyId: 1,
+                }).returning();
+              }
+              await tx.insert(bibliographyStudyPrograms).values({
+                bibliographyId: bib.id,
+                studyProgramId: sp.id,
+              }).onConflictDoNothing();
             }
           }
 

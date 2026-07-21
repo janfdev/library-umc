@@ -79,11 +79,9 @@ export function useBookList(
       publicationYear: String(item.publishYear ?? ""),
       isbn: item.isbnIssn || item.isbn || "",
       type: item.type || "physical_book",
-      categoryId: item.categoryId ?? item.category?.id,
       image: item.image || null,
       stock: item.stock ?? item.totalItems ?? 0,
       items: item.items || [],
-      category: item.category,
       subjects: item.subjects || [],
     }));
 
