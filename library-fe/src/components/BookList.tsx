@@ -10,6 +10,7 @@ interface BookListProps {
   availabilityFilter?: string[];
   yearRange?: { start: string; end: string };
   currentUser?: LibraryUser | null;
+  selectedFaculty?: string;
 }
 
 const BookList = ({
@@ -18,6 +19,7 @@ const BookList = ({
   availabilityFilter = [],
   yearRange = { start: "", end: "" },
   currentUser = null,
+  selectedFaculty = "",
 }: BookListProps) => {
   const navigate = useNavigate();
 
@@ -126,12 +128,19 @@ const BookList = ({
     return Number(year) >= Number(start) && Number(year) <= Number(end);
   });
 
+  // Filter berdasarkan fakultas
+  const filteredByFaculty = selectedFaculty
+    ? filteredByYear.filter((bib) =>
+        bib.faculties?.some((f) => String(f.id) === selectedFaculty)
+      )
+    : filteredByYear;
+
   // Pagination Logic
-  const totalItems = filteredByYear.length;
+  const totalItems = filteredByFaculty.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredByYear.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredByFaculty.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);

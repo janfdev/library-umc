@@ -5,11 +5,13 @@ export interface Fine {
   amount: number;
   status: "paid" | "unpaid";
   loanId: string;
-  loan?: {
+  loan: {
     dueDate: string;
-    loanDate: string;
+    loanDate?: string;
+    status: string;
+    returnDate?: string;
     item: {
-      bibliography: {
+      collection?: {
         title: string;
       };
     };

@@ -366,6 +366,7 @@ const Katalog = () => {
               availabilityFilter={availabilityFilter}
               yearRange={yearRange}
               currentUser={currentUser}
+              selectedFaculty={selectedFaculty}
             />
           </section>
         </div>
