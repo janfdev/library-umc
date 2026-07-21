@@ -5,21 +5,17 @@ export const createBibliographySchema = z.object({
   isbnIssn: z.string().max(255).optional().or(z.literal(""))
     .refine((val) => {
       if (!val) return true;
-      const isISBN = /^ISBN\s/i.test(val);
-      const isISSN = /^ISSN\s/i.test(val);
-      if (isISBN) {
-        const isbnRegex = /^ISBN\s(978|979)-\d+-\d+-\d+-\d$/i;
-        if (!isbnRegex.test(val)) return false;
-        const digits = val.replace(/[^0-9]/g, "");
-        return digits.length === 13;
-      }
+      const clean = val.replace(/^ISBN\s*/i, "").replace(/^ISSN\s*/i, "ISSN ");
+      const isISSN = /^ISSN\s/i.test(clean);
       if (isISSN) {
         const issnRegex = /^ISSN\s\d{4}-\d{3}[\dX]$/i;
-        return issnRegex.test(val);
+        return issnRegex.test(clean);
       }
+      const isbnDigits = val.replace(/[^0-9]/g, "");
+      if (isbnDigits.length === 10 || isbnDigits.length === 13) return true;
       return false;
     }, {
-      message: "ISBN harus berformat 'ISBN 978-xxx-xxx-xx-x' (13 digit angka) atau ISSN berformat 'ISSN xxxx-xxxx'"
+      message: "ISBN harus 10 atau 13 digit, atau ISSN berformat 'ISSN xxxx-xxxx'"
     }),
   edition: z.string().max(100).optional().or(z.literal("")),
   publisherId: z.coerce.number().int().positive().optional(),
@@ -35,7 +31,7 @@ export const createBibliographySchema = z.object({
   sor: z.string().optional().or(z.literal("")),
   gmdId: z.coerce.number().int().positive().optional(),
   collectionTypeId: z.coerce.number().int().positive().optional(),
-  categoryId: z.coerce.number().int().positive().optional(),
+  publishPlace: z.string().optional().or(z.literal("")),
   description: z.string().optional().or(z.literal("")),
   image: z.string().optional().or(z.literal("")),
   type: z.enum(["physical_book", "ebook", "journal", "thesis"]).optional(),
@@ -46,7 +42,9 @@ export const createBibliographySchema = z.object({
   })).optional(),
   subjects: z.array(z.object({
     name: z.string().min(1)
-  })).optional()
+  })).optional(),
+  facultyIds: z.array(z.number().int().positive()).optional(),
+  studyProgramIds: z.array(z.number().int().positive()).optional()
 });
 
 export const updateBibliographySchema = createBibliographySchema.partial();
@@ -65,10 +63,20 @@ export const bibliographyQuerySchema = z.object({
   publishYearTo: z.coerce.number().int().optional(),
   hasAvailableItems: z.coerce.boolean().optional(),
   isPopular: z.coerce.boolean().optional(),
+  facultyId: z.coerce.number().int().optional(),
+  studyProgramId: z.coerce.number().int().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(["title", "publishYear", "createdAt"]).default("title"),
   order: z.enum(["asc", "desc"]).default("asc")
+});
+
+export const checkDuplicateSchema = z.object({
+  isbn: z.string().max(255).optional(),
+  title: z.string().max(500).optional(),
+  author: z.string().max(255).optional(),
+}).refine((d) => d.isbn || d.title || d.author, {
+  message: "At least one of isbn, title, or author is required",
 });
 
 export type CreateBibliographyData = z.infer<typeof createBibliographySchema>;

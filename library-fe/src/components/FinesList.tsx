@@ -75,14 +75,20 @@ const FinesList = () => {
           <tbody className="divide-y divide-slate-50">
             {fines.map((fine) => {
               const bookTitle =
-                fine.loan?.item?.bibliography?.title || "Unknown Title";
+                fine.loan?.item?.collection?.title || "Unknown Title";
               const borrowDate = fine.loan?.loanDate
                 ? new Date(fine.loan.loanDate).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",
                     year: "numeric"
                   })
-                : "-";
+                : fine.loan?.dueDate
+                  ? new Date(fine.loan.dueDate).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric"
+                    })
+                  : "-";
 
               return (
                 <tr

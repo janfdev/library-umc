@@ -184,10 +184,6 @@ export default function HomeBookList() {
                               {sub.name}
                             </span>
                           ))
-                        ) : bibliography.category ? (
-                          <span className="px-1.5 py-0.5 text-[8px] sm:text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
-                            {bibliography.category.name}
-                          </span>
                         ) : (
                           <span className="px-1.5 py-0.5 text-[8px] sm:text-[9px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
                             Umum

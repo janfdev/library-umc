@@ -1,6 +1,6 @@
 {
-  "id": "20bd043f-57a5-45b1-85d7-b15ac9574547",
-  "prevId": "f9c26775-9791-4cf2-8335-70dbf74d2797",
+  "id": "42be0216-8026-4c76-8f17-ee52babca11d",
+  "prevId": "20bd043f-57a5-45b1-85d7-b15ac9574547",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -913,6 +913,218 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.bibliography_faculties": {
+      "name": "bibliography_faculties",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "bibliography_id": {
+          "name": "bibliography_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "faculty_id": {
+          "name": "faculty_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bf_bibliography_idx": {
+          "name": "bf_bibliography_idx",
+          "columns": [
+            {
+              "expression": "bibliography_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bf_faculty_idx": {
+          "name": "bf_faculty_idx",
+          "columns": [
+            {
+              "expression": "faculty_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bibliography_faculties_bibliography_id_bibliographies_id_fk": {
+          "name": "bibliography_faculties_bibliography_id_bibliographies_id_fk",
+          "tableFrom": "bibliography_faculties",
+          "tableTo": "bibliographies",
+          "columnsFrom": [
+            "bibliography_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bibliography_faculties_faculty_id_faculties_id_fk": {
+          "name": "bibliography_faculties_faculty_id_faculties_id_fk",
+          "tableFrom": "bibliography_faculties",
+          "tableTo": "faculties",
+          "columnsFrom": [
+            "faculty_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bf_unique": {
+          "name": "bf_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "bibliography_id",
+            "faculty_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bibliography_study_programs": {
+      "name": "bibliography_study_programs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "bibliography_id": {
+          "name": "bibliography_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "study_program_id": {
+          "name": "study_program_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bsp_bibliography_idx": {
+          "name": "bsp_bibliography_idx",
+          "columns": [
+            {
+              "expression": "bibliography_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bsp_study_program_idx": {
+          "name": "bsp_study_program_idx",
+          "columns": [
+            {
+              "expression": "study_program_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bibliography_study_programs_bibliography_id_bibliographies_id_fk": {
+          "name": "bibliography_study_programs_bibliography_id_bibliographies_id_fk",
+          "tableFrom": "bibliography_study_programs",
+          "tableTo": "bibliographies",
+          "columnsFrom": [
+            "bibliography_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bibliography_study_programs_study_program_id_study_programs_id_fk": {
+          "name": "bibliography_study_programs_study_program_id_study_programs_id_fk",
+          "tableFrom": "bibliography_study_programs",
+          "tableTo": "study_programs",
+          "columnsFrom": [
+            "study_program_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bsp_unique": {
+          "name": "bsp_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "bibliography_id",
+            "study_program_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.bibliography_subjects": {
       "name": "bibliography_subjects",
       "schema": "",
@@ -1202,6 +1414,61 @@
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.faculties": {
+      "name": "faculties",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "faculties_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -3488,6 +3755,97 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.study_programs": {
+      "name": "study_programs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "study_programs_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "faculty_id": {
+          "name": "faculty_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sp_faculty_idx": {
+          "name": "sp_faculty_idx",
+          "columns": [
+            {
+              "expression": "faculty_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "study_programs_faculty_id_faculties_id_fk": {
+          "name": "study_programs_faculty_id_faculties_id_fk",
+          "tableFrom": "study_programs",
+          "tableTo": "faculties",
+          "columnsFrom": [
+            "faculty_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

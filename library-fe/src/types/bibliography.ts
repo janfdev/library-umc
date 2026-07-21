@@ -7,12 +7,6 @@
 
 export type BibliographyType = "physical_book" | "ebook" | "journal" | "thesis";
 
-export interface BibliographyCategory {
-  id: number;
-  name: string;
-  description?: string;
-}
-
 /** Struktur bibliografi yang dikembalikan dari GET /api/bibliographies */
 export interface Bibliography {
   id: string;
@@ -23,7 +17,6 @@ export interface Bibliography {
   publicationYear: string;
   isbn?: string;
   type: BibliographyType;
-  categoryId?: number;
   description?: string;
   /** URL gambar cover (Cloudinary) */
   image: string | null;
@@ -43,10 +36,14 @@ export interface Bibliography {
       shelf: string;
     };
   }[];
-  category?: BibliographyCategory;
   subjects?: {
     id: number;
     name: string;
+  }[];
+  faculties?: {
+    id: number;
+    name: string;
+    code?: string;
   }[];
   createdAt?: string;
   updatedAt?: string;

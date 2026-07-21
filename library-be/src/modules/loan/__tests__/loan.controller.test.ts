@@ -70,13 +70,13 @@ describe("LoanController Unit Tests", () => {
   // POST /loans/request
   // ==========================================================
   describe("POST /loans/request", () => {
-    // 🔴 RED CASE: Validasi Zod gagal — itemId kosong
-    it("harus return 400 jika body tidak mengandung collectionId", async () => {
+    // 🔴 RED CASE: Validasi Zod gagal — bibliographyId kosong
+    it("harus return 400 jika body tidak mengandung bibliographyId", async () => {
       const response = await request(app).post("/loans/request").send({}); // body kosong
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Validation Error");
-      expect(response.body.data.fieldErrors).toHaveProperty("collectionId");
+      expect(response.body.data.fieldErrors).toHaveProperty("bibliographyId");
     });
 
     // 🟢 GREEN CASE: Request berhasil
@@ -106,7 +106,7 @@ describe("LoanController Unit Tests", () => {
 
       const response = await request(app)
         .post("/loans/request")
-        .send({ collectionId: "collection-abc" });
+        .send({ bibliographyId: "biblio-abc" });
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -126,7 +126,7 @@ describe("LoanController Unit Tests", () => {
 
       const response = await request(app)
         .post("/loans/request")
-        .send({ collectionId: "collection-abc" });
+        .send({ bibliographyId: "biblio-abc" });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toContain("Profil member belum tersedia");

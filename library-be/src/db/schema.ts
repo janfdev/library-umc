@@ -37,7 +37,7 @@ export const logsStatusEnum = pgEnum("logs_status", [
   "create", "update", "delete", "approve", "blacklist", "failed_login", "rate_limited"
 ]);
 export const logsEntityEnum = pgEnum("logs_entity", [
-  "loan", "item", "fine", "Users", "category", "bibliography", "reservation", "auth"
+  "loan", "item", "fine", "Users", "category", "bibliography", "reservation", "auth", "faculty", "study_program"
 ]);
 export const recommendationStatusEnum = pgEnum("recommendation_status", [
   "pending", "approved", "rejected"
@@ -145,6 +145,51 @@ export const subjects = pgTable("subjects", {
   deletedAt: timestamp("deleted_at")
 }, (table) => ({
   normalizedNameIdx: index("subject_normalized_name_idx").on(table.normalizedName)
+}));
+
+// ==========================================
+// 2b. FACULTIES & STUDY PROGRAMS
+// ==========================================
+
+export const faculties = pgTable("faculties", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+});
+
+export const studyPrograms = pgTable("study_programs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  facultyId: integer("faculty_id").notNull().references(() => faculties.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  deletedAt: timestamp("deleted_at")
+}, (table) => ({
+  facultyIdx: index("sp_faculty_idx").on(table.facultyId)
+}));
+
+export const bibliographyFaculties = pgTable("bibliography_faculties", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
+  facultyId: integer("faculty_id").notNull().references(() => faculties.id),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  unique: unique("bf_unique").on(table.bibliographyId, table.facultyId),
+  bibIdx: index("bf_bibliography_idx").on(table.bibliographyId),
+  facultyIdx: index("bf_faculty_idx").on(table.facultyId)
+}));
+
+export const bibliographyStudyPrograms = pgTable("bibliography_study_programs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bibliographyId: uuid("bibliography_id").notNull().references(() => bibliographies.id),
+  studyProgramId: integer("study_program_id").notNull().references(() => studyPrograms.id),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  unique: unique("bsp_unique").on(table.bibliographyId, table.studyProgramId),
+  bibIdx: index("bsp_bibliography_idx").on(table.bibliographyId),
+  spIdx: index("bsp_study_program_idx").on(table.studyProgramId)
 }));
 
 // ==========================================
@@ -259,6 +304,10 @@ export const bibliographies = pgTable("bibliographies", {
   categoryId: integer("category_id").references(() => categories.id),
   description: text("description"),
   type: collectionTypeEnum("type"),
+  contentType: varchar("content_type", { length: 50 }),
+  mediaType: varchar("media_type", { length: 50 }),
+  carrierType: varchar("carrier_type", { length: 50 }),
+  frequency: varchar("frequency", { length: 50 }),
   stock: integer("stock").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -597,7 +646,9 @@ export const bibliographyRelations = relations(bibliographies, ({ one, many }) =
   items: many(items),
   contents: many(bibliographyContents),
   bibliographyAuthors: many(bibliographyAuthors),
-  bibliographySubjects: many(bibliographySubjects)
+  bibliographySubjects: many(bibliographySubjects),
+  bibliographyFaculties: many(bibliographyFaculties),
+  bibliographyStudyPrograms: many(bibliographyStudyPrograms)
 }));
 
 export const bibliographyAuthorsRelations = relations(bibliographyAuthors, ({ one }) => ({
@@ -652,4 +703,24 @@ export const importItemRowRelations = relations(importItemRows, ({ one }) => ({
 
 export const importErrorRelations = relations(importErrors, ({ one }) => ({
   batch: one(importBatches, { fields: [importErrors.batchId], references: [importBatches.id] })
+}));
+
+export const facultyRelations = relations(faculties, ({ many }) => ({
+  studyPrograms: many(studyPrograms),
+  bibliographyFaculties: many(bibliographyFaculties)
+}));
+
+export const studyProgramRelations = relations(studyPrograms, ({ one, many }) => ({
+  faculty: one(faculties, { fields: [studyPrograms.facultyId], references: [faculties.id] }),
+  bibliographyStudyPrograms: many(bibliographyStudyPrograms)
+}));
+
+export const bibliographyFacultyRelations = relations(bibliographyFaculties, ({ one }) => ({
+  bibliography: one(bibliographies, { fields: [bibliographyFaculties.bibliographyId], references: [bibliographies.id] }),
+  faculty: one(faculties, { fields: [bibliographyFaculties.facultyId], references: [faculties.id] })
+}));
+
+export const bibliographyStudyProgramRelations = relations(bibliographyStudyPrograms, ({ one }) => ({
+  bibliography: one(bibliographies, { fields: [bibliographyStudyPrograms.bibliographyId], references: [bibliographies.id] }),
+  studyProgram: one(studyPrograms, { fields: [bibliographyStudyPrograms.studyProgramId], references: [studyPrograms.id] })
 }));

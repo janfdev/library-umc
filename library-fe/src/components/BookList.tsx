@@ -10,7 +10,7 @@ interface BookListProps {
   availabilityFilter?: string[];
   yearRange?: { start: string; end: string };
   currentUser?: LibraryUser | null;
-  categoryFilter?: number[];
+  selectedFaculty?: string;
 }
 
 const BookList = ({
@@ -19,7 +19,7 @@ const BookList = ({
   availabilityFilter = [],
   yearRange = { start: "", end: "" },
   currentUser = null,
-  categoryFilter = [],
+  selectedFaculty = "",
 }: BookListProps) => {
   const navigate = useNavigate();
 
@@ -34,7 +34,7 @@ const BookList = ({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab, categoryFilter]);
+  }, [searchQuery, searchType, availabilityFilter, yearRange, activeTab]);
 
   // Helper: Cek apakah user sedang meminjam buku ini
   const isUserBorrowing = (bibliographyId: string): boolean => {
@@ -128,19 +128,19 @@ const BookList = ({
     return Number(year) >= Number(start) && Number(year) <= Number(end);
   });
 
-  // Filter berdasarkan kategori/jurusan
-  const filteredByCategory = categoryFilter.length > 0
-    ? filteredByYear.filter((bibliography) => {
-        return categoryFilter.includes(Number(bibliography.categoryId));
-      })
+  // Filter berdasarkan fakultas
+  const filteredByFaculty = selectedFaculty
+    ? filteredByYear.filter((bib) =>
+        bib.faculties?.some((f) => String(f.id) === selectedFaculty)
+      )
     : filteredByYear;
 
   // Pagination Logic
-  const totalItems = filteredByCategory.length;
+  const totalItems = filteredByFaculty.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredByCategory.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredByFaculty.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -350,10 +350,6 @@ const BookList = ({
                             {sub.name}
                           </span>
                         ))
-                      ) : bibliography.category ? (
-                        <span className="px-2.5 py-0.5 text-[9px] sm:text-[10px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
-                          {bibliography.category.name}
-                        </span>
                       ) : (
                         <span className="px-2.5 py-0.5 text-[9px] sm:text-[10px] bg-muted text-muted-foreground border border-border rounded-full font-medium">
                           Umum

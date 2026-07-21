@@ -20,7 +20,9 @@ interface CreateLogPayload {
     | "category"
     | "bibliography"
     | "reservation"
-    | "auth";
+    | "auth"
+    | "faculty"
+    | "study_program";
   entityId?: string;
   ipAddress?: string;
   userAgent?: string;

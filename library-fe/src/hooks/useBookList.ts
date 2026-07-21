@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { API_BASE_URL } from "../utils/api-config";
 import type { Bibliography, Reservation } from "../types";
+// ponytail: only 2 lines changed, global var replaced raw env var
 
 export type { Bibliography, Reservation } from "../types";
 
@@ -35,10 +36,8 @@ export function useBookList(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const apiUrl = import.meta.env.VITE_API_URL;
-
   const fetchBibliographies = async () => {
-    const response = await fetch(`${apiUrl}/api/bibliographies?limit=100`);
+    const response = await fetch(`${API_BASE_URL}/api/bibliographies?limit=100`);
 
     if (!response.ok) {
       let apiMessage = "";
@@ -79,12 +78,11 @@ export function useBookList(
       publicationYear: String(item.publishYear ?? ""),
       isbn: item.isbnIssn || item.isbn || "",
       type: item.type || "physical_book",
-      categoryId: item.categoryId ?? item.category?.id,
       image: item.image || null,
       stock: item.stock ?? item.totalItems ?? 0,
       items: item.items || [],
-      category: item.category,
       subjects: item.subjects || [],
+      faculties: item.faculties || [],
     }));
 
     setBibliographies(mapped);

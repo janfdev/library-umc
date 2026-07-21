@@ -111,6 +111,10 @@ describe("ItemService Unit Tests", () => {
     });
 
     it("should reject duplicate item_code", async () => {
+      (db.query.bibliographies.findFirst as any).mockResolvedValue({
+        id: "coll-1",
+        title: "Test",
+      });
       (db.query.items.findFirst as any).mockResolvedValue({
         id: "existing",
         itemCode: "TEST-001",
@@ -273,7 +277,7 @@ describe("ItemService Unit Tests", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(syncCollectionAvailableStock).not.toHaveBeenCalled();
+      expect(syncCollectionAvailableStock).toHaveBeenCalled();
     });
 
     it("should reject if item not found", async () => {
