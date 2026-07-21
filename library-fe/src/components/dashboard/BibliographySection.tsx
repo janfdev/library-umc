@@ -23,6 +23,7 @@ import {
   UploadCloud,
   Check,
 } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api-config";
 import { bibliographyApi, type Bibliography, type BibliographyListResponse, type Location, type Item, locationApi, itemApi } from "@/api/client";
 
 interface BibliographySectionProps {
@@ -43,6 +44,8 @@ export default function BibliographySection({
   const [detailLoading, setDetailLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingBib, setEditingBib] = useState<Bibliography | null>(null);
+  const [duplicates, setDuplicates] = useState<Array<{ id: string; title: string; isbnIssn?: string; authors: Array<{ name: string }>; similarity: string }>>([]);
+  const [checkingDup, setCheckingDup] = useState(false);
   const limit = 10;
 
   const fetchData = useCallback(async (pageNum: number, query?: string) => {
@@ -429,7 +432,12 @@ function BibliographyDetail({
           <MetaField label="Klasifikasi" value={bib.classification} />
           <MetaField label="Deskripsi Fisik/Kolasi" value={bib.collation} />
           <MetaField label="Seri" value={bib.seriesTitle} />
-          <MetaField label="Kategori" value={bib.category?.name} />
+          {bib.faculties && bib.faculties.length > 0 && (
+            <MetaField label="Fakultas" value={bib.faculties.map((f: any) => f.name).join(", ")} />
+          )}
+          {bib.studyPrograms && bib.studyPrograms.length > 0 && (
+            <MetaField label="Program Studi" value={bib.studyPrograms.map((sp: any) => sp.name).join(", ")} />
+          )}
         </div>
 
         {/* Description */}
@@ -559,6 +567,64 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
   // Subject adding input state
   const [subjectInput, setSubjectInput] = useState("");
 
+  // Faculty / Study Program
+  const [facultyOptions, setFacultyOptions] = useState<{ id: number; name: string }[]>([]);
+  const [studyProgramOptions, setStudyProgramOptions] = useState<{ id: number; name: string; facultyId: number }[]>([]);
+  const [selectedFacultyIds, setSelectedFacultyIds] = useState<number[]>(bib?.faculties?.map((f: any) => f.id) || []);
+  const [selectedStudyProgramIds, setSelectedStudyProgramIds] = useState<number[]>(bib?.studyPrograms?.map((sp: any) => sp.id) || []);
+
+  // Duplicate detection
+  useEffect(() => {
+    if (editingBib || !showForm) { setDuplicates([]); return; }
+    const title = formData.title.trim();
+    const isbn = formData.isbnIssn.trim().replace(/[^0-9Xx]/g, "");
+    if (title.length < 3 && isbn.length < 3) { setDuplicates([]); return; }
+    const timer = setTimeout(async () => {
+      setCheckingDup(true);
+      try {
+        const params: Record<string, string> = {};
+        if (isbn.length >= 3) params.isbn = isbn;
+        if (title.length >= 3) params.title = title;
+        if (Object.keys(params).length === 0) { setDuplicates([]); return; }
+        const res = await bibliographyApi.checkDuplicate(params);
+        setDuplicates(res.data.duplicates.filter((d) => d.id !== editingBib?.id) || []);
+      } catch { setDuplicates([]); } finally { setCheckingDup(false); }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [formData?.title, formData?.isbnIssn, editingBib, showForm]);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        const [facRes, spRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/faculties`),
+          fetch(`${API_BASE_URL}/api/study-programs`),
+        ]);
+        const facJson = await facRes.json();
+        const spJson = await spRes.json();
+        if (facJson.success) setFacultyOptions(facJson.data);
+        if (spJson.success) setStudyProgramOptions(spJson.data);
+      } catch {}
+    };
+    loadOptions();
+  }, []);
+
+  const toggleFaculty = (id: number) => {
+    setSelectedFacultyIds((prev) =>
+      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+    );
+  };
+
+  const toggleStudyProgram = (id: number) => {
+    setSelectedStudyProgramIds((prev) =>
+      prev.includes(id) ? prev.filter((spid) => spid !== id) : [...prev, id]
+    );
+  };
+
+  const filteredStudyPrograms = selectedFacultyIds.length > 0
+    ? studyProgramOptions.filter((sp) => selectedFacultyIds.includes(sp.facultyId))
+    : studyProgramOptions;
+
   const handleIsbnChange = (val: string) => {
     // Strip everything except digits and x/X
     let clean = val.replace(/[^0-9Xx]/g, "");
@@ -597,12 +663,36 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
   const [itemsLoading, setItemsLoading] = useState(false);
 
   // New items added locally (for new bibliography)
-  const [localNewItems, setLocalNewItems] = useState<Array<{ itemCode: string; locationId: number; locationName: string }>>([]);
+  const [localNewItems, setLocalNewItems] = useState<Array<{ itemCode: string; inventoryCode?: string; locationId: number; locationName: string }>>([]);
 
   // Form for adding single copy
   const [polaKodeItem, setPolaKodeItem] = useState("");
+  const [inventoryCodeInput, setInventoryCodeInput] = useState("");
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [step3Error, setStep3Error] = useState<string | null>(null);
+  const [generatingCode, setGeneratingCode] = useState(false);
+
+  const handleGenerateCode = async () => {
+    if (!bib && localNewItems.length === 0) {
+      setStep3Error("Simpan bibliografi terlebih dahulu, atau tambahkan item manual");
+      return;
+    }
+    const bibId = bib?.id;
+    if (!bibId) {
+      setStep3Error("Bibliografi belum disimpan. Gunakan input manual untuk kode item.");
+      return;
+    }
+    setGeneratingCode(true);
+    setStep3Error(null);
+    try {
+      const res = await itemApi.generateCode(bibId);
+      setPolaKodeItem(res.data.itemCode);
+    } catch (err: unknown) {
+      setStep3Error(err instanceof Error ? err.message : "Gagal generate kode item");
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
 
   // Load locations
   useEffect(() => {
@@ -673,7 +763,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
     setStep3Error(null);
     const code = polaKodeItem.trim();
     if (!code) {
-      setStep3Error("Pola kode item tidak boleh kosong");
+      setStep3Error("Kode item tidak boleh kosong");
       return;
     }
     if (!selectedLocationId) {
@@ -684,6 +774,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
     const locId = parseInt(selectedLocationId);
     const locObj = locations.find((l) => l.id === locId);
     const locName = locObj ? `${locObj.room} - ${locObj.rack} - ${locObj.shelf}` : "Sirkulasi";
+    const invCode = inventoryCodeInput.trim() || undefined;
 
     if (bib) {
       // Editing Mode: Save to DB immediately
@@ -692,10 +783,12 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
         const res = await itemApi.create(bib.id, {
           itemCode: code,
           locationId: locId,
+          inventoryCode: invCode,
           status: "available",
         });
         if (res.success) {
           setPolaKodeItem("");
+          setInventoryCodeInput("");
           await loadItems();
         } else {
           setStep3Error(res.message || "Gagal menyimpan eksemplar");
@@ -711,8 +804,9 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
         setStep3Error("Kode item sudah ada di daftar");
         return;
       }
-      setLocalNewItems([...localNewItems, { itemCode: code, locationId: locId, locationName: locName }]);
+      setLocalNewItems([...localNewItems, { itemCode: code, inventoryCode: invCode, locationId: locId, locationName: locName }]);
       setPolaKodeItem("");
+      setInventoryCodeInput("");
     }
   };
 
@@ -768,21 +862,14 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
     setLoading(true);
     setError(null);
 
-    // Auto-format ISBN / ISSN to match backend regex exactly
+    // Auto-format ISBN / ISSN — send clean digits only
     let formattedIsbn = formData.isbnIssn.trim();
     if (formattedIsbn) {
       const clean = formattedIsbn.replace(/[^0-9Xx]/g, "");
-      if (clean.length === 13) {
-        const g1 = clean.substring(0, 3);
-        const g2 = clean.substring(3, 6);
-        const g3 = clean.substring(6, 9);
-        const g4 = clean.substring(9, 12);
-        const g5 = clean.substring(12, 13);
-        formattedIsbn = `ISBN ${g1}-${g2}-${g3}-${g4}-${g5}`;
+      if (clean.length === 10 || clean.length === 13) {
+        formattedIsbn = clean;
       } else if (clean.length === 8) {
-        const g1 = clean.substring(0, 4);
-        const g2 = clean.substring(4, 8);
-        formattedIsbn = `ISSN ${g1}-${g2.toUpperCase()}`;
+        formattedIsbn = `ISSN ${clean.substring(0, 4)}-${clean.substring(4, 8).toUpperCase()}`;
       }
     }
 
@@ -795,6 +882,8 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
         subjects: subjects.filter((s) => s.name.trim()),
         unlistedAuthorsLabel: unlistedAuthorsLabel || undefined,
         gmdId: formData.gmdId ? parseInt(formData.gmdId) : undefined,
+        facultyIds: selectedFacultyIds.length > 0 ? selectedFacultyIds : undefined,
+        studyProgramIds: selectedStudyProgramIds.length > 0 ? selectedStudyProgramIds : undefined,
       };
 
       if (bib) {
@@ -812,6 +901,7 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
             items: localNewItems.map((item) => ({
               itemCode: item.itemCode,
               locationId: item.locationId,
+              ...(item.inventoryCode ? { inventoryCode: item.inventoryCode } : {}),
             })),
           });
         }
@@ -926,6 +1016,33 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
         <div className="rounded-xl border border-warning-border bg-warning-bg p-4 flex items-center gap-3">
           <AlertCircle className="size-5 text-destructive shrink-0" />
           <p className="text-sm text-destructive">{error}</p>
+        </div>
+      )}
+
+      {duplicates.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle className="size-5 text-amber-600" />
+            <span className="text-sm font-semibold text-amber-800">{duplicates.some((d) => d.similarity === "isbn") ? "ISBN sudah terdaftar" : "Judul serupa ditemukan"}</span>
+            {checkingDup && <Loader2 className="size-4 animate-spin text-amber-600" />}
+          </div>
+          <div className="space-y-2">
+            {duplicates.map((d) => (
+              <div key={d.id} className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-100">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-amber-900 truncate">{d.title}</p>
+                  <p className="text-xs text-amber-700">{d.authors.map((a) => a.name).join(", ")}{d.isbnIssn ? ` — ${d.isbnIssn}` : ""}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openDetail(d.id)}
+                  className="shrink-0 text-xs font-semibold text-primary hover:underline"
+                >
+                  Lihat
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -1258,6 +1375,53 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
               </div>
             </div>
 
+            {/* Faculty / Study Program Multiselect */}
+            <div className="border-t border-border pt-4 space-y-4">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Fakultas & Program Studi</h4>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-muted-foreground">Fakultas</label>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-border rounded-lg">
+                    {facultyOptions.length === 0 && <span className="text-xs text-muted-foreground">Memuat...</span>}
+                    {facultyOptions.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => toggleFaculty(f.id)}
+                        className={`px-3 py-1.5 text-xs rounded-full border font-medium transition-all ${
+                          selectedFacultyIds.includes(f.id)
+                            ? "bg-primary text-white border-primary"
+                            : "bg-muted text-muted-foreground border-border hover:border-primary"
+                        }`}
+                      >
+                        {f.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-muted-foreground">Program Studi</label>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-border rounded-lg">
+                    {filteredStudyPrograms.length === 0 && <span className="text-xs text-muted-foreground">Pilih fakultas terlebih dahulu</span>}
+                    {filteredStudyPrograms.map((sp) => (
+                      <button
+                        key={sp.id}
+                        type="button"
+                        onClick={() => toggleStudyProgram(sp.id)}
+                        className={`px-3 py-1.5 text-xs rounded-full border font-medium transition-all ${
+                          selectedStudyProgramIds.includes(sp.id)
+                            ? "bg-primary text-white border-primary"
+                            : "bg-muted text-muted-foreground border-border hover:border-primary"
+                        }`}
+                      >
+                        {sp.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2 pt-4 border-t border-border">
               <div className="flex items-center gap-2 mt-2">
                 <input
@@ -1298,16 +1462,39 @@ function BibliographyForm({ bib, onClose, onSuccess }: BibliographyFormProps) {
                 </p>
               )}
 
-              <div className="grid gap-4 md:grid-cols-3 items-end">
+              <div className="grid gap-4 md:grid-cols-4 items-end">
                 <div>
                   <label className="mb-2 block text-xs font-medium text-muted-foreground uppercase">
-                    Pola Kode Item
+                    Kode Item
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Otomatis jika klik Generate"
+                      value={polaKodeItem}
+                      onChange={(e) => setPolaKodeItem(e.target.value.replace(/\s/g, ""))}
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-background"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGenerateCode}
+                      disabled={generatingCode}
+                      className="shrink-0 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-all disabled:opacity-50"
+                    >
+                      {generatingCode ? <Loader2 className="size-4 animate-spin" /> : "Generate"}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-muted-foreground uppercase">
+                    Kode Inventaris
                   </label>
                   <input
                     type="text"
-                    placeholder="Contoh: S2578178271"
-                    value={polaKodeItem}
-                    onChange={(e) => setPolaKodeItem(e.target.value.replace(/\s/g, ""))}
+                    placeholder="Opsional"
+                    value={inventoryCodeInput}
+                    onChange={(e) => setInventoryCodeInput(e.target.value)}
                     className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-background"
                   />
                 </div>

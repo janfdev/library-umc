@@ -20,13 +20,6 @@ export function useKatalogDetail(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [similarBooks, setSimilarBooks] = useState<Bibliography[]>([
-    { id: "1", title: "Bulan", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2015", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
-    { id: "2", title: "Matahari", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2016", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
-    { id: "3", title: "Bintang", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2017", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
-    { id: "4", title: "Ceros dan Batozar", author: "Tere Liye", image: null, categoryId: 0, publicationYear: "2018", publisher: "Gramedia", type: "physical_book" } as unknown as Bibliography,
-  ]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
