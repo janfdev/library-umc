@@ -40,6 +40,11 @@ export interface Bibliography {
     id: number;
     name: string;
   }[];
+  faculties?: {
+    id: number;
+    name: string;
+    code?: string;
+  }[];
   createdAt?: string;
   updatedAt?: string;
 }
