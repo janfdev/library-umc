@@ -55,7 +55,8 @@ export interface Bibliography {
   publicationPlace?: { id: number; name: string };
   language?: { id: number; code: string; name: string };
   gmd?: { id: number; name: string };
-  category?: { id: number; name: string };
+  faculties?: { id: number; name: string; code?: string }[];
+  studyPrograms?: { id: number; name: string; code?: string; faculty?: { id: number; name: string } }[];
   isPopular?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -222,6 +223,16 @@ export const bibliographyApi = {
 
   getItems: (id: string) =>
     apiFetch<Item[]>(`/api/bibliographies/${id}/items`),
+
+  checkDuplicate: (params: { isbn?: string; title?: string; author?: string }) => {
+    const search = new URLSearchParams();
+    if (params.isbn) search.set("isbn", params.isbn);
+    if (params.title) search.set("title", params.title);
+    if (params.author) search.set("author", params.author);
+    return apiFetch<{ hasExactMatch: boolean; duplicates: Array<{ id: string; title: string; isbnIssn?: string; classification?: string; callNumber?: string; authors: Array<{ name: string }>; similarity: string }> }>(
+      `/api/bibliographies/check-duplicate?${search.toString()}`
+    );
+  },
 };
 
 // ==========================================
@@ -280,6 +291,9 @@ export const itemApi = {
 
   revokeQr: (id: string) =>
     apiFetch<Item>(`/api/items/${id}/qr/revoke`, { method: "POST" }),
+
+  generateCode: (bibliographyId: string) =>
+    apiFetch<{ itemCode: string }>(`/api/items/generate-code/${bibliographyId}`),
 };
 
 // ==========================================
@@ -295,6 +309,79 @@ export interface Location {
 
 export const locationApi = {
   list: () => apiFetch<Location[]>("/api/locations"),
+};
+
+// ==========================================
+// Faculty API
+// ==========================================
+
+export interface Faculty {
+  id: number;
+  name: string;
+  code?: string;
+  createdAt?: string;
+}
+
+export const facultyApi = {
+  list: () => apiFetch<Faculty[]>("/api/faculties"),
+
+  getById: (id: number) => apiFetch<Faculty>(`/api/faculties/${id}`),
+
+  create: (data: { name: string; code?: string }) =>
+    apiFetch<Faculty>("/api/faculties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: number, data: { name: string; code?: string }) =>
+    apiFetch<Faculty>(`/api/faculties/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: number) =>
+    apiFetch<null>(`/api/faculties/${id}`, { method: "DELETE" }),
+};
+
+// ==========================================
+// Study Program API
+// ==========================================
+
+export interface StudyProgram {
+  id: number;
+  facultyId: number;
+  name: string;
+  code?: string;
+  faculty?: { id: number; name: string };
+  createdAt?: string;
+}
+
+export const studyProgramApi = {
+  list: (facultyId?: number) => {
+    const params = facultyId ? `?facultyId=${facultyId}` : "";
+    return apiFetch<StudyProgram[]>(`/api/study-programs${params}`);
+  },
+
+  getById: (id: number) => apiFetch<StudyProgram>(`/api/study-programs/${id}`),
+
+  create: (data: { name: string; code?: string; facultyId: number }) =>
+    apiFetch<StudyProgram>("/api/study-programs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: number, data: { name: string; code?: string; facultyId?: number }) =>
+    apiFetch<StudyProgram>(`/api/study-programs/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: number) =>
+    apiFetch<null>(`/api/study-programs/${id}`, { method: "DELETE" }),
 };
 
 // ==========================================

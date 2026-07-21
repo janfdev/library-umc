@@ -3,7 +3,7 @@ import {
   Users, account as accountTable, members, categories, locations, vendors,
   publishers, languages, publicationPlaces, gmds,
   collectionTypes, authors, subjects, bibliographies, bibliographyAuthors,
-  bibliographySubjects, items
+  bibliographySubjects, items, faculties, studyPrograms
 } from "./schema";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
@@ -175,6 +175,52 @@ async function seed() {
   } else {
     console.log("Catalog data already exists. Skipping.");
   }
+
+  // 11. Faculties
+  const facultyData = [
+    { name: "Fakultas Ilmu Komputer", code: "FIK" },
+    { name: "Fakultas Ekonomi dan Bisnis", code: "FEB" },
+    { name: "Fakultas Teknik", code: "FT" },
+    { name: "Fakultas Keguruan dan Ilmu Pendidikan", code: "FKIP" },
+    { name: "Fakultas Hukum", code: "FH" },
+    { name: "Fakultas Pertanian", code: "FP" },
+  ];
+  const facultyMap = new Map<string, number>();
+  for (const f of facultyData) {
+    const existing = await db.query.faculties.findFirst({ where: eq(faculties.name, f.name) });
+    if (!existing) {
+      const [created] = await db.insert(faculties).values(f).returning();
+      facultyMap.set(f.code, created.id);
+    } else {
+      facultyMap.set(f.code, existing.id);
+    }
+  }
+  console.log(`Seeded ${facultyData.length} faculties`);
+
+  // 12. Study Programs
+  const spData = [
+    { name: "Teknik Informatika", code: "TI", facultyCode: "FIK" },
+    { name: "Sistem Informasi", code: "SI", facultyCode: "FIK" },
+    { name: "Manajemen", code: "MNJ", facultyCode: "FEB" },
+    { name: "Akuntansi", code: "AKT", facultyCode: "FEB" },
+    { name: "Teknik Sipil", code: "TS", facultyCode: "FT" },
+    { name: "Teknik Mesin", code: "TM", facultyCode: "FT" },
+    { name: "Pendidikan Matematika", code: "PM", facultyCode: "FKIP" },
+    { name: "Pendidikan Bahasa Inggris", code: "PBI", facultyCode: "FKIP" },
+    { name: "Ilmu Hukum", code: "IH", facultyCode: "FH" },
+    { name: "Agroteknologi", code: "AGRO", facultyCode: "FP" },
+  ];
+  for (const sp of spData) {
+    const fid = facultyMap.get(sp.facultyCode);
+    if (!fid) continue;
+    const existing = await db.query.studyPrograms.findFirst({
+      where: eq(studyPrograms.name, sp.name),
+    });
+    if (!existing) {
+      await db.insert(studyPrograms).values({ name: sp.name, code: sp.code, facultyId: fid });
+    }
+  }
+  console.log(`Seeded ${spData.length} study programs`);
 
   console.log("Seeding complete.");
   process.exit(0);

@@ -15,7 +15,9 @@ import {
   CheckCircle,
   FileUp,
   FileDown,
-  Package
+  Package,
+  Building2,
+  GraduationCap
 } from "lucide-react";
 
 import Logo from "@/assets/logo_umc.png";
@@ -34,6 +36,8 @@ import ReportsSection from "@/components/dashboard/ReportsSection";
 import UsersSection from "@/components/dashboard/UsersSection";
 import RecommendationsSection from "@/components/dashboard/RecommendationsSection";
 import ReturnApprovalsSection from "@/components/dashboard/ReturnApprovalsSection";
+import FakultasSection from "@/components/dashboard/FakultasSection";
+import ProdiSection from "@/components/dashboard/ProdiSection";
 import {
   CommandDialog,
   CommandEmpty,
@@ -78,7 +82,9 @@ type ActiveMenu =
   | "users"
   | "audit"
   | "reports"
-  | "recommendations";
+  | "recommendations"
+  | "fakultas"
+  | "prodi";
 
 type MenuConfig = {
   key: ActiveMenu;
@@ -95,6 +101,8 @@ const MENU_CONFIG: MenuConfig[] = [
   { key: "items", label: "Item / Eksemplar", icon: Package, group: "Manajemen Koleksi" },
   { key: "importData", label: "Import Data", icon: FileUp, group: "Manajemen Koleksi" },
   { key: "exportData", label: "Export Data", icon: FileDown, group: "Manajemen Koleksi" },
+  { key: "fakultas", label: "Fakultas", icon: Building2, group: "Master Data" },
+  { key: "prodi", label: "Program Studi", icon: GraduationCap, group: "Master Data" },
   { key: "guests", label: "Data Pengunjung", icon: Users },
   { key: "loans", label: "Peminjaman & Persetujuan", icon: BookOpen },
   { key: "returnApprovals", label: "Konfirmasi Pengembalian", icon: CheckCircle, superAdminOnly: true },
@@ -359,6 +367,10 @@ export default function SuperAdminDashboard() {
         return <AuditLogsSection />;
       case "reports":
         return <ReportsSection />;
+      case "fakultas":
+        return <FakultasSection />;
+      case "prodi":
+        return <ProdiSection />;
       case "returnApprovals":
         return <ReturnApprovalsSection />;
       case "recommendations":

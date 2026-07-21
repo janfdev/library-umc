@@ -47,7 +47,7 @@ export default function ProtectedRoute({
 
   // Final check for rendering
   if (!session) return null;
-  
+
   const userRole = (session.user as any).role;
   if (excludeRole && excludeRole.includes(userRole)) return null;
   if (requiredRole && userRole !== requiredRole) return null;

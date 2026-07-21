@@ -1,8 +1,9 @@
 import { db } from "../../../db";
 import {
   bibliographies, items, bibliographyAuthors, bibliographySubjects,
+  bibliographyFaculties, bibliographyStudyPrograms,
   authors, subjects, publishers, publicationPlaces, gmds,
-  languages, locations, vendors, collectionTypes
+  languages, locations, vendors, collectionTypes, faculties, studyPrograms
 } from "../../../db/schema";
 import { eq, and, isNull, asc, sql } from "drizzle-orm";
 
@@ -10,7 +11,8 @@ const BIBLIO_HEADERS = [
   "title", "gmd_name", "edition", "isbn_issn", "publisher_name",
   "publish_year", "collation", "series_title", "call_number",
   "language_name", "place_name", "classification", "notes", "image",
-  "sor", "authors", "topics", "item_code"
+  "sor", "authors", "topics", "item_code",
+  "faculty_name", "study_program_name"
 ];
 
 const ITEM_HEADERS = [
@@ -48,6 +50,8 @@ export class ExportService {
         publicationPlace: true,
         bibliographyAuthors: { with: { author: true } },
         bibliographySubjects: { with: { subject: true } },
+        bibliographyFaculties: { with: { faculty: true } },
+        bibliographyStudyPrograms: { with: { studyProgram: true } },
         items: { where: isNull(items.deletedAt) },
       },
       orderBy: [asc(bibliographies.title)],
@@ -59,6 +63,8 @@ export class ExportService {
       const authorNames = bib.bibliographyAuthors.map(ca => `<${ca.author.name}>`).join("");
       const topicNames = bib.bibliographySubjects.map(cs => `<${cs.subject.name}>`).join("");
       const itemCodes = bib.items.map(i => `<${i.itemCode}>`).join("");
+      const facultyNames = [...new Set(bib.bibliographyFaculties.map(bf => bf.faculty.name))].join(", ");
+      const studyProgramNames = [...new Set(bib.bibliographyStudyPrograms.map(bsp => bsp.studyProgram.name))].join(", ");
 
       const row = [
         escapeCsvField(bib.title),
@@ -79,6 +85,8 @@ export class ExportService {
         escapeCsvField(authorNames),
         escapeCsvField(topicNames),
         escapeCsvField(itemCodes),
+        escapeCsvField(facultyNames),
+        escapeCsvField(studyProgramNames),
       ];
       lines.push(row.join(";"));
     }

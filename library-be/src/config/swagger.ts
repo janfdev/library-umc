@@ -97,9 +97,29 @@ const swaggerDefinition = {
           subjects: { type: "array", items: { type: "object" } },
           totalItems: { type: "integer" },
           availableItems: { type: "integer" },
+          faculties: { type: "array", items: { type: "object", properties: { id: { type: "integer" }, name: { type: "string" }, code: { type: "string" } } } },
+          studyPrograms: { type: "array", items: { type: "object", properties: { id: { type: "integer" }, name: { type: "string" }, code: { type: "string" }, faculty: { type: "object" } } } },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
           category: { $ref: "#/components/schemas/Category" },
+        },
+      },
+      Faculty: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          code: { type: "string", nullable: true },
+        },
+      },
+      StudyProgram: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          code: { type: "string", nullable: true },
+          facultyId: { type: "integer" },
+          faculty: { $ref: "#/components/schemas/Faculty" },
         },
       },
       GuestLog: {
@@ -259,6 +279,8 @@ const swaggerDefinition = {
     { name: "Recommendations", description: "Book recommendation from lecturers" },
     { name: "Import", description: "CSV import (bibliographies & items)" },
     { name: "Export", description: "CSV export (bibliographies & items)" },
+    { name: "Faculties", description: "Faculty management (Super Admin)" },
+    { name: "Study Programs", description: "Study program management (Super Admin)" },
   ],
   paths: {
     "/auth/users": {
@@ -1518,6 +1540,99 @@ const swaggerDefinition = {
           }
         }
       }
+    },
+    "/faculties": {
+      get: {
+        summary: "Get all faculties",
+        tags: ["Faculties"],
+        security: [],
+        responses: { 200: { description: "List of faculties" } },
+      },
+      post: {
+        summary: "Create faculty",
+        tags: ["Faculties"],
+        security: [{ bearerAuth: [] }],
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", properties: { name: { type: "string" }, code: { type: "string" } }, required: ["name"] } } } },
+        responses: { 201: { description: "Faculty created" }, 400: { description: "Validation error" }, 409: { description: "Duplicate name" } },
+      },
+    },
+    "/faculties/{id}": {
+      get: {
+        summary: "Get faculty by ID",
+        tags: ["Faculties"],
+        security: [],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { 200: { description: "Faculty details" }, 404: { description: "Not found" } },
+      },
+      patch: {
+        summary: "Update faculty",
+        tags: ["Faculties"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", properties: { name: { type: "string" }, code: { type: "string" } } } } } },
+        responses: { 200: { description: "Faculty updated" }, 404: { description: "Not found" }, 409: { description: "Duplicate name" } },
+      },
+      delete: {
+        summary: "Delete faculty",
+        tags: ["Faculties"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { 200: { description: "Faculty deleted" }, 404: { description: "Not found" }, 409: { description: "In use" } },
+      },
+    },
+    "/study-programs": {
+      get: {
+        summary: "Get all study programs",
+        tags: ["Study Programs"],
+        security: [],
+        parameters: [{ in: "query", name: "facultyId", schema: { type: "integer" }, description: "Filter by faculty" }],
+        responses: { 200: { description: "List of study programs" } },
+      },
+      post: {
+        summary: "Create study program",
+        tags: ["Study Programs"],
+        security: [{ bearerAuth: [] }],
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", properties: { name: { type: "string" }, code: { type: "string" }, facultyId: { type: "integer" } }, required: ["name", "facultyId"] } } } },
+        responses: { 201: { description: "Study program created" }, 400: { description: "Validation error" }, 409: { description: "Duplicate name in faculty" } },
+      },
+    },
+    "/study-programs/{id}": {
+      get: {
+        summary: "Get study program by ID",
+        tags: ["Study Programs"],
+        security: [],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { 200: { description: "Study program details" }, 404: { description: "Not found" } },
+      },
+      patch: {
+        summary: "Update study program",
+        tags: ["Study Programs"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", properties: { name: { type: "string" }, code: { type: "string" }, facultyId: { type: "integer" } } } } } },
+        responses: { 200: { description: "Study program updated" }, 404: { description: "Not found" }, 409: { description: "Duplicate name" } },
+      },
+      delete: {
+        summary: "Delete study program",
+        tags: ["Study Programs"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: { 200: { description: "Study program deleted" }, 404: { description: "Not found" }, 409: { description: "In use" } },
+      },
+    },
+    "/bibliographies/check-duplicate": {
+      get: {
+        summary: "Check for duplicate bibliographies",
+        description: "Check for existing bibliographies by ISBN exact match or title+author fuzzy match. Returns suggestions for redirecting to existing records.",
+        tags: ["Bibliographies"],
+        security: [],
+        parameters: [
+          { in: "query", name: "isbn", schema: { type: "string" }, description: "ISBN/ISSN to match exactly" },
+          { in: "query", name: "title", schema: { type: "string" }, description: "Title for fuzzy matching" },
+          { in: "query", name: "author", schema: { type: "string" }, description: "Author name for fuzzy matching" },
+        ],
+        responses: { 200: { description: "Duplicate check result with hasExactMatch and duplicates array" }, 400: { description: "At least one param required" } },
+      },
     },
   },
 };

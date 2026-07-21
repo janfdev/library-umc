@@ -4,6 +4,7 @@ import {
   createBibliographySchema,
   updateBibliographySchema,
   bibliographyQuerySchema,
+  checkDuplicateSchema,
 } from "../validation/bibliography.validation";
 import { sendSuccess, sendError, sendValidationError } from "../../../utils/api-utils";
 import auditService from "../../audit/service/audit.service";
@@ -60,6 +61,17 @@ export class BibliographyController {
         userId: (req as any).user?.id, ipAddress: req.ip,
       });
       sendSuccess(res, "Bibliography updated", bib);
+    } catch (error) { next(error); }
+  }
+
+  async checkDuplicate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validation = checkDuplicateSchema.safeParse(req.query);
+      if (!validation.success) {
+        return sendValidationError(res, validation.error.flatten());
+      }
+      const result = await bibliographyService.checkDuplicate(validation.data);
+      sendSuccess(res, "Duplicate check completed", result);
     } catch (error) { next(error); }
   }
 

@@ -37,71 +37,23 @@ const Katalog = () => {
   const [availabilityFilter, setAvailabilityFilter] = useState<string[]>([]);
   const [yearRange, setYearRange] = useState({ start: "", end: "" });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [selectedFaculty, setSelectedFaculty] = useState<string>("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | "">("");
 
-  // Dynamic faculty classification lookup
-  const getFacultyForCategory = (categoryName: string): string => {
-    const name = categoryName.toLowerCase();
-    if (name.includes("pendidikan") || name.includes("paud") || name.includes("bk") || name.includes("inggris") || name.includes("matematika") || name.includes("keguruan")) {
-      return "Fakultas Keguruan & Ilmu Pendidikan (FKIP)";
-    }
-    if (name.includes("fai") || name.includes("agama") || name.includes("islam")) {
-      return "Fakultas Agama Islam (FAI)";
-    }
-    if (name.includes("komunikasi") || name.includes("pemerintahan") || name.includes("psikologi") || name.includes("sosial") || name.includes("politik")) {
-      return "Fakultas Ilmu Sosial & Ilmu Politik (FISIP)";
-    }
-    if (name.includes("informatika") || name.includes("teknik") || name.includes("komputer") || name.includes("sains")) {
-      return "Fakultas Teknik (FT)";
-    }
-    if (name.includes("manajemen") || name.includes("ekonomi") || name.includes("akuntansi")) {
-      return "Fakultas Ekonomi (FE)";
-    }
-    if (name.includes("umum")) {
-      return "Umum";
-    }
-    return "Lainnya";
-  };
-
-  const FACULTIES = useMemo(() => [
-    "Fakultas Keguruan & Ilmu Pendidikan (FKIP)",
-    "Fakultas Agama Islam (FAI)",
-    "Fakultas Ilmu Sosial & Ilmu Politik (FISIP)",
-    "Fakultas Teknik (FT)",
-    "Fakultas Ekonomi (FE)",
-    "Umum",
-    "Lainnya"
-  ], []);
-
-  // Compute categoryFilter array based on selected faculty and major
-  const categoryFilter = useMemo(() => {
-    if (selectedCategoryId !== "") {
-      return [selectedCategoryId];
-    }
-    if (selectedFaculty !== "") {
-      return categories
-        .filter((cat) => getFacultyForCategory(cat.name) === selectedFaculty)
-        .map((cat) => cat.id);
-    }
-    return [];
-  }, [selectedFaculty, selectedCategoryId, categories]);
-
-  // Fetch categories from backend
+  // Fetch faculties from backend for filter
+  const [faculties, setFaculties] = useState<{ id: number; name: string }[]>([]);
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchFaculties = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/categories`);
+        const response = await fetch(`${API_BASE_URL}/api/faculties`);
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
-          setCategories(json.data);
+          setFaculties(json.data);
         }
-      } catch (err) {
-        console.error("Gagal mengambil kategori:", err);
+      } catch (error) {
+        console.error("Gagal mengambil fakultas:", error);
       }
     };
-    fetchCategories();
+    fetchFaculties();
   }, []);
 
   // Update search query when URL changes
@@ -136,7 +88,6 @@ const Katalog = () => {
     setAvailabilityFilter([]);
     setYearRange({ start: "", end: "" });
     setSelectedFaculty("");
-    setSelectedCategoryId("");
     setSearchParams({});
   };
 
@@ -146,8 +97,7 @@ const Katalog = () => {
     availabilityFilter.length > 0 ||
     yearRange.start ||
     yearRange.end ||
-    selectedFaculty !== "" ||
-    selectedCategoryId !== "";
+    selectedFaculty !== "";
 
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col">
@@ -332,7 +282,6 @@ const Katalog = () => {
                     value={selectedFaculty || "all"}
                     onValueChange={(val) => {
                       setSelectedFaculty(val === "all" ? "" : val);
-                      setSelectedCategoryId(""); // Reset jurusan when faculty changes
                     }}
                   >
                     <SelectTrigger className="w-full h-11 rounded-xl bg-muted border-border font-semibold text-foreground text-left focus:ring-2 focus:ring-red-100 focus:border-primary transition-all cursor-pointer">
@@ -340,44 +289,12 @@ const Katalog = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-popover text-popover-foreground border-border rounded-xl">
                       <SelectItem value="all">Semua Fakultas</SelectItem>
-                      {FACULTIES.map((fac) => (
-                        <SelectItem key={fac} value={fac}>{fac}</SelectItem>
+                      {faculties.map((fac) => (
+                        <SelectItem key={fac.id} value={String(fac.id)}>{fac.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Filter: Jurusan Dropdown */}
-                {categories.length > 0 && (
-                  <div>
-                    <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-                      Jurusan / Program Studi
-                    </h3>
-                    <Select
-                      value={selectedCategoryId ? String(selectedCategoryId) : "all"}
-                      onValueChange={(val) => {
-                        setSelectedCategoryId(val === "all" ? "" : Number(val));
-                      }}
-                    >
-                      <SelectTrigger className="w-full h-11 rounded-xl bg-muted border-border font-semibold text-foreground text-left focus:ring-2 focus:ring-red-100 focus:border-primary transition-all cursor-pointer">
-                        <SelectValue placeholder="Semua Jurusan" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover text-popover-foreground border-border rounded-xl">
-                        <SelectItem value="all">Semua Jurusan</SelectItem>
-                        {categories
-                          .filter((cat) => {
-                            if (!selectedFaculty) return true;
-                            return getFacultyForCategory(cat.name) === selectedFaculty;
-                          })
-                          .map((cat) => (
-                            <SelectItem key={cat.id} value={String(cat.id)}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
 
                 {/* Filter: Tahun Terbit */}
                 <div>
@@ -431,12 +348,7 @@ const Katalog = () => {
                       ))}
                       {selectedFaculty && (
                         <span className="px-3 py-1.5 bg-yellow-50 text-yellow-800 rounded-lg text-[10px] font-bold border border-yellow-100">
-                          Fakultas: {selectedFaculty.replace(/ \(.*\)/, "")}
-                        </span>
-                      )}
-                      {selectedCategoryId && (
-                        <span className="px-3 py-1.5 bg-orange-50 text-orange-800 rounded-lg text-[10px] font-bold border border-orange-100">
-                          Jurusan: {categories.find((c) => c.id === selectedCategoryId)?.name}
+                          Fakultas: {faculties.find((f) => String(f.id) === selectedFaculty)?.name?.replace(/ \(.*\)/, "") || selectedFaculty}
                         </span>
                       )}
                     </div>
@@ -454,7 +366,6 @@ const Katalog = () => {
               availabilityFilter={availabilityFilter}
               yearRange={yearRange}
               currentUser={currentUser}
-              categoryFilter={categoryFilter}
             />
           </section>
         </div>

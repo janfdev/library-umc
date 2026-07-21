@@ -2,7 +2,6 @@ export type { AuthUser, AuthSession, LibraryUser } from "./auth";
 export type {
   Bibliography,
   BibliographyType,
-  BibliographyCategory,
   Reservation,
   ReservationStatus,
   LoanRequest,

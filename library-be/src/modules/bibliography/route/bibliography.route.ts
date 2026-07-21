@@ -6,6 +6,7 @@ import { publicApiLimiter } from "../../../middlewares/rateLimiter";
 
 const router = Router();
 
+router.get("/bibliographies/check-duplicate", publicApiLimiter, (req, res, next) => bibliographyController.checkDuplicate(req, res, next));
 router.get("/bibliographies", publicApiLimiter, (req, res, next) => bibliographyController.list(req, res, next));
 router.get("/bibliographies/:id", publicApiLimiter, (req, res, next) => bibliographyController.getById(req, res, next));
 router.get("/bibliographies/:id/items", publicApiLimiter, (req, res, next) => bibliographyController.getItems(req, res, next));
